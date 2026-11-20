@@ -93,7 +93,7 @@ export function derivePalette(baseColor) {
   if (base === '#000000') return { ...DEFAULT_PALETTE };
 
   const text = contrastRatio(base, '#ffffff') >=
-    contrastRatio(base, '#101318') ? '#ffffff' : '#101318';
+    contrastRatio(base, '#000000') ? '#ffffff' : '#000000';
   const dark = text === '#ffffff';
   const opposite = dark ? '#000000' : '#ffffff';
   const shade = (up, down) => blendColor(

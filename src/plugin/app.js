@@ -40,7 +40,7 @@ function syncPalette() {
   const base = repo.getBaseColor();
   applyPalette(palette);
   const dark = contrastRatio(base, '#ffffff') >=
-    contrastRatio(base, '#101318');
+    contrastRatio(base, '#000000');
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
   $('themeState').textContent = dark ? 'DARK' : 'LIGHT';
   $('colorSwatch').style.backgroundColor = base;
