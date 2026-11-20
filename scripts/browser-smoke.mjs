@@ -181,10 +181,10 @@ try {
     "window.__clusterFrameEvents.find(e=>e.data?.method==='Router.register')?.origin");
   assert(requester === "null",
     "Plugin iframe must have opaque origin after CSP sandbox: "+requester);
-  await until("Boolean(document.querySelector('[data-community-plugin=example.hello]')?.srcdoc)",
+  await until("Boolean(document.querySelector('[data-community-plugin="example.hello"]')?.srcdoc)",
     "plugin-provided community card");
   const communitySandbox = await evaluate(
-    "document.querySelector('[data-community-plugin=example.hello]')?.getAttribute('sandbox')");
+    "document.querySelector('[data-community-plugin="example.hello"]')?.getAttribute('sandbox')");
   assert(communitySandbox === "allow-scripts allow-forms",
     "Community card must be opaque and container bounded");
   let echoSession = null;
