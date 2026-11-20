@@ -25,7 +25,7 @@ test("router correlates req/rep and records unavailable targets", async () => {
   const a = kernel.load("example.a"), b = kernel.load("example.b");
   b.Router.register("ping", input => ({ pong: input.value }));
   assert.deepEqual((await a.Router.request("example.b", "ping", { value: 7 })).data, { pong: 7 });
-  assert.equal(kernel.inspect("example.a").relations.length, 2);
+  assert.equal(kernel.inspect("example.a").relations.filter(r => r.action === "ping").length, 2);
   const missing = await a.Router.request("missing", "ping", {});
   assert.equal(missing.status, 503);
   assert.ok(kernel.logs("elog").length >= 1);

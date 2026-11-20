@@ -181,11 +181,19 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
         }
         try {
           const timeoutMs = Math.max(1, Math.min(60000, options.timeoutMs || 5000));
-          const data = await Promise.race([
-            Promise.resolve().then(() => handler(copy(payload), copy(base))),
-            new Promise((_, reject) => setTimeout(() =>
-              reject(new ClusterError(408, "ROUTER_TIMEOUT", action)), timeoutMs))
-          ]);
+          let timeout;
+          let data;
+          try {
+            data = await Promise.race([
+              Promise.resolve().then(() => handler(copy(payload), copy(base))),
+              new Promise((_, reject) => {
+                timeout = setTimeout(() =>
+                  reject(new ClusterError(408, "ROUTER_TIMEOUT", action)), timeoutMs);
+              })
+            ]);
+          } finally {
+            clearTimeout(timeout);
+          }
           relations.push({ ...base, direction: "rep", status: 200 });
           record("log", { ...base, status: 200 });
           return result(copy(data));
