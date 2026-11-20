@@ -57,16 +57,20 @@ try {
   debugPort = await freePort();
   browser=spawn(await chromePath(),[
     "--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
-    "--no-first-run","--no-default-browser-check",
+    "--disable-background-networking","--no-first-run",
+    "--no-default-browser-check",
     "--remote-debugging-port="+debugPort,"--user-data-dir="+profile,"about:blank"
   ],{stdio:["ignore","ignore","pipe"]});
+  browser.on("error", error => {
+    stderrText += "\nChrome spawn error: " + String(error);
+  });
   browser.stderr.on("data",chunk=>{
     stderrText = (stderrText + String(chunk)).slice(-8000);
     const found=String(chunk).match(/DevTools listening on ws:\/\/[^:]+:(\d+)\//);
     if(found) debugPort=Number(found[1]);
   });
   let targets = null;
-  for (let i=0; i<120; i++) {
+  for (let i=0; i<300; i++) {
     if (browser.exitCode !== null) break;
     try {
       const response = await fetch("http://127.0.0.1:"+
@@ -75,7 +79,8 @@ try {
     } catch {/* Chrome not yet listening */}
     await sleep(100);
   }
-  assert(targets, "Chrome remote debugger unavailable; stderr: "+stderrText);
+  assert(targets, "Chrome remote debugger unavailable; exit="+
+    browser.exitCode+" stderr: "+stderrText);
   const page=targets.find(target=>target.type==="page");
   assert(page?.webSocketDebuggerUrl,"Chrome page target missing");
   socket=new WebSocket(page.webSocketDebuggerUrl);
