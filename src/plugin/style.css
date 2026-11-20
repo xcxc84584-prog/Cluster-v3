@@ -491,3 +491,6 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
 .plugin-page-view > #pluginPageEmpty:not([hidden]) {
   pointer-events: none;
 }
+
+/* Explorer 'open website' icon: same compact controls as stop/remove. */
+.plugin-open-action{font-size:17px;font-weight:600}

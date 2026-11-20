@@ -196,6 +196,19 @@ try {
       JSON.stringify(marketplaceLayout));
   assert(await evaluate("document.querySelectorAll('.plugin-entry-wrapper').length") >= 1,
     "Explorer must include PMU row");
+  assert(await evaluate("document.querySelector('#pluginStandalone') === null"),
+    "Page-level standalone button must be removed");
+  const explorerActions = await evaluate(`(() => {
+    const rows = [...document.querySelectorAll('.plugin-entry-wrapper')];
+    return { coreActions: rows[0]?.querySelectorAll('.plugin-action').length ?? -1,
+      plugins: rows.slice(1).map(row =>
+        [...row.querySelectorAll('.plugin-action')].map(button =>
+          ({ symbol: button.textContent, label: button.getAttribute('aria-label') })))
+    };
+  })()`);
+  assert(explorerActions.coreActions === 0,
+    "Protected PMU must not have plugin controls");
+
   await evaluate("document.querySelector('[data-tab=router]').click();"+
     "document.querySelector('#refreshRouter').click()");
   assert(await evaluate("document.querySelector('#refreshRouter').classList.contains('is-refreshing')"),

@@ -248,7 +248,16 @@ function renderPluginExplorer() {
           if (selectedPluginId === entry.id) choosePlugin('cluster.pmu');
         } catch (error) { reportLoaderError(error); }
       });
-      actions.append(toggle, remove);
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'plugin-action plugin-open-action';
+      open.textContent = '↗';
+      open.title = t('openStandalone');
+      open.setAttribute('aria-label', open.title + ': ' + entry.id);
+      open.addEventListener('click', () => {
+        void openPluginSite(entry.id);
+      });
+      actions.append(open, toggle, remove);
       line.append(actions);
     }
     $('pluginList').append(line);
@@ -258,6 +267,32 @@ function renderPluginExplorer() {
     empty.className = 'no-plugins';
     empty.textContent = t('noPluginSearch');
     $('pluginList').append(empty);
+  }
+}
+/**
+ * Open the plugin's standalone website from Explorer.
+ * Open a tab synchronously to avoid popup blockers before any async startup.
+ */
+async function openPluginSite(pluginId) {
+  const record = browserManager?.get(pluginId);
+  if (!record || pluginId === 'cluster.pmu') return;
+  const url = new URL('../', location.href);
+  url.searchParams.set('plugin', pluginId);
+  const tab = window.open('about:blank', '_blank');
+  if (!tab) {
+    reportLoaderError(new Error('Browser blocked the plugin window'));
+    return;
+  }
+  try {
+    if (!browserManager.isLoaded(pluginId)) {
+      setLoaderState('loaderBusy');
+      await hostPMU.load(pluginId);
+      setLoaderState('loaderReady');
+    }
+    tab.location.replace(url.href);
+  } catch (error) {
+    tab.close();
+    reportLoaderError(error);
   }
 }
 function choosePlugin(pluginId) {
@@ -302,12 +337,9 @@ function renderSettings() {
 }
 function renderPluginPage() {
   browserManager?.show(selectedPluginId);
-  const manifest = browserManager?.get(selectedPluginId)?.manifest;
   const canOpen = selectedPluginId !== 'cluster.pmu' &&
     browserManager?.isLoaded(selectedPluginId);
   $('pluginPageEmpty').hidden = Boolean(canOpen);
-  $('pluginStandalone').hidden = !canOpen ||
-    manifest?.ui?.mode === 'embedded';
 }
 function sendSettingsContext() {
   const frame = $('pluginSettingsFrame');
