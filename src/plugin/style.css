@@ -199,3 +199,40 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-l
   .list-toolbar select{min-width:0;flex:1}
   .list-download{flex:1}
 }
+
+/* Installed plugin actions: same Host color tokens, never plugin-defined Host UI. */
+.plugin-entry-wrapper{display:flex;align-items:stretch;border-bottom:1px solid var(--ui-border)}
+.plugin-entry-wrapper .plugin-entry{min-width:0;flex:1}
+.plugin-entry-actions{display:flex;align-items:center;gap:4px;padding-right:7px}
+.plugin-action{padding:6px 7px;border:1px solid var(--ui-border);
+  border-radius:4px;background:var(--ui-control);color:var(--ui-muted);
+  font-size:10px;white-space:nowrap}
+.plugin-action:hover{background:var(--ui-hover);color:var(--ui-text)}
+.plugin-action:focus-visible{outline:2px solid var(--ui-accent)}
+.plugin-page-view{height:100%;padding:0;overflow:hidden;position:relative}
+.plugin-pages{width:100%;height:100%;min-height:0}
+.plugin-main-host{width:100%;height:100%;min-height:0}
+.plugin-main-host[hidden]{display:none}
+.plugin-main-frame{width:100%;height:100%;border:0;display:block}
+.plugin-page-view>.plugin-settings-empty{position:absolute;inset:0}
+.community-intro{max-width:850px;margin-bottom:22px}
+.community-intro small{font:10px Consolas,monospace;color:var(--ui-muted);
+  letter-spacing:1.4px}
+.community-intro h2{margin:7px 0 10px;font-size:20px}
+.community-intro p,.community-body p,.community-docs p{font-size:12px;
+  line-height:1.7;color:var(--ui-muted)}
+.community-card{display:flex;align-items:flex-start;gap:17px;max-width:850px;
+  padding:24px;background:var(--ui-panel);border:1px solid var(--ui-border);
+  border-radius:9px}
+.community-icon{width:50px;height:50px;display:grid;place-items:center;
+  flex:none;font-size:35px;border:1px solid var(--ui-border);
+  border-radius:9px;color:var(--ui-accent)}
+.community-body{flex:1;min-width:0}
+.community-body strong{font-size:15px}
+.community-body p{margin:10px 0 17px}
+.community-actions{display:flex;flex-wrap:wrap;gap:9px}
+.community-docs{max-width:850px;margin-top:16px;padding:22px;
+  border:1px solid var(--ui-border);border-radius:9px;background:var(--ui-panel)}
+.community-docs h3{font-size:14px;margin:0 0 10px}
+.community-docs a{display:inline-block;margin-top:12px;color:var(--ui-accent);
+  text-decoration:underline;text-underline-offset:3px}

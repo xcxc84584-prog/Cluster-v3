@@ -25,14 +25,20 @@
     <div class="workspace-shell">
       <aside class="explorer" id="explorer" aria-label="Explorer">
         <div class="explorer-heading"><div><small>WORKSPACE / PLUGIN</small><strong data-i18n="explorer">插件總管</strong></div><span class="counter" id="pluginCount">01</span></div>
-        <div class="explorer-searchline"><input type="search" id="pluginSearch" data-i18n-placeholder="searchPlugins" placeholder="搜尋插件…" aria-label="Search plugins"><button id="loadPlugin" type="button" disabled data-i18n-title="loadPlugin" title="裝載插件（尚未開放）" aria-label="Load plugin">＋</button></div>
+        <div class="explorer-searchline"><input type="search" id="pluginSearch" data-i18n-placeholder="searchPlugins" placeholder="搜尋插件…" aria-label="Search plugins"><button id="loadPlugin" type="button" data-i18n-title="loadPluginZip"
+          title="裝載 ZIP 插件" aria-label="Load plugin ZIP">＋</button>
+          <button id="loadPluginFolder" type="button" data-i18n-title="loadPluginFolder"
+          title="裝載資料夾" aria-label="Load plugin folder">▤</button></div>
+          <input id="pluginZipInput" type="file" accept=".zip,.cluster-plugin" hidden>
+          <input id="pluginFolderInput" type="file" webkitdirectory directory multiple hidden>
         <div class="explorer-section" data-i18n="installed">已裝載插件</div>
         <div id="pluginList" class="explorer-list" role="listbox" aria-label="Plugins"></div>
-        <div class="explorer-footer"><span class="status-dot muted"></span><span data-i18n="statusNotLoaded">尚未裝載</span></div>
+        <div class="explorer-footer"><span class="status-dot muted"></span><span id="loaderStatus" data-i18n="loaderReady">裝載系統已就緒</span></div>
       </aside>
       <main class="main-content" id="mainContent">
         <div class="tabs" role="tablist" aria-label="Plugin sections">
           <button type="button" role="tab" data-tab="settings" aria-selected="true"><span class="tab-icon" aria-hidden="true">⚙</span><span data-i18n="pluginSettings">插件設定</span></button>
+          <button type="button" role="tab" data-tab="page" aria-selected="false"><span class="tab-icon" aria-hidden="true">▣</span><span data-i18n="pluginPage">插件頁面</span></button>
           <button type="button" role="tab" data-tab="apis" aria-selected="false"><span class="tab-icon" aria-hidden="true">⌘</span><span data-i18n="apiList">API 列表</span></button>
           <button type="button" role="tab" data-tab="logs" aria-selected="false"><span class="tab-icon" aria-hidden="true">≡</span><span data-i18n="logList">LOG 列表</span></button>
           <button type="button" role="tab" data-tab="router" aria-selected="false"><span class="tab-icon" aria-hidden="true">⌁</span><span data-i18n="routerStatus">Router 狀態表</span></button>
@@ -56,6 +62,11 @@
               <div id="pluginSettingsEmpty" class="plugin-settings-empty" hidden
                 data-i18n="settingsUnavailable">插件未提供設定頁面。</div>
             </div>
+          </section>
+          <section class="tab-view plugin-page-view" role="tabpanel" data-view="page" hidden>
+            <div id="pluginPageEmpty" class="plugin-settings-empty"
+              data-i18n="choosePluginPage">請選擇已裝載的插件。</div>
+            <div id="pluginPages" class="plugin-pages"></div>
           </section>
           <section class="tab-view" role="tabpanel" data-view="apis" hidden>
             <div class="list-toolbar"><div class="api-search"><input id="apiSearch" type="search" data-i18n-placeholder="searchApis" placeholder="搜尋 API…" aria-label="Search API list"></div><select id="apiFilter" aria-label="API type"><option value="all" data-i18n="all">全部</option><option value="read" data-i18n="read">讀取</option><option value="write" data-i18n="write">寫入</option><option value="execute" data-i18n="execute">執行</option></select><button class="list-download" type="button" id="apiDownloadList" data-i18n="downloadList">下載 List</button></div>
@@ -94,7 +105,30 @@
             <div class="list-toolbar"><strong>Router / req &amp; rep</strong><button type="button" id="refreshRouter">Refresh</button></div>
             <div class="diagnostic-list" id="routerList" role="list"></div>
           </section>
-          <section class="tab-view" role="tabpanel" data-view="community" hidden><div class="placeholder"><span class="placeholder-icon">◇</span><strong data-i18n="communityWait">社群下載服務將由社群插件提供。</strong><p data-i18n="listPlaceholder">此處將呈現插件提供的資料。</p></div></section>
+          <section class="tab-view" role="tabpanel" data-view="community" hidden>
+            <div class="community-intro"><small>CLUSTER / PLUGIN DEVELOPMENT</small>
+              <h2 data-i18n="exampleTitle">標準插件開發範例</h2>
+              <p data-i18n="exampleDescription">包含標準資料夾、Manifest、完整 API JSON、公共庫規範與可執行的雙頁插件。</p>
+            </div>
+            <section class="community-card">
+              <div class="community-icon">◇</div>
+              <div class="community-body"><strong>Hello Cluster · v1.0.0</strong>
+                <p data-i18n="exampleCapabilities">支援 Router req/rep、PRMU 共享屬性、PMU Log、六語和全域色系。</p>
+                <div class="community-actions">
+                  <button type="button" class="list-download" id="downloadExample"
+                    data-i18n="downloadExample">下載標準範例 ZIP</button>
+                  <button type="button" class="list-download" id="installExample"
+                    data-i18n="installExample">直接裝載範例</button>
+                </div>
+              </div>
+            </section>
+            <section class="community-docs">
+              <h3 data-i18n="exampleDocuments">開發文件</h3>
+              <p data-i18n="exampleDocsHint">ZIP 內包含 PMU API JSON、完整 API Catalog、插件資料夾規範與公共庫說明。</p>
+              <a id="exampleSource" href="../templates/plugin-example/README.md"
+                target="_blank" rel="noopener" data-i18n="viewExampleSource">查看範例原始碼</a>
+            </section>
+          </section>
         </div>
       </main>
     </div>

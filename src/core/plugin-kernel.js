@@ -271,6 +271,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
   return Object.freeze({
     host, load, unload, repo,
     getManifest: pluginId => copy(plugins.get(pluginId)?.manifest ?? null),
+    getInstance: pluginId => plugins.get(pluginId) || null,
     get plugins() { return [...plugins.keys()]; },
     catalog: API_CATALOG, queryCatalog,
     log: record,
