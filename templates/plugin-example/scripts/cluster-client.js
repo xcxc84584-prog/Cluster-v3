@@ -1,0 +1,95 @@
+/* Generic Cluster-v3 plugin client; no direct Host DOM access. */
+(() => {
+  "use strict";
+  const protocol = "cluster.plugin.v1";
+  const pending = new Map();
+  const handlers = new Map();
+  const contextListeners = new Set();
+  let context = null;
+  const id = () => crypto.randomUUID();
+  function applyContext(value) {
+    context = value;
+    document.documentElement.lang = value.language || "zh-TW";
+    for (const [name, color] of Object.entries(value.palette || {})) {
+      if (/^#[0-9a-f]{6}$/i.test(color))
+        document.documentElement.style.setProperty("--ui-" + name, color);
+    }
+    for (const fn of contextListeners) fn(context);
+  }
+  window.addEventListener("message", async event => {
+    if (event.source !== parent) return;
+    const message = event.data || {};
+    if (message.protocol === "cluster.settings.context.v1") {
+      applyContext(message);
+      return;
+    }
+    if (message.protocol !== protocol) return;
+    if (message.type === "context") {
+      applyContext(message);
+    } else if (message.type === "response") {
+      const request = pending.get(message.requestId);
+      if (!request) return;
+      clearTimeout(request.timer);
+      pending.delete(message.requestId);
+      request.resolve(message);
+    } else if (message.type === "invoke") {
+      const handler = handlers.get(message.action);
+      try {
+        if (!handler) throw Error("Unknown action: " + message.action);
+        const value = await handler(message.payload, message.trace);
+        parent.postMessage({ protocol, type: "invoke-result",
+          requestId: message.requestId, ok: true, data: value }, "*");
+      } catch (error) {
+        parent.postMessage({ protocol, type: "invoke-result",
+          requestId: message.requestId, ok: false,
+          error: { message: String(error.message || error) } }, "*");
+      }
+    }
+  });
+  function request(method, ...args) {
+    const requestId = id();
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        pending.delete(requestId);
+        reject(Error("Host request timeout: " + method));
+      }, 12000);
+      pending.set(requestId, { resolve, reject, timer });
+      parent.postMessage({ protocol, type: "request", requestId, method, args }, "*");
+    });
+  }
+  window.Cluster = Object.freeze({
+    request,
+    context: () => context,
+    onContext(handler) {
+      contextListeners.add(handler);
+      if (context) handler(context);
+      return () => contextListeners.delete(handler);
+    },
+    PRMU: Object.freeze({
+      get: (source, item) => request("PRMU.get", source, item),
+      set: (source, item, value) => request("PRMU.set", source, item, value),
+      register: (source, definition) => request("PRMU.register", source, definition),
+      list: source => request("PRMU.list", source)
+    }),
+    Router: Object.freeze({
+      request: (target, action, payload) =>
+        request("Router.request", target, action, payload),
+      async register(action, handler) {
+        const result = await request("Router.register", action);
+        if (result.ok) handlers.set(action, handler);
+        return result;
+      },
+      unregister: async action => {
+        const result = await request("Router.unregister", action);
+        if (result.ok) handlers.delete(action);
+        return result;
+      }
+    }),
+    PMU: Object.freeze({
+      log: (type, entry) => request("PMU.log", type, entry),
+      get: () => request("PMU.get", "self"),
+      list: () => request("PMU.list")
+    })
+  });
+  parent.postMessage({ protocol, type: "hello" }, "*");
+})();
