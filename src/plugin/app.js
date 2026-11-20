@@ -1,159 +1,111 @@
-/** Host Plugin Manager UI (phase 1: language + palette). */
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, translate } from '../core/translations.js';
+/** Cluster-v3 Host UI: one RGB base color with legible derived surfaces. */
+import { translate } from '../core/translations.js';
 import {
-  COLOR_KEYS, PALETTE_PRESETS, applyPalette, normalizeColor, publicRepository,
+  applyPalette, contrastRatio, normalizeColor, publicRepository,
 } from '../core/public-repository.js';
 
 const $ = (id) => document.getElementById(id);
 const repo = publicRepository;
 const dialog = $('paletteDialog');
-const tokenList = $('tokenList');
-let activeToken = 'accent';
-
-const COLOR_LABELS = {
-  background: 'colorBackground', surface: 'colorSurface', panel: 'colorPanel',
-  control: 'colorControl', hover: 'colorHover', border: 'colorBorder',
-  text: 'colorText', muted: 'colorMuted', accent: 'colorAccent',
-  editor: 'colorEditor', gutter: 'colorGutter',
-};
 const t = (key) => translate(repo.getLanguage(), key);
 
+function channelsFromHex(hex) {
+  return [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+}
+function hexFromChannels(channels) {
+  return '#' + channels.map((n) =>
+    Number(n).toString(16).padStart(2, '0')).join('');
+}
 function syncLanguage() {
-  const language = repo.getLanguage();
-  document.documentElement.lang = language;
-  $('languageSelect').value = language;
-  $('settingsLanguage').value = language;
-  document.querySelectorAll('[data-i18n]').forEach((element) => {
-    element.textContent = t(element.dataset.i18n);
+  const locale = repo.getLanguage();
+  document.documentElement.lang = locale;
+  $('languageSelect').value = locale;
+  $('settingsLanguage').value = locale;
+  document.querySelectorAll('[data-i18n]').forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
   });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
-    element.placeholder = t(element.dataset.i18nPlaceholder);
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
   });
-  document.querySelectorAll('[data-i18n-title]').forEach((element) => {
-    element.title = t(element.dataset.i18nTitle);
+  document.querySelectorAll('[data-i18n-title]').forEach((node) => {
+    node.title = t(node.dataset.i18nTitle);
   });
   const toggle = $('explorerToggle');
-  toggle.setAttribute('aria-label', t(toggle.getAttribute('aria-expanded') === 'true' ? 'collapse' : 'expand'));
-  document.title = `Cluster-v3 · ${t('brand')}`;
-  renderTokens();
-  renderEditor();
+  toggle.setAttribute('aria-label',
+    t(toggle.getAttribute('aria-expanded') === 'true' ? 'collapse' : 'expand'));
+  document.title = 'Cluster-v3 · ' + t('brand');
 }
-
 function syncPalette() {
   const palette = repo.getPalette();
+  const base = repo.getBaseColor();
   applyPalette(palette);
-  for (const button of tokenList.querySelectorAll('[data-color-token]')) {
-    const key = button.dataset.colorToken;
-    button.querySelector('.token-dot').style.backgroundColor = palette[key];
-    button.querySelector('.token-hex').textContent = palette[key].toUpperCase();
-  }
-  renderEditor();
-}
-
-function renderTokens() {
-  const palette = repo.getPalette();
-  tokenList.replaceChildren();
-  COLOR_KEYS.forEach((key) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'token-item';
-    button.dataset.colorToken = key;
-    button.setAttribute('role', 'option');
-    button.setAttribute('aria-selected', String(key === activeToken));
-    const swatch = document.createElement('span');
-    swatch.className = 'token-dot';
-    swatch.style.backgroundColor = palette[key];
-    const label = document.createElement('span');
-    label.textContent = t(COLOR_LABELS[key]);
-    const hex = document.createElement('span');
-    hex.className = 'token-hex';
-    hex.textContent = palette[key].toUpperCase();
-    button.append(swatch, label, hex);
-    button.addEventListener('click', () => {
-      activeToken = key;
-      tokenList.querySelectorAll('.token-item').forEach((item) => {
-        item.setAttribute('aria-selected', String(item === button));
-      });
-      renderEditor();
-    });
-    tokenList.append(button);
+  const dark = contrastRatio(base, '#ffffff') >=
+    contrastRatio(base, '#101318');
+  document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  $('themeState').textContent = dark ? 'DARK' : 'LIGHT';
+  $('colorSwatch').style.backgroundColor = base;
+  $('paletteHexLabel').textContent = base.toUpperCase();
+  $('hexColor').value = base.toUpperCase();
+  $('hexColor').setCustomValidity('');
+  $('nativeColor').value = base;
+  const values = channelsFromHex(base);
+  document.querySelectorAll('[data-channel]').forEach((node) => {
+    node.value = String(values[Number(node.dataset.channel)]);
+  });
+  document.querySelectorAll('[data-base-color]').forEach((button) => {
+    button.setAttribute('aria-pressed',
+      String(button.dataset.baseColor === base));
   });
 }
-
-function hexToRgb(hex) {
-  return [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
+function setColor(candidate) {
+  const value = normalizeColor(candidate);
+  if (!value) return false;
+  repo.setBaseColor(value);
+  return true;
 }
-function rgbToHex(values) {
-  return '#' + values.map((n) => Math.round(n).toString(16).padStart(2, '0')).join('');
-}
-function renderEditor() {
-  const color = repo.getPalette()[activeToken];
-  $('colorEditorTitle').textContent = t(COLOR_LABELS[activeToken]);
-  $('colorSwatch').style.backgroundColor = color;
-  $('hexColor').value = color.toUpperCase();
-  $('nativeColor').value = color;
-  const channels = hexToRgb(color);
-  document.querySelectorAll('[data-channel]').forEach((element) => {
-    const index = Number(element.dataset.channel);
-    element.value = String(channels[index]);
-    document.querySelector(`[data-output="${index}"]`).textContent = String(channels[index]);
-  });
-}
-
-function changeActiveColor(value) {
-  const color = normalizeColor(value);
-  if (color) {
-    repo.setPaletteToken(activeToken, color);
-    $('hexColor').setCustomValidity('');
-    return true;
-  }
-  return false;
-}
-
-function showPalette() {
-  if (!dialog.open) dialog.showModal();
-}
-function hidePalette() {
-  if (dialog.open) dialog.close();
-}
-
 function selectTab(name) {
   document.querySelectorAll('[data-tab]').forEach((button) => {
     const selected = button.dataset.tab === name;
     button.setAttribute('aria-selected', String(selected));
     button.tabIndex = selected ? 0 : -1;
   });
-  document.querySelectorAll('[data-view]').forEach((view) => {
-    view.hidden = view.dataset.view !== name;
+  document.querySelectorAll('[data-view]').forEach((panel) => {
+    panel.hidden = panel.dataset.view !== name;
   });
 }
-
-// UI events: the unimplemented plugin actions are deliberately disabled.
+function showPalette() {
+  if (!dialog.open) dialog.showModal();
+}
+function hidePalette() {
+  if (dialog.open) dialog.close();
+}
 $('languageSelect').addEventListener('change', (e) => repo.setLanguage(e.target.value));
 $('settingsLanguage').addEventListener('change', (e) => repo.setLanguage(e.target.value));
 $('openPalette').addEventListener('click', showPalette);
 $('settingsPalette').addEventListener('click', showPalette);
 $('closePalette').addEventListener('click', hidePalette);
 $('donePalette').addEventListener('click', hidePalette);
-$('hexColor').addEventListener('change', (event) => {
-  if (!changeActiveColor(event.target.value)) {
-    event.target.setCustomValidity('Use #RRGGBB');
-    event.target.reportValidity();
+$('hexColor').addEventListener('change', (e) => {
+  if (!setColor(e.target.value)) {
+    e.target.setCustomValidity('Use #RRGGBB');
+    e.target.reportValidity();
   }
 });
-$('nativeColor').addEventListener('input', (event) => changeActiveColor(event.target.value));
-document.querySelectorAll('[data-channel]').forEach((range) => {
-  range.addEventListener('input', (event) => {
-    const channels = hexToRgb(repo.getPalette()[activeToken]);
-    channels[Number(event.target.dataset.channel)] = Number(event.target.value);
-    changeActiveColor(rgbToHex(channels));
+$('nativeColor').addEventListener('input', (e) => setColor(e.target.value));
+document.querySelectorAll('[data-channel]').forEach((field) => {
+  field.addEventListener('change', () => {
+    const channels = channelsFromHex(repo.getBaseColor());
+    const n = Number(field.value);
+    if (!Number.isInteger(n) || n < 0 || n > 255) {
+      syncPalette();
+      return;
+    }
+    channels[Number(field.dataset.channel)] = n;
+    setColor(hexFromChannels(channels));
   });
 });
-document.querySelectorAll('[data-preset]').forEach((button) => {
-  button.addEventListener('click', () => repo.replacePalette(PALETTE_PRESETS[button.dataset.preset]));
-});
-$('resetPalette').addEventListener('click', () => {
-  if (window.confirm(t('resetConfirm'))) repo.resetPalette();
+document.querySelectorAll('[data-base-color]').forEach((button) => {
+  button.addEventListener('click', () => setColor(button.dataset.baseColor));
 });
 $('explorerToggle').addEventListener('click', (event) => {
   const open = event.currentTarget.getAttribute('aria-expanded') !== 'true';
@@ -169,7 +121,7 @@ $('pluginSearch').addEventListener('input', (event) => {
 document.querySelectorAll('[data-tab]').forEach((button) => {
   button.addEventListener('click', () => selectTab(button.dataset.tab));
   button.addEventListener('keydown', (event) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     const tabs = [...document.querySelectorAll('[data-tab]')];
     const offset = event.key === 'ArrowRight' ? 1 : -1;
     const next = tabs[(tabs.indexOf(button) + offset + tabs.length) % tabs.length];
@@ -179,7 +131,7 @@ document.querySelectorAll('[data-tab]').forEach((button) => {
   });
 });
 
-repo.subscribe(({ type }) => {
+repo.subscribe(({type}) => {
   if (type === 'language' || type === 'sync') syncLanguage();
   if (type === 'palette' || type === 'sync') syncPalette();
 });
@@ -187,6 +139,5 @@ syncLanguage();
 syncPalette();
 selectTab('settings');
 
-// Reserved for the Host's Router/PRMU integration. This phase intentionally
-// does not implement cross-plugin calls or make a plugin-installer claim.
+// Future plugin integration goes through Router -> PRMU, not direct DOM access.
 export const hostPublicProperties = repo;

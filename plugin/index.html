@@ -31,13 +31,12 @@
         <div class="explorer-footer"><span class="status-dot muted"></span><span data-i18n="statusNotLoaded">尚未裝載</span></div>
       </aside>
       <main class="main-content" id="mainContent">
-        <div class="main-heading"><div class="page-identity"><div class="identity-icon">◇</div><div><div class="eyebrow">CLUSTER / PLUGIN</div><h1 data-i18n="brand">插件管理器</h1></div></div><span class="release-mark">FOUNDATION 0.1</span></div>
         <div class="tabs" role="tablist" aria-label="Plugin sections">
-          <button type="button" role="tab" data-tab="settings" aria-selected="true" data-i18n="pluginSettings">插件設定</button>
-          <button type="button" role="tab" data-tab="apis" aria-selected="false" data-i18n="apiList">API 列表</button>
-          <button type="button" role="tab" data-tab="logs" aria-selected="false" data-i18n="logList">LOG 列表</button>
-          <button type="button" role="tab" data-tab="router" aria-selected="false" data-i18n="routerStatus">Router 狀態表</button>
-          <button type="button" role="tab" data-tab="community" aria-selected="false" data-i18n="community">社群</button>
+          <button type="button" role="tab" data-tab="settings" aria-selected="true"><span class="tab-icon" aria-hidden="true">⚙</span><span data-i18n="pluginSettings">插件設定</span></button>
+          <button type="button" role="tab" data-tab="apis" aria-selected="false"><span class="tab-icon" aria-hidden="true">⌘</span><span data-i18n="apiList">API 列表</span></button>
+          <button type="button" role="tab" data-tab="logs" aria-selected="false"><span class="tab-icon" aria-hidden="true">≡</span><span data-i18n="logList">LOG 列表</span></button>
+          <button type="button" role="tab" data-tab="router" aria-selected="false"><span class="tab-icon" aria-hidden="true">⌁</span><span data-i18n="routerStatus">Router 狀態表</span></button>
+          <button type="button" role="tab" data-tab="community" aria-selected="false"><span class="tab-icon" aria-hidden="true">▣</span><span data-i18n="community">社群</span></button>
         </div>
         <div class="tab-workspace">
           <section class="tab-view" role="tabpanel" data-view="settings">
@@ -64,12 +63,45 @@
   </div>
 
   <dialog id="paletteDialog" class="palette-dialog" aria-labelledby="paletteTitle">
-    <div class="palette-titlebar"><div><small>PUBLIC / UI.PALETTE</small><h2 id="paletteTitle" data-i18n="palette">介面調色盤</h2></div><button id="closePalette" class="icon-button" type="button" data-i18n-title="paletteClose" aria-label="Close palette">×</button></div>
-    <div class="palette-content"><p class="palette-help" data-i18n="paletteHint">使用 RGB 分量調整介面色彩；變更會即時套用並保存。</p>
-      <div class="presets"><button type="button" data-preset="cluster" data-i18n="presetDefault">Cluster 預設</button><button type="button" data-preset="midnight" data-i18n="presetMidnight">深藍</button><button type="button" data-preset="graphite" data-i18n="presetGraphite">石墨</button></div>
-      <div class="palette-layout"><div id="tokenList" class="token-list" role="listbox" aria-label="Color tokens"></div><div class="color-editor"><strong id="colorEditorTitle">Accent</strong><div id="colorSwatch" class="color-swatch"></div><div class="hex-line"><label for="hexColor">HEX</label><input id="hexColor" type="text" maxlength="7" pattern="#[a-fA-F0-9]{6}" spellcheck="false"><input id="nativeColor" type="color" aria-label="Select color"></div><div class="channel-list"><label>R <input data-channel="0" type="range" min="0" max="255"><output data-output="0">0</output></label><label>G <input data-channel="1" type="range" min="0" max="255"><output data-output="1">0</output></label><label>B <input data-channel="2" type="range" min="0" max="255"><output data-output="2">0</output></label></div></div></div>
+    <div class="palette-titlebar">
+      <div><small>CLUSTER / APPEARANCE</small><h2 id="paletteTitle" data-i18n="palette">介面調色盤</h2></div>
+      <button id="closePalette" class="icon-button" type="button" data-i18n-title="paletteClose" aria-label="Close palette">×</button>
     </div>
-    <div class="palette-footer"><button type="button" id="resetPalette" data-i18n="resetPalette">還原預設</button><button type="button" id="donePalette" class="primary-button">OK</button></div>
+    <div class="palette-content">
+      <div class="palette-ui-preview" aria-label="UI preview">
+        <div class="palette-ui-preview-bar"><strong><span class="diamond-mini">◇</span> CLUSTER</strong><small>UI PREVIEW</small></div>
+        <div class="palette-ui-preview-body">
+          <div class="palette-ui-preview-rail"></div>
+          <div class="palette-ui-preview-lines"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <div class="palette-base-heading">
+        <strong data-i18n="standardColor">介面色系 RGB</strong>
+        <span id="paletteHexLabel">#000000</span>
+      </div>
+      <div class="palette-base-row">
+        <label for="nativeColor" class="palette-swatch-wrapper" data-i18n-title="standardColor" title="Color">
+          <span id="colorSwatch" class="palette-color-swatch"></span>
+          <input type="color" id="nativeColor" aria-label="Choose global interface color">
+        </label>
+        <p data-i18n="paletteOneHint">選擇單一顏色即可調整整體介面，文字對比自動處理。</p>
+      </div>
+      <div class="palette-hex-row"><label for="hexColor">HEX</label><input id="hexColor" type="text" maxlength="7" spellcheck="false" inputmode="text" aria-label="RGB hex value"></div>
+      <div class="rgb-fields">
+        <label>R<input data-channel="0" type="number" min="0" max="255" step="1" inputmode="numeric"></label>
+        <label>G<input data-channel="1" type="number" min="0" max="255" step="1" inputmode="numeric"></label>
+        <label>B<input data-channel="2" type="number" min="0" max="255" step="1" inputmode="numeric"></label>
+      </div>
+      <div class="palette-base-heading palette-style-row">
+        <strong data-i18n="contrastAutomatic">字體對比自動調整</strong>
+        <span id="themeState">DARK</span>
+      </div>
+      <div class="palette-endpoints">
+        <button type="button" data-base-color="#000000" data-i18n="presetBlack">黑色端點</button>
+        <button type="button" data-base-color="#ffffff" data-i18n="presetWhite">白色端點</button>
+      </div>
+    </div>
+    <div class="palette-footer"><small data-i18n="paletteSaved">設定會自動儲存</small><button type="button" id="donePalette" class="primary-button" data-i18n="paletteDone">完成</button></div>
   </dialog>
 </body>
 </html>

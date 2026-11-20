@@ -53,3 +53,11 @@ Events include `language`, `palette`, and `sync`. Invalid values are rejected,
 and local browser storage failures degrade gracefully. When Router and PRMU are
 introduced, these operations should be surfaced as request/response APIs rather
 than direct cross-plugin access.
+
+## Foundation 0.2 — Global RGB and compact layout
+
+- One UI base RGB derives all eleven standard color tokens, including automatic readable text/muted/accent contrasts.
+- ClusterOpt-style 405px palette modal: preview, swatch, HEX, R/G/B fields, black/white endpoints and auto-save.
+- Compact icon tabs appear immediately below the Host toolbar; the redundant Plugin Manager title section is removed.
+- The six-language public setting remains available; earlier browser palette state is migrated at initialization.
+- Plugin installation, Router and PRMU remain out of scope. CSS tokens continue to be published from the browser-local public property store.

@@ -54,6 +54,92 @@ export function normalizeColor(value) {
     : '#' + raw;
 }
 
+
+function colorChannels(hex) {
+  return [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16));
+}
+function channelsHex(values) {
+  return '#' + values.map((value) =>
+    Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0')).join('');
+}
+function blendColor(from, to, amount) {
+  const a = colorChannels(from);
+  const b = colorChannels(to);
+  return channelsHex(a.map((value, index) => value + (b[index] - value) * amount));
+}
+function luminance(hex) {
+  const values = colorChannels(hex).map((value) => {
+    const channel = value / 255;
+    return channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return values[0] * 0.2126 + values[1] * 0.7152 + values[2] * 0.0722;
+}
+export function contrastRatio(first, second) {
+  const a = luminance(normalizeColor(first) ?? '#000000');
+  const b = luminance(normalizeColor(second) ?? '#000000');
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/**
+ * Derive every legacy UI token from one user-selected RGB base.
+ * The editor, toolbar and control surfaces stay within a readable range.
+ * Text and muted labels meet at least WCAG 4.5:1 on the standard surfaces.
+ */
+export function derivePalette(baseColor) {
+  const base = normalizeColor(baseColor);
+  if (!base) throw new TypeError('Invalid global base RGB color');
+  if (base === '#000000') return { ...DEFAULT_PALETTE };
+
+  const text = contrastRatio(base, '#ffffff') >=
+    contrastRatio(base, '#101318') ? '#ffffff' : '#101318';
+  const dark = text === '#ffffff';
+  const opposite = dark ? '#000000' : '#ffffff';
+  const shade = (up, down) => blendColor(
+    base, dark ? '#ffffff' : '#000000', dark ? up : down
+  );
+  const ensureReadable = (color, foreground = text, minimum = 4.5) => {
+    if (contrastRatio(color, foreground) >= minimum) return color;
+    for (let i = 1; i <= 100; i += 1) {
+      const candidate = blendColor(color, opposite, i / 100);
+      if (contrastRatio(candidate, foreground) >= minimum) return candidate;
+    }
+    return opposite;
+  };
+  const palette = {
+    background: base,
+    surface: ensureReadable(shade(0.13, 0.085)),
+    panel: ensureReadable(shade(0.065, 0.035)),
+    control: ensureReadable(shade(0.21, 0.13)),
+    hover: ensureReadable(shade(0.275, 0.17)),
+    border: shade(0.26, 0.23),
+    text,
+    muted: text,
+    accent: dark ? '#a7baff' : '#3453ad',
+    editor: ensureReadable(blendColor(base, dark ? '#000000' : '#ffffff', 0.025)),
+    gutter: ensureReadable(shade(0.04, 0.04)),
+  };
+  const surfaces = [
+    'background', 'surface', 'panel', 'control', 'hover', 'editor', 'gutter',
+  ];
+  // Make muted copy secondary in appearance without compromising readability.
+  let muted = blendColor(text, base, 0.19);
+  for (let i = 0; i < 100; i += 1) {
+    if (surfaces.every((key) => contrastRatio(muted, palette[key]) >= 4.5)) break;
+    muted = blendColor(muted, text, 0.10);
+  }
+  palette.muted = muted;
+  // Accent is also used for inline code and active controls.
+  let accent = palette.accent;
+  for (let i = 0; i < 100; i += 1) {
+    if (surfaces.every((key) => contrastRatio(accent, palette[key]) >= 4.5)) break;
+    accent = blendColor(accent, text, 0.10);
+  }
+  palette.accent = accent;
+  return palette;
+}
+
 export function validatePalette(palette) {
   if (!palette || typeof palette !== 'object' || Array.isArray(palette)) {
     throw new TypeError('Palette must be an object');
@@ -75,7 +161,7 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
     catch { store = null; /* Opaque-origin / sandboxed browser contexts. */ }
   }
   const listeners = new Set();
-  let state = { language: DEFAULT_LANGUAGE, palette: { ...DEFAULT_PALETTE } };
+  let state = { language: DEFAULT_LANGUAGE, baseColor: '#000000', palette: { ...DEFAULT_PALETTE } };
 
   function load() {
     if (!store) return;
@@ -88,6 +174,11 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
             COLOR_KEYS.includes(key) && normalizeColor(value))
         );
         state.palette = validatePalette(allowed);
+        state.baseColor = state.palette.background;
+      }
+      if (normalizeColor(raw.baseColor)) {
+        state.baseColor = normalizeColor(raw.baseColor);
+        state.palette = derivePalette(state.baseColor);
       }
     } catch { /* Damaged browser storage falls back to defaults. */ }
   }
@@ -105,6 +196,17 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
   function getSnapshot() { return clone(state); }
   function getLanguage() { return state.language; }
   function getPalette() { return { ...state.palette }; }
+  function getBaseColor() { return state.baseColor; }
+
+  function setBaseColor(color) {
+    const normalized = normalizeColor(color);
+    if (!normalized) throw new TypeError('Invalid base RGB color');
+    if (normalized === state.baseColor &&
+        JSON.stringify(state.palette) === JSON.stringify(derivePalette(normalized))) return;
+    state.baseColor = normalized;
+    state.palette = derivePalette(normalized);
+    save(); emit('palette');
+  }
 
   function setLanguage(language) {
     if (!LANGUAGE_CODES.has(language)) throw new RangeError(`Unsupported language: ${language}`);
@@ -127,7 +229,7 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
     save(); emit('palette');
   }
 
-  function resetPalette() { replacePalette(DEFAULT_PALETTE); }
+  function resetPalette() { setBaseColor('#000000'); }
 
   function subscribe(fn) {
     if (typeof fn !== 'function') throw new TypeError('Listener must be a function');
@@ -144,8 +246,8 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
   eventTarget?.addEventListener('storage', syncFromStorage);
 
   return Object.freeze({
-    getSnapshot, getLanguage, getPalette, setLanguage,
-    setPaletteToken, replacePalette, resetPalette, subscribe,
+    getSnapshot, getLanguage, getPalette, getBaseColor, setLanguage,
+    setBaseColor, setPaletteToken, replacePalette, resetPalette, subscribe,
     destroy() { listeners.clear(); eventTarget?.removeEventListener('storage', syncFromStorage); },
   });
 }
