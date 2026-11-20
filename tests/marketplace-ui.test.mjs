@@ -53,3 +53,13 @@ test("Explorer provides Open/Stop/Remove icons, without page-level launcher", ()
   assert.doesNotMatch(html, /id="pluginStandalone"/);
   assert.doesNotMatch(code, /\$\('pluginStandalone'\)/);
 });
+
+test("plugin UI tolerates missing cached Host placeholders and records exact IDs", () => {
+  const code = readFileSync(new URL("../src/plugin/app.js", import.meta.url), "utf8");
+  assert.match(code, /function setHostHidden\(id, hidden\)/);
+  assert.match(code, /setHostHidden\('pluginPageEmpty', Boolean\(canOpen\)\)/);
+  assert.match(code, /setHostHidden\('pluginSettingsHost', isCore\)/);
+  assert.match(code, /code: 'HOST_DOM_MISMATCH'/);
+  assert.match(code, /elementId: id/);
+  assert.match(code, /stack: String\(error\?\.stack/);
+});
