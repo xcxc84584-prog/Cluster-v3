@@ -146,7 +146,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     const host = document.createElement("div");
     host.className = "plugin-main-host";
     host.dataset.pluginId = pluginId;
-    host.hidden = true;
+    host.dataset.inactive = "true";
+    host.hidden = false;
     const iframe = document.createElement("iframe");
     iframe.className = "plugin-main-frame";
     iframe.sandbox = "allow-scripts allow-forms";
@@ -251,7 +252,10 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     return installFiles(files);
   }
   function show(pluginId) {
-    for (const [id, state] of frames) state.host.hidden = id !== pluginId;
+    for (const [id, state] of frames) {
+      state.host.hidden = false;
+      state.host.dataset.inactive = String(id !== pluginId);
+    }
   }
   function attachSettings(pluginId) {
     settingsFrame.dataset.pluginId = pluginId;

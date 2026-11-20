@@ -81,7 +81,14 @@ function selectTab(name) {
     button.tabIndex = selected ? 0 : -1;
   });
   document.querySelectorAll('[data-view]').forEach((panel) => {
-    panel.hidden = panel.dataset.view !== name;
+    const inactive = panel.dataset.view !== name;
+    if (panel.dataset.view === 'page') {
+      // Keep iframe runtimes executing even when the tab is not selected.
+      panel.hidden = false;
+      panel.classList.toggle('plugin-page-inactive', inactive);
+    } else {
+      panel.hidden = inactive;
+    }
   });
 }
 function showPalette() {

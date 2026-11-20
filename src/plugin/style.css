@@ -262,3 +262,15 @@ body.standalone-mode .statusbar{display:none!important}
 body.standalone-mode .tab-workspace{overflow:hidden}
 body.standalone-mode .plugin-page-view{height:100%;display:block}
 body.standalone-mode .workspace-shell{height:100vh}
+
+/* Offscreen, live Runtime containers: never display:none on an active frame. */
+.tab-view.plugin-page-inactive{
+  display:block!important;position:fixed!important;left:-100000px!important;
+  top:0;width:360px!important;height:260px!important;
+  visibility:hidden;pointer-events:none;overflow:hidden
+}
+.plugin-main-host[data-inactive="true"]{
+  position:absolute!important;left:-100000px!important;top:0;
+  width:360px!important;height:260px!important;visibility:hidden;
+  pointer-events:none;overflow:hidden
+}

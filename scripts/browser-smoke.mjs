@@ -144,6 +144,9 @@ try {
     "example plugin installation");
   await until("Boolean(document.querySelector('.plugin-main-frame')?.src)",
     "installed iframe");
+  await until("window.__clusterFrameEvents?.some(e=>"+
+    "e.data?.method === 'Router.register')",
+    "iframe registered Router action");
   await evaluate("document.querySelector('[data-tab=apis]').click()");
   await until("document.querySelector('#apiTableBody')?.textContent.includes('demo.echo')",
     "plugin runtime contract registration");
