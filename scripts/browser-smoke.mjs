@@ -173,6 +173,10 @@ try {
   await until("window.__clusterFrameEvents?.some(e=>"+
     "e.data?.method === 'Router.register')",
     "iframe registered Router action");
+  const requester = await evaluate(
+    "window.__clusterFrameEvents.find(e=>e.data?.method==='Router.register')?.origin");
+  assert(requester === "null",
+    "Plugin iframe must have opaque origin after CSP sandbox: "+requester);
   await evaluate("document.querySelector('[data-tab=apis]').click()");
   await until("document.querySelector('#apiTableBody')?.textContent.includes('demo.echo')",
     "plugin runtime contract registration");

@@ -150,7 +150,9 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     host.hidden = false;
     const iframe = document.createElement("iframe");
     iframe.className = "plugin-main-frame";
-    iframe.sandbox = "allow-scripts allow-forms";
+    // Initial navigation must share Host origin so SW can serve the asset.
+    // The response CSP sandbox directive removes same-origin privileges.
+    iframe.sandbox = "allow-scripts allow-forms allow-same-origin";
     iframe.referrerPolicy = "no-referrer";
     iframe.title = manifest.name;
     host.append(iframe);

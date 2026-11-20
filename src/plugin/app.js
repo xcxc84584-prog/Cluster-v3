@@ -555,7 +555,8 @@ function updateCommunityCards() {
         !browserManager.isLoaded(record.id)) continue;
     const frame = document.createElement('iframe');
     frame.className = 'community-card-frame';
-    frame.sandbox = 'allow-scripts allow-forms';
+    // CSP on the virtual page imposes opaque origin after SW navigation.
+    frame.sandbox = 'allow-scripts allow-forms allow-same-origin';
     frame.referrerPolicy = 'no-referrer';
     frame.title = record.manifest.name;
     frame.dataset.communityPlugin = record.id;
