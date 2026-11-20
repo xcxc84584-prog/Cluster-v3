@@ -49,6 +49,7 @@ async function freePort() {
   return port;
 }
 const pending = new Map();
+const browserErrors = [];
 try {
   await new Promise(resolve=>http.listen(0,"127.0.0.1",resolve));
   const hostURL="http://127.0.0.1:"+http.address().port+"/Cluster-v3/plugin/";
@@ -84,6 +85,11 @@ try {
   let serial=0;
   socket.onmessage=event=>{
     const message=JSON.parse(event.data);
+    if (message.method === "Runtime.exceptionThrown" ||
+        message.method === "Log.entryAdded" ||
+        message.method === "Runtime.consoleAPICalled") {
+      browserErrors.push(message);
+    }
     const waiting=pending.get(message.id);
     if(!waiting)return;
     pending.delete(message.id);
@@ -118,11 +124,13 @@ try {
         "asset:(await fetch('/Cluster-v3/__cluster_plugins/example.hello/index.html'))" +
         ".status,logs:document.querySelector('#logList')?.textContent?.slice(-1300)}))()");
       console.error("Browser diagnostic:", JSON.stringify(diagnosis));
+      console.error("Chrome console/errors:", JSON.stringify(browserErrors).slice(-15000));
     } catch (error) { console.error("Diagnostic failed:", error.message); }
     throw Error("Timeout waiting for "+label);
   }
   await send("Page.enable");
   await send("Runtime.enable");
+  await send("Log.enable");
   await send("Page.navigate",{url:hostURL});
   await until("Boolean(document.querySelector('#installExample'))","Host UI");
   await evaluate("document.querySelector('#installExample').click()");
