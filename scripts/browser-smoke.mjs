@@ -4,6 +4,7 @@ import { readFile, mkdtemp, rm, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve, extname } from "node:path";
 import { spawn } from "node:child_process";
+import { createServer as createTCPServer } from "node:net";
 
 const root = resolve(import.meta.dirname, "..");
 const mime = {".html":"text/html",".js":"text/javascript",".css":"text/css",
@@ -39,22 +40,40 @@ async function chromePath() {
 }
 const profile = await mkdtemp(join(tmpdir(),"cluster-v3-chrome-"));
 let browser, socket, debugPort;
+let stderrText = "";
+async function freePort() {
+  const server = createTCPServer();
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  const port = server.address().port;
+  await new Promise(resolve => server.close(resolve));
+  return port;
+}
 const pending = new Map();
 try {
   await new Promise(resolve=>http.listen(0,"127.0.0.1",resolve));
   const hostURL="http://127.0.0.1:"+http.address().port+"/Cluster-v3/plugin/";
+  debugPort = await freePort();
   browser=spawn(await chromePath(),[
     "--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
     "--no-first-run","--no-default-browser-check",
-    "--remote-debugging-port=0","--user-data-dir="+profile,"about:blank"
+    "--remote-debugging-port="+debugPort,"--user-data-dir="+profile,"about:blank"
   ],{stdio:["ignore","ignore","pipe"]});
   browser.stderr.on("data",chunk=>{
+    stderrText = (stderrText + String(chunk)).slice(-8000);
     const found=String(chunk).match(/DevTools listening on ws:\/\/[^:]+:(\d+)\//);
     if(found) debugPort=Number(found[1]);
   });
-  for(let i=0;i<120&&!debugPort;i++) await sleep(100);
-  assert(debugPort,"Chrome debugging port missing");
-  const targets=await(await fetch("http://127.0.0.1:"+debugPort+"/json/list")).json();
+  let targets = null;
+  for (let i=0; i<120; i++) {
+    if (browser.exitCode !== null) break;
+    try {
+      const response = await fetch("http://127.0.0.1:"+
+        debugPort+"/json/list");
+      if (response.ok) { targets = await response.json(); break; }
+    } catch {/* Chrome not yet listening */}
+    await sleep(100);
+  }
+  assert(targets, "Chrome remote debugger unavailable; stderr: "+stderrText);
   const page=targets.find(target=>target.type==="page");
   assert(page?.webSocketDebuggerUrl,"Chrome page target missing");
   socket=new WebSocket(page.webSocketDebuggerUrl);
