@@ -1,6 +1,7 @@
 /** Cluster-v3 standalone plugin kernel. Host-only management, autonomous plugins. */
 import { API_CATALOG, queryCatalog } from "./api-catalog.js";
 import { createPublicRepository } from "./public-repository.js";
+import { createElogStore } from "./elog-store.js";
 
 const copy = value => value === undefined ? undefined : structuredClone(value);
 const id = prefix => prefix + "-" + globalThis.crypto.randomUUID();
@@ -19,7 +20,7 @@ const result = (data, status = 200) => ({ ok: status >= 200 && status < 300, sta
 const fail = error => ({ ok: false, status: error.status || 500,
   data: null, error: { code: error.code || "INTERNAL_ERROR", message: error.message } });
 
-export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0" } = {}) {
+export function createPluginKernel({ storage, publicRepo, elogStore, systemVersion = "0.1.0" } = {}) {
   const repo = publicRepo || createPublicRepository({ storage });
   const plugins = new Map();
   const registry = new Map();
@@ -27,7 +28,18 @@ export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0
   const relations = [];
   const recent = [];
   const persistent = [];
+  const pluginLogs = new Map();
+  const durableLog = elogStore || createElogStore();
+  const ready = durableLog.load().then(entries => {
+    const known = new Set(persistent.map(item => item.id));
+    for (const entry of entries) {
+      if (!known.has(entry.id)) persistent.push(entry);
+    }
+    persistent.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    return persistent.length;
+  }).catch(() => 0);
   const listeners = new Map();
+  const registryListeners = new Map();
   let sequence = 0;
 
   function record(type, entry = {}) {
@@ -43,7 +55,21 @@ export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0
     });
     recent.push(item);
     if (recent.length > 2000) recent.shift();
-    if (type === "elog") persistent.push(item);
+    if (type === "elog") {
+      persistent.push(item);
+      void durableLog.append(item).catch(() => {
+        // Browser quota/storage failures cannot erase the in-memory record.
+        // A production archival backend is needed for guaranteed retention.
+      });
+    }
+    for (const pluginId of new Set([item.source, item.target])) {
+      if (!plugins.has(pluginId)) continue;
+      if (!pluginLogs.has(pluginId)) pluginLogs.set(pluginId, { log: [], elog: [] });
+      const local = pluginLogs.get(pluginId);
+      local.log.push(item);
+      if (local.log.length > 2000) local.log.shift();
+      if (type === "elog") local.elog.push(item);
+    }
     for (const cb of listeners.values()) cb(copy(item));
     return copy(item);
   }
@@ -72,10 +98,18 @@ export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0
     if (entry.owner !== pluginId && !entry.sharedWrite)
       throw new ClusterError(403, "OWNER_ONLY", key);
     entry.value = copy(value); entry.revision++;
+    for (const listener of registryListeners.values()) {
+      if (listener.key === key || listener.key === "*") listener.callback(copy(entry.value));
+    }
     return result(copy(entry.value));
   }
   function makePRMU(pluginId) {
     const subscriptions = new Map();
+    function emitRegistry(key, value) {
+      for (const listener of registryListeners.values()) {
+        if (listener.key === key || listener.key === "*") listener.callback(copy(value));
+      }
+    }
     return Object.freeze({
       get: (source, item) => result(publicEntry(pluginId, source, item)),
       set: (source, item, value) => publicSet(pluginId, source, item, value),
@@ -89,16 +123,18 @@ export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0
         registry.set(key, { owner: pluginId, value: copy(definition.value),
           sharedWrite: definition.sharedWrite === true,
           persistent: definition.persistent === true, revision: 1 });
+        emitRegistry(key, definition.value);
         return result({ key }, 201);
       },
       unregister(source, item) {
         const key = source + "." + item, entry = registry.get(key);
         if (entry?.owner !== pluginId) throw new ClusterError(403, "OWNER_ONLY", key);
-        registry.delete(key); return result(true);
+        registry.delete(key); emitRegistry(key, undefined); return result(true);
       },
       subscribe(source, item, callback) {
         const key = id("sub");
-        const un = repo.subscribe(({ type, snapshot }) => {
+        const un = source === "properties" || source === "ui" ?
+          repo.subscribe(({ type, snapshot }) => {
           if ((source === "properties" && item === "system.language" && type === "language") ||
               (source === "ui" && type === "palette")) callback(copy(snapshot));
         });
@@ -184,8 +220,20 @@ export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0
     const prmu = makePRMU(pluginId), router = makeRouter(pluginId);
     router.register("router.handshake", () => ({ pluginId, protocol: "cluster.router.v1" }));
     const instance = { id: pluginId, manifest: copy(manifest), PRMU: prmu,
-      Router: router, state: "active" };
+      Router: router, state: "active", ready: null };
+    const existing = [...plugins.keys()];
     plugins.set(pluginId, instance);
+    // A new router sends a req and receives a correlated rep from every
+    // registered target. Failures are preserved in ELog by Router.request().
+    instance.ready = Promise.all(existing.map(target =>
+      router.probe(target).then(reply => {
+        if (!reply.ok) record("elog", {
+          source: pluginId, target, action: "router.initialize",
+          status: reply.status, error: reply.error
+        });
+        return reply;
+      })));
+
     record("log", { source: "PMU", target: pluginId, action: "plugin.load" });
     return instance;
   }
@@ -206,6 +254,8 @@ export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0
     catalog: API_CATALOG, queryCatalog,
     log: record,
     logs: (type = "log") => copy(type === "elog" ? persistent : recent),
+    ready,
+    pluginLogs: pluginId => copy(pluginLogs.get(pluginId) || { log: [], elog: [] }),
     inspect: pluginId => ({ id: pluginId, loaded: plugins.has(pluginId),
       relations: relations.filter(x => x.source === pluginId || x.target === pluginId).map(copy) }),
     dispose() { for (const key of [...plugins.keys()]) unload(key); if (!publicRepo) repo.destroy(); }
