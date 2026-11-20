@@ -587,7 +587,7 @@
       "description": "Read plugin metadata",
       "signature": "source:string,item:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {
@@ -647,7 +647,7 @@
       "description": "List installed plugins",
       "signature": "options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {
@@ -698,7 +698,7 @@
       "description": "Install a package",
       "signature": "source:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "host-only",
       "request": {
         "type": "object",
         "properties": {
@@ -754,7 +754,7 @@
       "description": "Remove a plugin",
       "signature": "pluginId:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "host-only",
       "request": {
         "type": "object",
         "properties": {
@@ -810,7 +810,7 @@
       "description": "Start a plugin runtime",
       "signature": "pluginId:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "host-only",
       "request": {
         "type": "object",
         "properties": {
@@ -866,7 +866,7 @@
       "description": "Stop a plugin runtime",
       "signature": "pluginId:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "host-only",
       "request": {
         "type": "object",
         "properties": {
@@ -2168,7 +2168,7 @@
       "description": "Mount plugin web app",
       "signature": "target:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "host-only",
       "request": {
         "type": "object",
         "properties": {
@@ -2224,7 +2224,7 @@
       "description": "Unmount plugin web app",
       "signature": "target:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "host-only",
       "request": {
         "type": "object",
         "properties": {
@@ -2506,7 +2506,7 @@
       "description": "List contracts",
       "signature": "source:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {

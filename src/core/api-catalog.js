@@ -62,7 +62,12 @@ const groups = {
   ]
 };
 export const API_CATALOG_VERSION = "1.0.0";
+const hostOnly = new Set([
+  "PMU.install", "PMU.uninstall", "PMU.load", "PMU.unload",
+  "Runtime.mount", "Runtime.unmount"
+]);
 const implemented = new Set([
+  "PMU.get", "PMU.list", "Contract.list",
   "PRMU.get", "PRMU.set", "PRMU.list", "PRMU.register",
   "PRMU.unregister", "PRMU.subscribe", "PRMU.unsubscribe",
   "PRMU.describe", "PRMU.snapshot", "PRMU.batch",
@@ -91,7 +96,8 @@ export const API_CATALOG = Object.freeze(Object.entries(groups).flatMap(([unit, 
     id: unit + "." + method,
     unit, method, type, description, signature,
     version: API_CATALOG_VERSION,
-    implementation: implemented.has(unit + "." + method) ? "initial" : "planned",
+    implementation: hostOnly.has(unit + "." + method) ? "host-only" :
+      implemented.has(unit + "." + method) ? "initial" : "planned",
     request: requestSchema(signature),
     response: { type: "object", required: ["ok", "status"], properties: {
       ok: { type: "boolean" }, status: { type: "integer" },
