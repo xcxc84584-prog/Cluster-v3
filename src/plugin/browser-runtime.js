@@ -11,18 +11,20 @@ function errorResult(error) {
     error: { code: error.code || "RUNTIME_ERROR", message: error.message } };
 }
 export function createBrowserPluginManager({ kernel, pagesRoot,
-  settingsFrame, getContext, onChange, onFailure }) {
-  const store = createPackageStore();
+  settingsFrame, getContext, onChange, onFailure,
+  packageStore = null, registerServiceWorker = null }) {
+  const store = packageStore || createPackageStore();
   const installed = new Map();
   const frames = new Map();
   const pending = new Map();
-  const bridgeEvents = new Map();
+  let disposed = false;
   const scopeURL = new URL("../../", import.meta.url);
   const assetURL = (id, file) => new URL(
     "__cluster_plugins/" + encodeURIComponent(id) + "/" +
     file.split("/").map(encodeURIComponent).join("/"), scopeURL).href;
 
   async function serviceWorkerReady() {
+    if (registerServiceWorker) return registerServiceWorker();
     if (!("serviceWorker" in navigator) ||
         !["https:", "http:"].includes(location.protocol)) {
       throw new Error("Plugin pages require a secure HTTP(S) origin and Service Worker");
@@ -69,14 +71,21 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     const pluginId = frameOwner(event.source);
     if (!pluginId) return;
     const message = event.data;
-    if (!message || message.protocol !== PROTOCOL) return;
+    if (disposed || !message || message.protocol !== PROTOCOL) return;
     if (message.type === "invoke-result") {
       const item = pending.get(message.requestId);
       if (!item || item.pluginId !== pluginId) return;
       clearTimeout(item.timer);
       pending.delete(message.requestId);
       if (message.ok) item.resolve(message.data);
-      else item.reject(new Error(message.error?.message || "Plugin service rejected"));
+      else {
+        const error = new Error(message.error?.message || "Plugin service rejected");
+        error.code = message.error?.code || "PLUGIN_REJECTED";
+        error.location = message.error?.location || {
+          module: "plugin-frame", action: message.action || "unknown"
+        };
+        item.reject(error);
+      }
       return;
     }
     if (message.type === "hello") {
@@ -96,7 +105,10 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     } catch (error) {
       const failure = errorResult(error);
       kernel.log("elog", { source: pluginId, target: "cluster.pmu",
-        action: message.method, status: failure.status, error: failure.error });
+        action: message.method, status: failure.status, error: failure.error,
+        location: error.location || { module: "host-bridge.js",
+          function: "dispatchPluginCall", method: message.method },
+        details: { requestId: message.requestId } });
       post(event.source, { type: "response",
         requestId: message.requestId, ...failure });
     }
@@ -110,16 +122,19 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       if (item.enabled) {
         try { await load(item.id, false); }
         catch (error) {
-          onFailure(error);
+          onFailure?.(error);
           kernel.log("elog", { source: "cluster.pmu",
             target: item.id, action: "plugin.restore",
-            status: 500, error: errorResult(error).error });
+            status: 500, error: errorResult(error).error,
+            location: { module: "browser-runtime.js",
+              function: "restore", pluginId: item.id } });
         }
       }
     }
     onChange();
   })();
   async function load(pluginId, save = true) {
+    if (disposed) throw new Error("Runtime disposed");
     if (frames.has(pluginId)) return kernel.getInstance(pluginId);
     const record = installed.get(pluginId);
     if (!record) throw new Error("Plugin not installed: " + pluginId);
@@ -175,6 +190,22 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     }
     onChange();
   }
+  async function reload(pluginId) {
+    if (!installed.has(pluginId)) throw new Error("Unknown plugin: " + pluginId);
+    if (frames.has(pluginId)) await unload(pluginId);
+    return load(pluginId);
+  }
+  async function configure(pluginId, values = {}) {
+    const record = installed.get(pluginId);
+    if (!record) throw new Error("Plugin not installed: " + pluginId);
+    const editable = ["enabled"];
+    for (const key of Object.keys(values)) {
+      if (!editable.includes(key)) throw new Error("Unsupported PMU config: " + key);
+    }
+    if (values.enabled === true) return load(pluginId);
+    if (values.enabled === false) return unload(pluginId);
+    return record;
+  }
   async function remove(pluginId) {
     if (pluginId === "cluster.pmu") throw new Error("Cannot remove PMU");
     await unload(pluginId);
@@ -186,8 +217,22 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     await ready;
     const { manifest, files } = validatePluginPackage(rawFiles);
     const id = manifest.id;
+    const previous = installed.get(id) || null;
     if (frames.has(id)) await unload(id);
-    await store.install(manifest, files);
+    try {
+      await store.install(manifest, files);
+    } catch (error) {
+      // Failed replacement must not leave an already-installed plugin disabled.
+      if (previous?.enabled) {
+        installed.set(id, previous);
+        await load(id).catch(recovery => {
+          kernel.log("elog", { source: "cluster.pmu", target: id,
+            action: "plugin.install.rollback", status: 500,
+            error: errorResult(recovery).error });
+        });
+      }
+      throw error;
+    }
     installed.set(id, { id, manifest, enabled: true });
     await load(id);
     onChange();
@@ -219,12 +264,13 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       sendContext(settingsFrame.dataset.pluginId, settingsFrame.contentWindow);
   }
   return Object.freeze({
-    ready, installZip, installFolder, installFiles, load, unload, remove,
-    show, attachSettings, syncContext, assetURL,
+    ready, installZip, installFolder, installFiles, load, unload, reload,
+    remove, configure, show, attachSettings, syncContext, assetURL,
     list: () => [...installed.values()].map(clone),
     get: id => clone(installed.get(id) || null),
     isLoaded: id => frames.has(id),
     dispose() {
+      disposed = true;
       window.removeEventListener("message", onMessage);
       for (const req of pending.values()) {
         clearTimeout(req.timer);

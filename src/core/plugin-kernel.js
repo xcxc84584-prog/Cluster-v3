@@ -40,7 +40,22 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     }
     persistent.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
     return persistent.length;
-  }).catch(() => 0);
+  }).catch(error => {
+    // ELog storage corruption/permission errors must never fail silently.
+    const item = Object.freeze({
+      id: id("log"), schemaVersion: "1.0.0", sequence: 0,
+      type: "elog", timestamp: now(), level: "error", status: 507,
+      source: "cluster.pmu", target: "ELog.Store",
+      action: "elog.restore", result: null,
+      error: { code: "ELOG_RESTORE_FAILED",
+        message: String(error?.message || error) },
+      location: { module: "elog-store.js", function: "load" },
+      note: "Persistent ELog unavailable; in-memory logging continues"
+    });
+    recent.push(item);
+    persistent.push(item);
+    return 0;
+  });
   const listeners = new Map();
   const registryListeners = new Map();
   let sequence = 0;
