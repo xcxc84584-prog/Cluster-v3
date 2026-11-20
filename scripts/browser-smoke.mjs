@@ -259,7 +259,13 @@ try {
     placeholder?.remove();
     document.querySelector('[data-tab=page]').click();
     const frame = document.querySelector('.plugin-main-frame');
-    return Boolean(frame?.srcdoc);
+    const loaded = Boolean(frame?.srcdoc);
+    // Restore the fixture for the existing overlay interaction check.
+    if (placeholder) {
+      placeholder.hidden = loaded;
+      document.querySelector('.plugin-page-view').prepend(placeholder);
+    }
+    return loaded;
   })()`);
   assert(safeMissingNode,
     "Missing Host placeholder must not prevent plugin iframe mounting");
