@@ -172,6 +172,8 @@ try {
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host initialization and Service Worker activation");
+  // Measure only after opening the community tab; hidden tabs have zero geometry.
+  await evaluate("document.querySelector('[data-tab=community]').click()");
   // Real browser geometry catches flex-wrap and vertical text regressions.
   const marketplaceLayout = await evaluate(`(() => {
     const card = document.querySelector('.community-card');
@@ -190,7 +192,8 @@ try {
   assert(marketplaceLayout.rows.every(row =>
     row.width > 65 && row.height < 55 &&
     row.writingMode === "horizontal-tb" && row.whiteSpace === "nowrap"),
-    "Marketplace buttons must stay horizontally readable");
+    "Marketplace buttons must stay horizontally readable: " +
+      JSON.stringify(marketplaceLayout));
   assert(await evaluate("document.querySelectorAll('.plugin-entry-wrapper').length") >= 1,
     "Explorer must include PMU row");
   await evaluate("document.querySelector('[data-tab=router]').click();"+
