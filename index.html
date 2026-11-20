@@ -1,5 +1,13 @@
 <!doctype html>
-<html lang="zh-TW">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cluster-v3</title><meta http-equiv="refresh" content="0;url=./plugin/"></head>
-<body><a href="./plugin/">Cluster-v3 Plugin Manager</a></body>
-</html>
+<html lang="zh-TW"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cluster-v3</title>
+<script>
+// Root path is the Cluster landing page. Preserve optional ?plugin=<id>.
+const url = new URL("./plugin/", location.href);
+const plugin = new URLSearchParams(location.search).get("plugin");
+if (plugin) url.searchParams.set("plugin", plugin);
+else url.searchParams.set("view", "home");
+location.replace(url.href);
+</script></head>
+<body><a href="./plugin/">Cluster-v3 Plugin Manager</a></body></html>

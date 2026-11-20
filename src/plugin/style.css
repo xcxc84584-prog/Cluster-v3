@@ -151,3 +151,126 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-l
 
 @media(max-width:850px){.explorer{width:205px;flex-basis:205px}.topbar{padding:0 11px;gap:8px}.main-heading{padding:0 18px}.tab-view{padding:20px 18px}.tabs{padding-left:8px}.tabs button{padding:0 10px}.release-mark{display:none}}
 @media(max-width:600px){.brand strong{font-size:17px}.toolbar-divider{display:none}.breadcrumb{display:none}.language-control>span{display:none}.language-control select{max-width:110px;font-size:11px}.toolbar-button{padding:8px}.toolbar-button span:last-child{display:none}.explorer{position:absolute;left:0;top:56px;bottom:32px;z-index:5;box-shadow:10px 0 28px #0009;width:min(270px,85vw);flex-basis:auto}.setting-row{align-items:flex-start;flex-direction:column;gap:12px;padding:17px}.section-heading{padding:17px}.section-intro{align-items:flex-start}.palette-dialog{inset:12px;margin:auto}.statusbar [data-i18n=footerVersion]{display:none}}
+
+/* Live contract inspector; colors derive from the shared palette. */
+.api-detail{margin:12px 18px 22px;border:1px solid var(--ui-border);
+  border-radius:7px;background:var(--ui-panel);overflow:hidden}
+.api-detail-header{display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;padding:11px;border-bottom:1px solid var(--ui-border)}
+.api-detail-header>div{display:flex;gap:8px}
+.api-detail button{padding:7px 10px;border:1px solid var(--ui-border);
+  background:var(--ui-control);border-radius:5px}
+.api-detail pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;
+  overflow:auto;padding:12px;margin:0;color:var(--ui-text)}
+.api-link{border:0;background:transparent;color:var(--ui-accent);
+  text-align:left;text-decoration:underline;text-underline-offset:3px}
+.diagnostic-list{overflow:auto;padding:12px;max-height:calc(100vh - 230px)}
+.diagnostic-row{padding:9px 12px;border-bottom:1px solid var(--ui-border);
+  white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;color:var(--ui-text)}
+
+/* Plugin Explorer: core management entry is permanent and visually consistent. */
+.plugin-entry{width:100%;padding:11px 13px;display:flex;align-items:center;
+  gap:10px;text-align:left;background:transparent;border:0;border-left:3px solid transparent;
+  color:var(--ui-text)}
+.plugin-entry:hover{background:var(--ui-hover)}
+.plugin-entry[aria-selected="true"]{border-left-color:var(--ui-accent);
+  background:var(--ui-control)}
+.plugin-glyph{font-size:20px;color:var(--ui-accent);width:24px;text-align:center}
+.plugin-entry-label{min-width:0;display:flex;flex-direction:column;gap:4px}
+.plugin-entry-label strong,.plugin-entry-label small{overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.plugin-entry-label small{font-size:10px;color:var(--ui-muted)}
+/* Plugins own their entire settings UI, but never the Host tab/window. */
+.settings-panel:has(.plugin-settings-host:not([hidden])){padding:0;overflow:hidden;height:100%}
+.plugin-settings-host{height:100%;width:100%;min-height:280px;overflow:hidden;
+  background:var(--ui-background)}
+.plugin-settings-frame{width:100%;height:100%;border:0;display:block}
+.plugin-settings-empty{height:100%;display:grid;place-items:center;
+  color:var(--ui-muted);padding:24px;text-align:center}
+.list-download{height:38px;flex:none;display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;white-space:nowrap;background:var(--ui-control);
+  color:var(--ui-text);border:1px solid var(--ui-border);border-radius:5px;padding:0 13px}
+.list-download:hover{background:var(--ui-hover);border-color:var(--ui-accent)}
+.list-download:focus-visible{outline:2px solid var(--ui-accent)}
+.list-meta{font:11px Consolas,monospace;color:var(--ui-muted);margin-bottom:9px}
+@media(max-width:680px){
+  .list-toolbar{flex-wrap:wrap}
+  .list-toolbar .api-search{min-width:100%;flex-basis:100%}
+  .list-toolbar select{min-width:0;flex:1}
+  .list-download{flex:1}
+}
+
+/* Installed plugin actions: same Host color tokens, never plugin-defined Host UI. */
+.plugin-entry-wrapper{display:flex;align-items:stretch;border-bottom:1px solid var(--ui-border)}
+.plugin-entry-wrapper .plugin-entry{min-width:0;flex:1}
+.plugin-entry-actions{display:flex;align-items:center;gap:4px;padding-right:7px}
+.plugin-action{padding:6px 7px;border:1px solid var(--ui-border);
+  border-radius:4px;background:var(--ui-control);color:var(--ui-muted);
+  font-size:10px;white-space:nowrap}
+.plugin-action:hover{background:var(--ui-hover);color:var(--ui-text)}
+.plugin-action:focus-visible{outline:2px solid var(--ui-accent)}
+.plugin-page-view{height:100%;padding:0;overflow:hidden;position:relative}
+.plugin-pages{width:100%;height:100%;min-height:0}
+.plugin-main-host{width:100%;height:100%;min-height:0}
+.plugin-main-host[hidden]{display:none}
+.plugin-main-frame{width:100%;height:100%;border:0;display:block}
+.plugin-page-view>.plugin-settings-empty{position:absolute;inset:0}
+.community-intro{max-width:850px;margin-bottom:22px}
+.community-intro small{font:10px Consolas,monospace;color:var(--ui-muted);
+  letter-spacing:1.4px}
+.community-intro h2{margin:7px 0 10px;font-size:20px}
+.community-intro p,.community-body p,.community-docs p{font-size:12px;
+  line-height:1.7;color:var(--ui-muted)}
+.community-card{display:flex;align-items:flex-start;gap:17px;max-width:850px;
+  padding:24px;background:var(--ui-panel);border:1px solid var(--ui-border);
+  border-radius:9px}
+.community-icon{width:50px;height:50px;display:grid;place-items:center;
+  flex:none;font-size:35px;border:1px solid var(--ui-border);
+  border-radius:9px;color:var(--ui-accent)}
+.community-body{flex:1;min-width:0}
+.community-body strong{font-size:15px}
+.community-body p{margin:10px 0 17px}
+.community-actions{display:flex;flex-wrap:wrap;gap:9px}
+.community-docs{max-width:850px;margin-top:16px;padding:22px;
+  border:1px solid var(--ui-border);border-radius:9px;background:var(--ui-panel)}
+.community-docs h3{font-size:14px;margin:0 0 10px}
+.community-docs a{display:inline-block;margin-top:12px;color:var(--ui-accent);
+  text-decoration:underline;text-underline-offset:3px}
+
+/* A plugin card owns the markup and styles; the Host owns its frame geometry. */
+.community-card-body{overflow:hidden}
+.community-self-card{padding:17px 21px;min-height:190px}
+.community-head{display:flex;align-items:center;gap:12px}
+.community-head .mark{font-size:28px}
+.community-head h2{font-size:18px;margin:4px 0}
+.community-self-card p{margin:12px 0;font-size:12px}
+.community-self-card button{padding:8px 13px}
+
+/* Host bounds all community-supplied card UI. No card may resize the Host. */
+.community-card-grid{display:grid;grid-template-columns:repeat(auto-fill,
+  minmax(min(300px,100%),1fr));gap:15px;max-width:1050px;margin-bottom:17px}
+.community-card-frame{display:block;width:100%;height:215px;min-height:0;
+  border:1px solid var(--ui-border);border-radius:9px;background:var(--ui-panel)}
+.standalone-launch{position:absolute;right:16px;top:13px;z-index:2;
+  background:var(--ui-control);color:var(--ui-text);
+  border:1px solid var(--ui-border);border-radius:6px;padding:7px 12px}
+.standalone-launch[hidden]{display:none}
+body.standalone-mode .topbar,
+body.standalone-mode .explorer,
+body.standalone-mode .tabs,
+body.standalone-mode .statusbar{display:none!important}
+body.standalone-mode .tab-workspace{overflow:hidden}
+body.standalone-mode .plugin-page-view{height:100%;display:block}
+body.standalone-mode .workspace-shell{height:100vh}
+
+/* Offscreen, live Runtime containers: never display:none on an active frame. */
+.tab-view.plugin-page-inactive{
+  display:block!important;position:fixed!important;left:-100000px!important;
+  top:0;width:360px!important;height:260px!important;
+  visibility:hidden;pointer-events:none;overflow:hidden
+}
+.plugin-main-host[data-inactive="true"]{
+  position:absolute!important;left:-100000px!important;top:0;
+  width:360px!important;height:260px!important;visibility:hidden;
+  pointer-events:none;overflow:hidden
+}

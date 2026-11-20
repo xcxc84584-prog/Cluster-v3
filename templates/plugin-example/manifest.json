@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "example.hello",
+  "name": "Hello Cluster",
+  "version": "1.0.0",
+  "description": "Standard autonomous web plugin demonstrating PRMU, Router and PMU.Log.",
+  "entry": "index.html",
+  "settings": "settings.html",
+  "apiVersion": "1.0.0",
+  "community": "community.html",
+  "ui": {
+    "mode": "both",
+    "home": true
+  }
+}

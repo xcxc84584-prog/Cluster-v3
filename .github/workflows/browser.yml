@@ -1,0 +1,16 @@
+name: Cluster-v3 browser smoke
+on:
+  push:
+    branches: [main, feat/plugin-core-api-v1]
+  pull_request:
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Chrome browser integration
+        run: npm run browser:smoke

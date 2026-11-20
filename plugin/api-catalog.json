@@ -1,0 +1,2719 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedFrom": "src/core/api-catalog.js",
+  "apiCount": 48,
+  "apis": [
+    {
+      "id": "PRMU.get",
+      "unit": "PRMU",
+      "method": "get",
+      "type": "read",
+      "description": "Read a public value",
+      "signature": "source:string,item:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.set",
+      "unit": "PRMU",
+      "method": "set",
+      "type": "write",
+      "description": "Update a writable public value",
+      "signature": "source:string,item:string,value:any,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "value": {},
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source",
+          "item",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.list",
+      "unit": "PRMU",
+      "method": "list",
+      "type": "read",
+      "description": "Enumerate public entries",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.register",
+      "unit": "PRMU",
+      "method": "register",
+      "type": "write",
+      "description": "Register owned public data",
+      "signature": "source:string,definition:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source",
+          "definition"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.unregister",
+      "unit": "PRMU",
+      "method": "unregister",
+      "type": "write",
+      "description": "Remove an owned registration",
+      "signature": "source:string,item:string",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.subscribe",
+      "unit": "PRMU",
+      "method": "subscribe",
+      "type": "execute",
+      "description": "Observe changes",
+      "signature": "source:string,item:string,callback:function",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "callback": {
+            "type": "string",
+            "description": "Runtime callback registration; not JSON-serializable"
+          }
+        },
+        "required": [
+          "source",
+          "item",
+          "callback"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.unsubscribe",
+      "unit": "PRMU",
+      "method": "unsubscribe",
+      "type": "execute",
+      "description": "Remove an observer",
+      "signature": "subscriptionId:string",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscriptionId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.describe",
+      "unit": "PRMU",
+      "method": "describe",
+      "type": "read",
+      "description": "Read entry metadata",
+      "signature": "source:string,item:string",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.snapshot",
+      "unit": "PRMU",
+      "method": "snapshot",
+      "type": "read",
+      "description": "Read a consistent repository snapshot",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.batch",
+      "unit": "PRMU",
+      "method": "batch",
+      "type": "write",
+      "description": "Run a validated batch",
+      "signature": "operations:array,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "operations": {
+            "type": "array"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "operations"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.get",
+      "unit": "PMU",
+      "method": "get",
+      "type": "read",
+      "description": "Read plugin metadata",
+      "signature": "source:string,item:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.list",
+      "unit": "PMU",
+      "method": "list",
+      "type": "read",
+      "description": "List installed plugins",
+      "signature": "options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.install",
+      "unit": "PMU",
+      "method": "install",
+      "type": "execute",
+      "description": "Install a package",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "host-only",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.uninstall",
+      "unit": "PMU",
+      "method": "uninstall",
+      "type": "execute",
+      "description": "Remove a plugin",
+      "signature": "pluginId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "host-only",
+      "request": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.load",
+      "unit": "PMU",
+      "method": "load",
+      "type": "execute",
+      "description": "Start a plugin runtime",
+      "signature": "pluginId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "host-only",
+      "request": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.unload",
+      "unit": "PMU",
+      "method": "unload",
+      "type": "execute",
+      "description": "Stop a plugin runtime",
+      "signature": "pluginId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "host-only",
+      "request": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.reload",
+      "unit": "PMU",
+      "method": "reload",
+      "type": "execute",
+      "description": "Restart a plugin runtime",
+      "signature": "pluginId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.configure",
+      "unit": "PMU",
+      "method": "configure",
+      "type": "write",
+      "description": "Configure a plugin",
+      "signature": "pluginId:string,config:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "pluginId",
+          "config"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PMU.inspect",
+      "unit": "PMU",
+      "method": "inspect",
+      "type": "read",
+      "description": "Inspect plugin runtime units",
+      "signature": "pluginId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.request",
+      "unit": "Router",
+      "method": "request",
+      "type": "execute",
+      "description": "Send a correlated request",
+      "signature": "target:string,action:string,payload:any,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "payload": {},
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "target",
+          "action",
+          "payload"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.respond",
+      "unit": "Router",
+      "method": "respond",
+      "type": "execute",
+      "description": "Reply to pending request",
+      "signature": "requestId:string,result:any,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "result": {},
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "requestId",
+          "result"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.register",
+      "unit": "Router",
+      "method": "register",
+      "type": "write",
+      "description": "Register action handler",
+      "signature": "action:string,handler:function,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "handler": {
+            "type": "string",
+            "description": "Runtime callback registration; not JSON-serializable"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "action",
+          "handler"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.unregister",
+      "unit": "Router",
+      "method": "unregister",
+      "type": "write",
+      "description": "Unregister owned handler",
+      "signature": "action:string",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.get",
+      "unit": "Router",
+      "method": "get",
+      "type": "read",
+      "description": "Read router metadata",
+      "signature": "source:string,item:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.list",
+      "unit": "Router",
+      "method": "list",
+      "type": "read",
+      "description": "Enumerate dependency events",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.subscribe",
+      "unit": "Router",
+      "method": "subscribe",
+      "type": "execute",
+      "description": "Observe router events",
+      "signature": "source:string,callback:function",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "callback": {
+            "type": "string",
+            "description": "Runtime callback registration; not JSON-serializable"
+          }
+        },
+        "required": [
+          "source",
+          "callback"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.unsubscribe",
+      "unit": "Router",
+      "method": "unsubscribe",
+      "type": "execute",
+      "description": "Remove router observer",
+      "signature": "subscriptionId:string",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscriptionId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.probe",
+      "unit": "Router",
+      "method": "probe",
+      "type": "execute",
+      "description": "Handshake with a target",
+      "signature": "target:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Router.trace",
+      "unit": "Router",
+      "method": "trace",
+      "type": "read",
+      "description": "Read correlated events",
+      "signature": "traceId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "traceId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.log",
+      "unit": "Log",
+      "method": "log",
+      "type": "write",
+      "description": "Append log or permanent elog",
+      "signature": "type:string,entry:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "entry": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "entry"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logs",
+      "unit": "Log",
+      "method": "logs",
+      "type": "read",
+      "description": "Query recorded events",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logGet",
+      "unit": "Log",
+      "method": "logGet",
+      "type": "read",
+      "description": "Read one event",
+      "signature": "logId:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "logId": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "logId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logStats",
+      "unit": "Log",
+      "method": "logStats",
+      "type": "read",
+      "description": "Summarize status counts",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logSubscribe",
+      "unit": "Log",
+      "method": "logSubscribe",
+      "type": "execute",
+      "description": "Observe new entries",
+      "signature": "filter:object,callback:function",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "object"
+          },
+          "callback": {
+            "type": "string",
+            "description": "Runtime callback registration; not JSON-serializable"
+          }
+        },
+        "required": [
+          "filter",
+          "callback"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logUnsubscribe",
+      "unit": "Log",
+      "method": "logUnsubscribe",
+      "type": "execute",
+      "description": "Remove log observer",
+      "signature": "subscriptionId:string",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscriptionId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logExport",
+      "unit": "Log",
+      "method": "logExport",
+      "type": "read",
+      "description": "Export JSON or JSONL",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Log.logVerify",
+      "unit": "Log",
+      "method": "logVerify",
+      "type": "read",
+      "description": "Inspect recorded event integrity",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Runtime.get",
+      "unit": "Runtime",
+      "method": "get",
+      "type": "read",
+      "description": "Read runtime state",
+      "signature": "item:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Runtime.mount",
+      "unit": "Runtime",
+      "method": "mount",
+      "type": "execute",
+      "description": "Mount plugin web app",
+      "signature": "target:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "host-only",
+      "request": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Runtime.unmount",
+      "unit": "Runtime",
+      "method": "unmount",
+      "type": "execute",
+      "description": "Unmount plugin web app",
+      "signature": "target:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "host-only",
+      "request": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Runtime.emit",
+      "unit": "Runtime",
+      "method": "emit",
+      "type": "execute",
+      "description": "Emit runtime event",
+      "signature": "event:string,data:any",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "string"
+          },
+          "data": {}
+        },
+        "required": [
+          "event",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Runtime.subscribe",
+      "unit": "Runtime",
+      "method": "subscribe",
+      "type": "execute",
+      "description": "Observe runtime event",
+      "signature": "event:string,handler:function",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "string"
+          },
+          "handler": {
+            "type": "string",
+            "description": "Runtime callback registration; not JSON-serializable"
+          }
+        },
+        "required": [
+          "event",
+          "handler"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Runtime.unsubscribe",
+      "unit": "Runtime",
+      "method": "unsubscribe",
+      "type": "execute",
+      "description": "Remove runtime observer",
+      "signature": "subscriptionId:string",
+      "version": "1.0.0",
+      "implementation": "planned",
+      "request": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscriptionId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Contract.get",
+      "unit": "Contract",
+      "method": "get",
+      "type": "read",
+      "description": "Read contract definition",
+      "signature": "source:string,item:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Contract.list",
+      "unit": "Contract",
+      "method": "list",
+      "type": "read",
+      "description": "List contracts",
+      "signature": "source:string,options?:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Contract.register",
+      "unit": "Contract",
+      "method": "register",
+      "type": "write",
+      "description": "Publish a service schema",
+      "signature": "definition:object",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "definition": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "definition"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Contract.unregister",
+      "unit": "Contract",
+      "method": "unregister",
+      "type": "write",
+      "description": "Remove owned schema",
+      "signature": "contractId:string",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "contractId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "contractId"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "Contract.validate",
+      "unit": "Contract",
+      "method": "validate",
+      "type": "execute",
+      "description": "Validate payload against contract",
+      "signature": "contractId:string,payload:any",
+      "version": "1.0.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "contractId": {
+            "type": "string"
+          },
+          "payload": {}
+        },
+        "required": [
+          "contractId",
+          "payload"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    }
+  ]
+}

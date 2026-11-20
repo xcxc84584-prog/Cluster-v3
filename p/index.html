@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-TW"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cluster-v3 Plugin</title>
+<script>
+const url = new URL("../plugin/", location.href);
+for (const [key,value] of new URLSearchParams(location.search))
+  url.searchParams.set(key,value);
+location.replace(url.href);
+</script></head>
+<body><a href="../plugin/">Cluster-v3 Plugin</a></body></html>

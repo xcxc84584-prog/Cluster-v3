@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hello Cluster · Settings</title>
+  <link rel="stylesheet" href="./styles/main.css">
+  <script defer src="./scripts/cluster-client.js"></script>
+  <script defer src="./scripts/settings.js"></script>
+</head>
+<body>
+  <main class="content">
+    <header class="heading"><span class="mark">⚙</span><div>
+      <small>PLUGIN OWNED SETTINGS</small>
+      <h1 id="settingsHeading">範例插件設定</h1>
+    </div></header>
+    <p id="settingsHint">此介面由插件自行設計；不會修改 Host DOM。</p>
+    <div class="setting">
+      <label id="languageLabel" for="language">公共語言</label>
+      <select id="language"><option value="zh-TW">繁體中文</option>
+        <option value="en">English</option><option value="fr">Français</option>
+        <option value="ja">日本語</option><option value="es">Español</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+    </div>
+    <div class="setting">
+      <label id="colorLabel" for="color">全域介面色彩基準</label>
+      <input id="color" type="color" value="#000000">
+    </div>
+    <pre id="settingsOutput" aria-live="polite"></pre>
+  </main>
+</body>
+</html>
