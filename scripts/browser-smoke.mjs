@@ -120,9 +120,10 @@ try {
         "pluginCount:document.querySelector('#pluginCount')?.textContent," +
         "api:document.querySelector('#apiTableBody')?.textContent?.slice(0,300)," +
         "frame:document.querySelector('.plugin-main-frame')?.src," +
+        "frameEvents:(window.__clusterFrameEvents||[]).slice(-12)," +
         "controlled:Boolean(navigator.serviceWorker.controller)," +
         "asset:(await fetch('/Cluster-v3/__cluster_plugins/example.hello/index.html'))" +
-        ".status,logs:document.querySelector('#logList')?.textContent?.slice(-1300)}))()");
+        ".status,script:(await fetch('/Cluster-v3/__cluster_plugins/example.hello/scripts/app.js')).status,logs:document.querySelector('#logList')?.textContent?.slice(-1300)}))()");
       console.error("Browser diagnostic:", JSON.stringify(diagnosis));
       console.error("Chrome console/errors:", JSON.stringify(browserErrors).slice(-15000));
     } catch (error) { console.error("Diagnostic failed:", error.message); }
@@ -133,6 +134,8 @@ try {
   await send("Log.enable");
   await send("Page.navigate",{url:hostURL});
   await until("Boolean(document.querySelector('#installExample'))","Host UI");
+  await evaluate("window.__clusterFrameEvents=[];window.addEventListener('message',"+ 
+    "e=>window.__clusterFrameEvents.push({origin:e.origin,data:e.data}));");
   await evaluate("document.querySelector('#installExample').click()");
   await until("document.querySelector('#pluginCount')?.textContent === '02'",
     "example plugin installation");
