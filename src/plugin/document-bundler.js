@@ -1,8 +1,8 @@
 /**
- * Assemble local plugin assets into an opaque-origin iframe document.
- * Chrome does not route subresource loads through the Host SW after CSP
- * changes a document to an opaque origin. Inline local JS/CSS/images as
- * data URLs instead. This preserves plugin isolation without allow-same-origin.
+ * Assemble local plugin assets into an iframe document.
+ * Inline local JS/CSS/images as data URLs for reliable loading even when
+ * plugin assets are virtual files supplied by the Host service worker.
+ * The iframe is intentionally unsandboxed and shares the Host origin.
  */
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const encoder = new TextEncoder();
@@ -54,7 +54,7 @@ function compileSource(path, files, stack = new Set()) {
   const nextStack = new Set([...stack, path]);
   let js = decoder.decode(binary(files[path]));
   // Static local imports are rewritten recursively; external imports stay
-  // unmodified and remain subject to the sandbox/CORS restrictions.
+  // unmodified and remain subject to browser CORS restrictions.
   js = js.replace(/(from\s*|import\s*)(['"])(\.{1,2}\/[^'"]+)\2/g,
     (match, keyword, quote, specifier) => {
       const name = relativePath(specifier, path);
@@ -92,8 +92,8 @@ export function buildPluginDocument(files, path) {
     const ref = relativePath(item.getAttribute(key), path);
     if (ref && files[ref]) item.setAttribute(key, dataURL(ref, files[ref]));
   }
-  // Drop author-defined CSP meta entries; Host owns the iframe sandbox.
-  // Plugin scripts still operate independently within the opaque origin.
+  // Remove plugin CSP meta entries to retain Host packaging compatibility.
+  // CAUTION: the resulting frame runs with the Host origin.
   for (const item of doc.querySelectorAll(
       'meta[http-equiv="Content-Security-Policy" i]')) item.remove();
   return "<!doctype html>\n" + doc.documentElement.outerHTML;

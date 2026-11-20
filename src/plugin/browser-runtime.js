@@ -1,4 +1,4 @@
-/** Browser loader: package -> IndexedDB -> service-worker URL -> sandbox. */
+/** Browser loader: package -> IndexedDB -> service-worker URL -> plugin iframe. */
 import { validatePluginPackage, readZip, createZip } from "./package-format.js";
 import { createPackageStore } from "./package-store.js";
 import { dispatchPluginCall } from "./host-bridge.js";
@@ -170,8 +170,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     host.hidden = false;
     const iframe = document.createElement("iframe");
     iframe.className = "plugin-main-frame";
-    // All local files are embedded; opaque-origin sandbox remains enforced.
-    iframe.sandbox = "allow-scripts allow-forms";
+    // Unrestricted iframe: inherits Host origin for srcdoc-based plugins.
+    // WARNING: installed plugin code can access Host DOM and origin storage.
     iframe.referrerPolicy = "no-referrer";
     iframe.title = manifest.name;
     host.append(iframe);

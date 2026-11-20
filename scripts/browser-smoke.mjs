@@ -274,14 +274,14 @@ try {
     "iframe registered Router action");
   const requester = await evaluate(
     "window.__clusterFrameEvents.find(e=>e.data?.method==='Router.register')?.origin");
-  assert(requester === "null",
-    "Plugin iframe must have opaque origin after CSP sandbox: "+requester);
+  assert(requester === new URL(hostURL).origin,
+    "Unsandboxed srcdoc plugin should inherit Host origin: "+requester);
   await until("Boolean(document.querySelector('[data-community-plugin=\"example.hello\"]')?.srcdoc)",
     "plugin-provided community card");
   const communitySandbox = await evaluate(
     "document.querySelector('[data-community-plugin=\"example.hello\"]')?.getAttribute('sandbox')");
-  assert(communitySandbox === "allow-scripts allow-forms",
-    "Community card must be opaque and container bounded");
+  assert(communitySandbox === null,
+    "Community plugin iframe must not specify sandbox");
   const uniqueCards = await evaluate(
     "[...document.querySelectorAll('.community-card')].filter(" +
     "x=>x.dataset.communityId==='example.hello').length");
@@ -337,9 +337,9 @@ try {
     "standalone plugin iframe");
   const isolated=await evaluate(
     "document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')");
-  assert(isolated === "allow-scripts allow-forms",
-    "srcdoc iframe must exclude same-origin privilege");
-  console.log("Chrome E2E PASS: install, API contract, standalone restore, CSP");
+  assert(isolated === null,
+    "Standalone plugin iframe must not specify sandbox");
+  console.log("Chrome E2E PASS: install, API contract, standalone restore, no sandbox");
 } finally {
   socket?.close();
   browser?.kill("SIGKILL");
