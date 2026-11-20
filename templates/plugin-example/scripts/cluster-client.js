@@ -6,7 +6,12 @@
   const handlers = new Map();
   const contextListeners = new Set();
   let context = null;
-  const id = () => crypto.randomUUID();
+  // Sandboxed opaque-origin iframes may not expose crypto.randomUUID().
+  // getRandomValues remains available and preserves strong request IDs.
+  const id = () => {
+    const values = crypto.getRandomValues(new Uint8Array(16));
+    return [...values].map(byte => byte.toString(16).padStart(2, "0")).join("");
+  };
   function applyContext(value) {
     context = value;
     document.documentElement.lang = value.language || "zh-TW";
