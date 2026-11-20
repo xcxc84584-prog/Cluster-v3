@@ -129,14 +129,16 @@ export function derivePalette(baseColor) {
     if (surfaces.every((key) => contrastRatio(muted, palette[key]) >= 4.5)) break;
     muted = blendColor(muted, text, 0.10);
   }
-  palette.muted = muted;
+  palette.muted = surfaces.every((key) =>
+    contrastRatio(muted, palette[key]) >= 4.5) ? muted : text;
   // Accent is also used for inline code and active controls.
   let accent = palette.accent;
   for (let i = 0; i < 100; i += 1) {
     if (surfaces.every((key) => contrastRatio(accent, palette[key]) >= 4.5)) break;
     accent = blendColor(accent, text, 0.10);
   }
-  palette.accent = accent;
+  palette.accent = surfaces.every((key) =>
+    contrastRatio(accent, palette[key]) >= 4.5) ? accent : text;
   return palette;
 }
 
