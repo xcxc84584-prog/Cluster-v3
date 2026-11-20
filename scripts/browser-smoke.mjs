@@ -222,6 +222,34 @@ try {
   await evaluate("document.querySelector('.community-install-button').click()");
   await until("document.querySelector('#pluginCount')?.textContent === '02'",
     "example plugin installation");
+  const openAction = await evaluate(`(() => {
+    const row = document.querySelector('[data-plugin-id="example.hello"]')
+      ?.closest('.plugin-entry-wrapper');
+    const actions = [...(row?.querySelectorAll('.plugin-action') || [])];
+    return { symbols: actions.map(button => button.textContent),
+      accessible: actions.every(button => Boolean(button.getAttribute('aria-label'))) };
+  })()`);
+  assert(JSON.stringify(openAction.symbols) === JSON.stringify(['↗','■','×']) &&
+    openAction.accessible,
+    "Explorer installed plugin must have accessible Open/Stop/Remove icons: " +
+      JSON.stringify(openAction));
+  const launchedUrl = await evaluate(`(async () => {
+    let launched = "";
+    const previous = window.open;
+    window.open = () => ({ location: { replace: url => { launched = url; } },
+      close: () => {} });
+    try {
+      document.querySelector('[data-plugin-id="example.hello"]')
+        .closest('.plugin-entry-wrapper')
+        .querySelector('.plugin-open-action').click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      return launched;
+    } finally { window.open = previous; }
+  })()`);
+  assert(launchedUrl.includes('/Cluster-v3/?plugin=example.hello'),
+    "Explorer Open button must launch correct plugin standalone site: " +
+      launchedUrl);
+
   await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
     "installed iframe");
   const overlayCheck = await evaluate(`(() => {
