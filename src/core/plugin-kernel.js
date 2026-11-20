@@ -1,3 +1,4 @@
+import { SYSTEM_MANIFEST } from "./system-manifest.js";
 /** Cluster-v3 standalone plugin kernel. Host-only management, autonomous plugins. */
 import { API_CATALOG, queryCatalog } from "./api-catalog.js";
 import { createPublicRepository } from "./public-repository.js";
@@ -20,7 +21,7 @@ const result = (data, status = 200) => ({ ok: status >= 200 && status < 300, sta
 const fail = error => ({ ok: false, status: error.status || 500,
   data: null, error: { code: error.code || "INTERNAL_ERROR", message: error.message } });
 
-export function createPluginKernel({ storage, publicRepo, elogStore, systemVersion = "0.1.0" } = {}) {
+export function createPluginKernel({ storage, publicRepo, elogStore, systemVersion = SYSTEM_MANIFEST.version } = {}) {
   const repo = publicRepo || createPublicRepository({ storage });
   const plugins = new Map();
   const registry = new Map();

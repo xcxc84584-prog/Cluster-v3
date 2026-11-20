@@ -1,3 +1,4 @@
+import { SYSTEM_MANIFEST } from "../core/system-manifest.js";
 import { createPluginKernel } from '../core/plugin-kernel.js';
 import { API_CATALOG, queryCatalog, catalogJSON } from '../core/api-catalog.js';
 /** Cluster-v3 Host UI: one RGB base color with legible derived surfaces. */
@@ -146,7 +147,7 @@ export const hostPublicProperties = repo;
 
 
 /** API list and diagnostic views are driven by executable core metadata. */
-const kernel = createPluginKernel({ publicRepo: repo, systemVersion: "0.1.0" });
+const kernel = createPluginKernel({ publicRepo: repo, systemVersion: SYSTEM_MANIFEST.version });
 let apiPageNumber = 1;
 let selectedAPI = null;
 
