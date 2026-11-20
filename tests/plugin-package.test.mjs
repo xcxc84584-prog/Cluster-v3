@@ -44,5 +44,6 @@ test("tampered ZIP CRC is rejected", async () => {
     marker.every((value,j) => archive[i+j] === value));
   assert.ok(at > 0);
   archive[at] ^= 1;
-  await assert.rejects(readZip(archive), /CRC/);
+  await assert.rejects(readZip(archive), error =>
+    error.code === "ZIP_CRC_MISMATCH");
 });
