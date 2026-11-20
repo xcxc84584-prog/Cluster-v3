@@ -1,0 +1,92 @@
+/** API catalog is the discoverable contract, not a hard-coded UI-only list. */
+const groups = {
+  PRMU: [
+    ["get","read","Read a public value","source:string,item:string,options?:object"],
+    ["set","write","Update a writable public value","source:string,item:string,value:any,options?:object"],
+    ["list","read","Enumerate public entries","source:string,options?:object"],
+    ["register","write","Register owned public data","source:string,definition:object"],
+    ["unregister","write","Remove an owned registration","source:string,item:string"],
+    ["subscribe","execute","Observe changes","source:string,item:string,callback:function"],
+    ["unsubscribe","execute","Remove an observer","subscriptionId:string"],
+    ["describe","read","Read entry metadata","source:string,item:string"],
+    ["snapshot","read","Read a consistent repository snapshot","source:string,options?:object"],
+    ["batch","write","Run a validated batch","operations:array,options?:object"]
+  ],
+  PMU: [
+    ["get","read","Read plugin metadata","source:string,item:string,options?:object"],
+    ["list","read","List installed plugins","options?:object"],
+    ["install","execute","Install a package","source:string,options?:object"],
+    ["uninstall","execute","Remove a plugin","pluginId:string,options?:object"],
+    ["load","execute","Start a plugin runtime","pluginId:string,options?:object"],
+    ["unload","execute","Stop a plugin runtime","pluginId:string,options?:object"],
+    ["reload","execute","Restart a plugin runtime","pluginId:string,options?:object"],
+    ["configure","write","Configure a plugin","pluginId:string,config:object"],
+    ["inspect","read","Inspect plugin runtime units","pluginId:string,options?:object"]
+  ],
+  Router: [
+    ["request","execute","Send a correlated request","target:string,action:string,payload:any,options?:object"],
+    ["respond","execute","Reply to pending request","requestId:string,result:any,options?:object"],
+    ["register","write","Register action handler","action:string,handler:function,options?:object"],
+    ["unregister","write","Unregister owned handler","action:string"],
+    ["get","read","Read router metadata","source:string,item:string,options?:object"],
+    ["list","read","Enumerate dependency events","source:string,options?:object"],
+    ["subscribe","execute","Observe router events","source:string,callback:function"],
+    ["unsubscribe","execute","Remove router observer","subscriptionId:string"],
+    ["probe","execute","Handshake with a target","target:string,options?:object"],
+    ["trace","read","Read correlated events","traceId:string,options?:object"]
+  ],
+  Log: [
+    ["log","write","Append log or permanent elog","type:string,entry:object"],
+    ["logs","read","Query recorded events","source:string,options?:object"],
+    ["logGet","read","Read one event","logId:string,options?:object"],
+    ["logStats","read","Summarize status counts","source:string,options?:object"],
+    ["logSubscribe","execute","Observe new entries","filter:object,callback:function"],
+    ["logUnsubscribe","execute","Remove log observer","subscriptionId:string"],
+    ["logExport","read","Export JSON or JSONL","source:string,options?:object"],
+    ["logVerify","read","Inspect recorded event integrity","source:string,options?:object"]
+  ],
+  Runtime: [
+    ["get","read","Read runtime state","item:string,options?:object"],
+    ["mount","execute","Mount plugin web app","target:string,options?:object"],
+    ["unmount","execute","Unmount plugin web app","target:string,options?:object"],
+    ["emit","execute","Emit runtime event","event:string,data:any"],
+    ["subscribe","execute","Observe runtime event","event:string,handler:function"],
+    ["unsubscribe","execute","Remove runtime observer","subscriptionId:string"]
+  ],
+  Contract: [
+    ["get","read","Read contract definition","source:string,item:string,options?:object"],
+    ["list","read","List contracts","source:string,options?:object"],
+    ["register","write","Publish a service schema","definition:object"],
+    ["unregister","write","Remove owned schema","contractId:string"],
+    ["validate","execute","Validate payload against contract","contractId:string,payload:any"]
+  ]
+};
+export const API_CATALOG_VERSION = "1.0.0";
+export const API_CATALOG = Object.freeze(Object.entries(groups).flatMap(([unit, entries]) =>
+  entries.map(([method, type, description, signature]) => Object.freeze({
+    id: unit + "." + method,
+    unit, method, type, description, signature,
+    version: API_CATALOG_VERSION,
+    request: { type: "object", required: signature.split(",").filter(x => !x.includes("?")).map(x => x.split(":")[0]) },
+    response: { type: "object", required: ["ok", "status"], properties: {
+      ok: { type: "boolean" }, status: { type: "integer" },
+      data: {}, error: { type: ["object", "null"] }
+    }},
+    errors: [400, 403, 404, 408, 409, 500, 503]
+  }))
+));
+export const catalogJSON = () => JSON.stringify({
+  schemaVersion: API_CATALOG_VERSION, generatedFrom: "src/core/api-catalog.js",
+  apiCount: API_CATALOG.length, apis: API_CATALOG
+}, null, 2);
+export function queryCatalog({ search = "", type = "all", page = 1, pageSize = 20 } = {}) {
+  const term = String(search).trim().toLowerCase();
+  const matched = API_CATALOG.filter(api =>
+    (type === "all" || api.type === type) &&
+    (!term || [api.id, api.description, api.signature].some(s => s.toLowerCase().includes(term))));
+  const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
+  const pages = Math.max(1, Math.ceil(matched.length / size));
+  const current = Math.max(1, Math.min(pages, Number(page) || 1));
+  return { entries: matched.slice((current - 1) * size, current * size),
+    total: matched.length, page: current, pages, pageSize: size };
+}
