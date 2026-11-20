@@ -377,3 +377,106 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
  .community-toolbar select{flex:1;max-width:none}}
 @media(max-width:420px){.community-header h2{font-size:19px}
  .community-default-info h3{font-size:17px}}
+
+
+/* Compact VS Code-style Explorer: one line per plugin, no bulky cards. */
+.explorer-list{display:flex;flex-direction:column;gap:0;padding:5px 4px}
+.plugin-entry-wrapper{
+  display:flex;flex-direction:row;align-items:center;gap:2px;
+  min-width:0;height:32px;min-height:32px;border:0;border-radius:5px;
+  padding:0 4px;background:transparent;box-shadow:none;
+}
+.plugin-entry-wrapper:hover,.plugin-entry-wrapper:focus-within{
+  border:0;background:var(--ui-hover);box-shadow:none;
+}
+.plugin-entry{display:flex;align-items:center;gap:8px;flex:1;min-width:0;
+  height:32px;padding:0 5px!important;border:0!important;border-radius:4px;
+  background:transparent!important;text-align:left;color:var(--ui-text)}
+.plugin-entry[aria-current="true"]{background:var(--ui-control)!important}
+.plugin-entry:hover{background:transparent!important}
+.plugin-glyph{display:grid;place-items:center;flex:none;width:19px;height:22px;
+  border:0;border-radius:0;background:none;font-size:17px;line-height:1;
+  color:var(--ui-accent)}
+.plugin-entry-label{flex:1;min-width:0;display:block;overflow:hidden}
+.plugin-entry-name{display:block;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-size:12px;font-weight:500}
+.plugin-led{width:5px;height:5px;border-radius:50%;background:var(--ui-muted);
+  opacity:.45;flex:none}
+.plugin-led[data-running="true"]{background:var(--ui-accent);opacity:.9}
+.plugin-entry-actions{display:flex;align-items:center;justify-content:flex-end;
+  flex:none;gap:1px;border:0;padding:0;background:none;
+  visibility:hidden;opacity:0;pointer-events:none}
+.plugin-entry-wrapper:hover .plugin-entry-actions,
+.plugin-entry-wrapper:focus-within .plugin-entry-actions{
+  visibility:visible;opacity:1;pointer-events:auto}
+.plugin-action{display:grid;place-items:center;flex:none;width:25px;height:25px;
+  min-height:25px;padding:0;border:0;border-radius:5px;background:none;
+  color:var(--ui-muted);font:15px/1 system-ui,sans-serif;cursor:pointer}
+.plugin-action:hover{color:var(--ui-text);background:var(--ui-control)}
+.plugin-action:focus-visible{outline:2px solid var(--ui-accent);outline-offset:-2px}
+@media (hover:none){
+  .plugin-entry-actions{visibility:visible;opacity:1;pointer-events:auto}
+  .plugin-action{width:28px;height:28px}
+}
+/* Refresh is a compact utility command; never a generic big button. */
+.router-toolbar{display:flex;align-items:center;gap:10px}
+.router-toolbar>strong{font-size:12px;font-weight:600}
+.router-refresh{display:inline-flex;align-items:center;gap:8px;
+  margin-left:auto;padding:0 12px;min-height:34px;
+  border:1px solid var(--ui-border);border-radius:7px;
+  background:var(--ui-control);color:var(--ui-text);
+  white-space:nowrap;font-size:12px;font-weight:500}
+.router-refresh:hover{border-color:var(--ui-accent);background:var(--ui-hover)}
+.router-refresh svg{width:16px;height:16px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.router-refresh.is-refreshing svg{animation:router-refresh-spin .35s ease-out}
+@keyframes router-refresh-spin{to{transform:rotate(180deg)}}
+@media(prefers-reduced-motion:reduce){
+  .router-refresh.is-refreshing svg{animation:none}
+}
+/* Marketplace cards use the former Explorer information hierarchy.
+   Explicit stretch+grid fixes inherited align-items and vertical text. */
+.community-card-grid{display:grid;grid-template-columns:repeat(auto-fill,
+  minmax(min(320px,100%),1fr));gap:13px}
+.community-card{display:flex;flex-direction:column;align-items:stretch;
+  gap:0;min-width:0;min-height:190px;padding:0;
+  border:1px solid var(--ui-border);border-radius:10px;
+  background:var(--ui-panel);overflow:hidden}
+.community-card-identity{display:flex;align-items:flex-start;gap:13px;
+  min-width:0;padding:17px 17px 12px;flex:1}
+.community-card-glyph{display:grid;place-items:center;flex:none;
+  width:43px;height:43px;border-radius:9px;
+  background:var(--ui-control);border:1px solid var(--ui-border);
+  color:var(--ui-accent);font-size:23px}
+.community-card-information{min-width:0;flex:1}
+.community-card-heading{display:flex;align-items:baseline;gap:8px;min-width:0}
+.community-card-heading strong{flex:1;min-width:0;font-size:15px;
+  line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.community-card-heading small{flex:none;font:10px Consolas,monospace;
+  color:var(--ui-muted);white-space:nowrap}
+.community-card-description{display:-webkit-box;margin:8px 0;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:12px;line-height:1.55;color:var(--ui-muted);
+  overflow-wrap:anywhere}
+.community-card-status{font-size:10px;color:var(--ui-accent)}
+.community-card-preview{flex:none;min-width:0;margin:0 17px 12px;
+  border:1px solid var(--ui-border);border-radius:7px;
+  max-height:98px;height:98px;overflow:hidden;
+  background:var(--ui-background)}
+.community-card-frame{display:block;width:100%;height:98px;
+  min-height:0;border:0;border-radius:0;background:transparent}
+.community-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  width:100%;min-width:0;gap:8px;margin-top:auto;padding:11px 13px;
+  border-top:1px solid var(--ui-border);align-self:stretch}
+.community-card-actions button{display:flex;align-items:center;
+  justify-content:center;min-width:0;width:100%;height:37px;
+  padding:0 8px;border-radius:7px;white-space:nowrap;
+  word-break:keep-all;overflow-wrap:normal;writing-mode:horizontal-tb;
+  font-size:12px;line-height:1.2;letter-spacing:0;
+  font-weight:600}
+.community-card-actions .community-install-button{
+  border-color:var(--ui-accent)}
+@media(max-width:420px){.community-card-identity{padding:14px}
+ .community-card-actions{gap:6px;padding:10px}
+ .community-card-actions button{font-size:11px;padding:0 5px}}
