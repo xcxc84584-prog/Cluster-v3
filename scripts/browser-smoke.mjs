@@ -211,6 +211,23 @@ try {
     "example plugin installation");
   await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
     "installed iframe");
+  const overlayCheck = await evaluate(`(() => {
+    const hint = document.querySelector('#pluginPageEmpty');
+    const page = document.querySelector('[data-view=page]');
+    const bounds = page.getBoundingClientRect();
+    const point = document.elementFromPoint(
+      bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+    return {
+      hidden: hint.hidden,
+      display: getComputedStyle(hint).display,
+      blocksCenter: point === hint || hint.contains(point)
+    };
+  })()`);
+  assert(overlayCheck.hidden && overlayCheck.display === "none" &&
+    !overlayCheck.blocksCenter,
+    "Hidden Host placeholder must not intercept plugin clicks: " +
+      JSON.stringify(overlayCheck));
+
   await until("window.__clusterFrameEvents?.some(e=>"+
     "e.data?.method === 'Router.register')",
     "iframe registered Router action");

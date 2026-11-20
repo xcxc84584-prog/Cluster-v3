@@ -480,3 +480,14 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
 @media(max-width:420px){.community-card-identity{padding:14px}
  .community-card-actions{gap:6px;padding:10px}
  .community-card-actions button{font-size:11px;padding:0 5px}}
+
+/* A hidden Host placeholder must never cover an active plugin iframe.
+   Author-level display:grid otherwise overrides the browser [hidden] rule. */
+.plugin-page-view > #pluginPageEmpty[hidden],
+.plugin-settings-empty[hidden] {
+  display: none !important;
+  pointer-events: none !important;
+}
+.plugin-page-view > #pluginPageEmpty:not([hidden]) {
+  pointer-events: none;
+}
