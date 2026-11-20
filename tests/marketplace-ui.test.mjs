@@ -8,7 +8,7 @@ test("marketplace deduplicates example and has a bounded custom iframe", () => {
   assert.match(code, /id: 'example\.hello'/);
   assert.match(code, /installed\.filter\(x => x\.id !== 'example\.hello'\)/);
   assert.match(code, /browserManager\.exportZip\(id\)/);
-  assert.match(code, /frame\.sandbox = 'allow-scripts allow-forms'/);
+  assert.doesNotMatch(code, /frame\.sandbox\s*=/);
   assert.match(html, /id="communitySearch"/);
   assert.doesNotMatch(html, /id="builtinExampleCard"/);
   assert.doesNotMatch(html, /class="community-docs"/);
@@ -52,4 +52,15 @@ test("Explorer provides Open/Stop/Remove icons, without page-level launcher", ()
   assert.match(code, /await hostPMU\.load\(pluginId\)/);
   assert.doesNotMatch(html, /id="pluginStandalone"/);
   assert.doesNotMatch(code, /\$\('pluginStandalone'\)/);
+});
+
+test("all plugin views omit iframe sandbox and CSP sandbox directives", () => {
+  const runtime = readFileSync(new URL("../src/plugin/browser-runtime.js", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../src/plugin/app.js", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../plugin/index.html", import.meta.url), "utf8");
+  const worker = readFileSync(new URL("../plugin-sw.js", import.meta.url), "utf8");
+  assert.doesNotMatch(runtime, /iframe\.sandbox\s*=/);
+  assert.doesNotMatch(app, /frame\.sandbox\s*=/);
+  assert.doesNotMatch(html, /<iframe[^>]*\bsandbox\s*=/);
+  assert.doesNotMatch(worker, /sandbox allow-scripts/);
 });

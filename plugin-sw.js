@@ -52,9 +52,10 @@ self.addEventListener("fetch", event => {
           "Cross-Origin-Resource-Policy": "cross-origin",
           "Cache-Control": "no-store",
           "X-Content-Type-Options": "nosniff",
-          // Also sandbox package pages opened outside the Host iframe.
+          // No CSP sandbox. Retain a minimal active-content restriction
+          // for directly opened package URLs (not an iframe sandbox).
           "Content-Security-Policy":
-            "sandbox allow-scripts allow-forms; object-src 'none'; base-uri 'none'"
+            "object-src 'none'; base-uri 'none'"
         }
       });
     } catch {

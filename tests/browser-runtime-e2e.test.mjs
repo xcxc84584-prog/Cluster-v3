@@ -147,3 +147,13 @@ test("runtime: invalid bridge messages cannot request Host core lifecycle", asyn
     assert.equal(h.kernel.plugins.length,2);
   } finally { h.restore(); }
 });
+
+test("runtime: plugin iframe is intentionally unsandboxed", async () => {
+  const h = harness();
+  try {
+    await h.browser.ready;
+    await h.browser.installFiles(pkg("demo.unsandboxed"));
+    const iframe = h.pagesRoot.children.at(-1).children[0];
+    assert.equal(iframe.sandbox, undefined);
+  } finally { h.restore(); }
+});

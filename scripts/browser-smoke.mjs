@@ -274,14 +274,14 @@ try {
     "iframe registered Router action");
   const requester = await evaluate(
     "window.__clusterFrameEvents.find(e=>e.data?.method==='Router.register')?.origin");
-  assert(requester === "null",
-    "Plugin iframe must have opaque origin after CSP sandbox: "+requester);
+  assert(requester === new URL(hostURL).origin,
+    "Unsandboxed srcdoc plugin should inherit Host origin: "+requester);
   await until("Boolean(document.querySelector('[data-community-plugin=\"example.hello\"]')?.srcdoc)",
     "plugin-provided community card");
   const communitySandbox = await evaluate(
     "document.querySelector('[data-community-plugin=\"example.hello\"]')?.getAttribute('sandbox')");
-  assert(communitySandbox === "allow-scripts allow-forms",
-    "Community card must be opaque and container bounded");
+  assert(communitySandbox === null,
+    "Community plugin iframe must not specify sandbox");
   const uniqueCards = await evaluate(
     "[...document.querySelectorAll('.community-card')].filter(" +
     "x=>x.dataset.communityId==='example.hello').length");
@@ -292,28 +292,25 @@ try {
     "Marketplace search must render empty state");
   await evaluate("document.querySelector('#communitySearch').value='';" +
     "document.querySelector('#communitySearch').dispatchEvent(new Event('input'))");
-  let echoSession = null;
-  for (const session of iframeSessions) {
-    try {
-      const found = await send("Runtime.evaluate", {
-        expression:"Boolean(document.querySelector('#echo'))",
-        returnByValue:true
-      }, session);
-      if (found?.result?.value) { echoSession = session; break; }
-    } catch { /* iframe navigated / was replaced */ }
-  }
-  assert(echoSession, "Cannot locate example plugin runtime frame in Chrome");
-  await send("Runtime.evaluate", {
-    expression:"document.querySelector('#echo').click()",
-    returnByValue:true
-  }, echoSession);
+  // Unsandboxed srcdoc frames inherit Host origin and may run in the
+  // same Chrome target, rather than a separate OOPIF debugging session.
+  await until("Boolean(document.querySelector('.plugin-main-frame')" +
+    "?.contentDocument?.querySelector('#echo'))",
+    "same-origin example plugin runtime frame");
+  const hostDomAccess = await evaluate(
+    "document.querySelector('.plugin-main-frame')" +
+    ".contentWindow.parent.document === document");
+  assert(hostDomAccess === true,
+    "Unsandboxed plugin must be able to access Host DOM");
+  await evaluate(
+    "document.querySelector('.plugin-main-frame')" +
+    ".contentDocument.querySelector('#echo').click()");
   let echoOk = false;
   for (let i=0; i<100; i++) {
-    const value = await send("Runtime.evaluate", {
-      expression:"document.querySelector('#output')?.textContent",
-      returnByValue:true
-    }, echoSession);
-    if (value?.result?.value?.includes("Hello from Cluster")) {
+    const value = await evaluate(
+      "document.querySelector('.plugin-main-frame')" +
+      ".contentDocument.querySelector('#output')?.textContent");
+    if (value?.includes("Hello from Cluster")) {
       echoOk=true;break;
     }
     await sleep(80);
@@ -337,9 +334,9 @@ try {
     "standalone plugin iframe");
   const isolated=await evaluate(
     "document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')");
-  assert(isolated === "allow-scripts allow-forms",
-    "srcdoc iframe must exclude same-origin privilege");
-  console.log("Chrome E2E PASS: install, API contract, standalone restore, CSP");
+  assert(isolated === null,
+    "Standalone plugin iframe must not specify sandbox");
+  console.log("Chrome E2E PASS: install, API contract, standalone restore, no sandbox");
 } finally {
   socket?.close();
   browser?.kill("SIGKILL");

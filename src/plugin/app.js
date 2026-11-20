@@ -1,4 +1,4 @@
-// Plugin-owned card elements only live inside constrained iframe windows.
+// Plugin-owned card elements only live inside plugin iframe windows.
 import { createBrowserPluginManager } from './browser-runtime.js';
 import { createHostPMU } from './host-pmu.js';
 import { createExamplePackage } from './template-generator.js';
@@ -346,7 +346,7 @@ function sendSettingsContext() {
   if (selectedPluginId === 'cluster.pmu' ||
       (!frame.src && !frame.srcdoc) ||
       frame.hidden || !frame.contentWindow) return;
-  // Opaque-origin iframe: only send nonsecret UI context to the selected frame.
+  // Send public UI context to plugin settings iframe.
   // Plugin authors can subscribe to this message without Host DOM access.
   frame.contentWindow.postMessage({
     protocol: 'cluster.settings.context.v1',
@@ -687,7 +687,7 @@ function buildCommunityCard(item) {
     preview.className = 'community-card-preview';
     const frame = document.createElement('iframe');
     frame.className = 'community-card-frame';
-    frame.sandbox = 'allow-scripts allow-forms';
+    // Community frame is intentionally unsandboxed; plugin is fully trusted.
     frame.referrerPolicy = 'no-referrer';
     frame.title = item.name;
     frame.dataset.communityPlugin = item.id;
