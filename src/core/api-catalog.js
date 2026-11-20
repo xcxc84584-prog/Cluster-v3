@@ -62,12 +62,37 @@ const groups = {
   ]
 };
 export const API_CATALOG_VERSION = "1.0.0";
+const implemented = new Set([
+  "PRMU.get", "PRMU.set", "PRMU.list", "PRMU.register",
+  "PRMU.unregister", "PRMU.subscribe", "PRMU.unsubscribe",
+  "PRMU.describe", "PRMU.snapshot", "PRMU.batch",
+  "Router.request", "Router.register", "Router.unregister",
+  "Router.get", "Router.list", "Router.probe", "Router.trace",
+  "Log.log", "Log.logs"
+]);
+function requestSchema(signature) {
+  const properties = {};
+  const required = [];
+  for (const part of signature.split(",")) {
+    const [rawKey, rawType] = part.trim().split(":");
+    const optional = rawKey.endsWith("?");
+    const key = optional ? rawKey.slice(0, -1) : rawKey;
+    const type = rawType === "any" ? undefined :
+      rawType === "function" ? "string" : rawType;
+    properties[key] = type ? { type } : {};
+    if (rawType === "function")
+      properties[key].description = "Runtime callback registration; not JSON-serializable";
+    if (!optional) required.push(key);
+  }
+  return { type: "object", properties, required, additionalProperties: false };
+}
 export const API_CATALOG = Object.freeze(Object.entries(groups).flatMap(([unit, entries]) =>
   entries.map(([method, type, description, signature]) => Object.freeze({
     id: unit + "." + method,
     unit, method, type, description, signature,
     version: API_CATALOG_VERSION,
-    request: { type: "object", required: signature.split(",").filter(x => !x.includes("?")).map(x => x.split(":")[0]) },
+    implementation: implemented.has(unit + "." + method) ? "initial" : "planned",
+    request: requestSchema(signature),
     response: { type: "object", required: ["ok", "status"], properties: {
       ok: { type: "boolean" }, status: { type: "integer" },
       data: {}, error: { type: ["object", "null"] }
