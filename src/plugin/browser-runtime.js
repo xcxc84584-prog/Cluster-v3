@@ -2,6 +2,7 @@
 import { validatePluginPackage, readZip } from "./package-format.js";
 import { createPackageStore } from "./package-store.js";
 import { dispatchPluginCall } from "./host-bridge.js";
+import { buildPluginDocument } from "./document-bundler.js";
 
 const PROTOCOL = "cluster.plugin.v1";
 const timeoutMs = 10000;
@@ -41,6 +42,20 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   }
   function sendContext(id, targetWindow) {
     targetWindow?.postMessage(context(id), "*");
+  }
+  async function renderAssetFrame(id, path, frame) {
+    const files = await store.getFiles?.(id);
+    if (files && files[path] && typeof DOMParser !== "undefined") {
+      frame.removeAttribute("src");
+      frame.srcdoc = buildPluginDocument(files, path);
+      frame.dataset.virtualPath = path;
+      return "srcdoc";
+    }
+    if (packageStore) {
+      frame.src = assetURL(id, path);
+      return "virtual";
+    }
+    throw Error("Installed plugin file not found: " + id + "/" + path);
   }
   function frameOwner(source) {
     for (const [id, state] of frames) {
@@ -150,17 +165,16 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     host.hidden = false;
     const iframe = document.createElement("iframe");
     iframe.className = "plugin-main-frame";
-    // Initial navigation must share Host origin so SW can serve the asset.
-    // The response CSP sandbox directive removes same-origin privileges.
-    iframe.sandbox = "allow-scripts allow-forms allow-same-origin";
+    // All local files are embedded; opaque-origin sandbox remains enforced.
+    iframe.sandbox = "allow-scripts allow-forms";
     iframe.referrerPolicy = "no-referrer";
     iframe.title = manifest.name;
     host.append(iframe);
     pagesRoot.append(host);
     frames.set(pluginId, { iframe, host });
     iframe.addEventListener("load", () => sendContext(pluginId, iframe.contentWindow));
-    iframe.src = assetURL(pluginId, manifest.entry);
     try {
+      await renderAssetFrame(pluginId, manifest.entry, iframe);
       if (save) await store.setEnabled(pluginId, true);
       record.enabled = true;
       onChange();
@@ -272,6 +286,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   return Object.freeze({
     ready, installZip, installFolder, installFiles, load, unload, reload,
     remove, configure, show, attachSettings, syncContext, assetURL,
+    renderAssetFrame,
     list: () => [...installed.values()].map(clone),
     get: id => clone(installed.get(id) || null),
     isLoaded: id => frames.has(id),

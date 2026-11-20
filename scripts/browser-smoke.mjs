@@ -135,7 +135,7 @@ try {
         "(async()=>({status:document.querySelector('#loaderStatus')?.textContent," +
         "pluginCount:document.querySelector('#pluginCount')?.textContent," +
         "api:document.querySelector('#apiTableBody')?.textContent?.slice(0,300)," +
-        "frame:document.querySelector('.plugin-main-frame')?.src," +
+        "frame:document.querySelector('.plugin-main-frame')?.dataset.virtualPath," +
         "connected:document.querySelector('.plugin-main-frame')?.isConnected," +
         "hasWindow:Boolean(document.querySelector('.plugin-main-frame')?.contentWindow)," +
         "sandbox:document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')," +
@@ -168,7 +168,7 @@ try {
   await evaluate("document.querySelector('#installExample').click()");
   await until("document.querySelector('#pluginCount')?.textContent === '02'",
     "example plugin installation");
-  await until("Boolean(document.querySelector('.plugin-main-frame')?.src)",
+  await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
     "installed iframe");
   await until("window.__clusterFrameEvents?.some(e=>"+
     "e.data?.method === 'Router.register')",
@@ -185,12 +185,12 @@ try {
   await send("Page.navigate",{url:url.href});
   await until("document.body?.classList.contains('standalone-mode')",
     "standalone entry and IndexedDB restore");
-  await until("Boolean(document.querySelector('.plugin-main-frame')?.src)",
+  await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
     "standalone plugin iframe");
-  const sandbox=await evaluate(
-    "(async()=>{const r=await fetch('/Cluster-v3/__cluster_plugins/example.hello/index.html');"+
-    "return r.headers.get('Content-Security-Policy')?.includes('sandbox');})()");
-  assert(sandbox,"virtual plugin must be CSP sandboxed");
+  const isolated=await evaluate(
+    "document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')");
+  assert(isolated === "allow-scripts allow-forms",
+    "srcdoc iframe must exclude same-origin privilege");
   console.log("Chrome E2E PASS: install, API contract, standalone restore, CSP");
 } finally {
   socket?.close();

@@ -277,9 +277,19 @@ function renderSettings() {
     resolveSettingsURL(manifest?.settingsUrl, location.href) : null;
   frame.hidden = !settingsURL;
   $('pluginSettingsEmpty').hidden = Boolean(settingsURL);
-  if (settingsURL && frame.src !== settingsURL) frame.src = settingsURL;
+  const settingsPath = manifest?.settings;
+  if (settingsURL && settingsPath &&
+      frame.dataset.pluginId !== selectedPluginId) {
+    frame.dataset.pluginId = selectedPluginId;
+    void browserManager.renderAssetFrame(
+      selectedPluginId, settingsPath, frame).catch(reportLoaderError);
+  }
   if (settingsURL) sendSettingsContext();
-  if (!settingsURL) frame.removeAttribute('src');
+  if (!settingsURL) {
+    frame.removeAttribute('src');
+    frame.removeAttribute('srcdoc');
+    delete frame.dataset.pluginId;
+  }
 }
 function renderPluginPage() {
   browserManager?.show(selectedPluginId);
@@ -292,7 +302,8 @@ function renderPluginPage() {
 }
 function sendSettingsContext() {
   const frame = $('pluginSettingsFrame');
-  if (selectedPluginId === 'cluster.pmu' || !frame.src ||
+  if (selectedPluginId === 'cluster.pmu' ||
+      (!frame.src && !frame.srcdoc) ||
       frame.hidden || !frame.contentWindow) return;
   // Opaque-origin iframe: only send nonsecret UI context to the selected frame.
   // Plugin authors can subscribe to this message without Host DOM access.
@@ -555,13 +566,12 @@ function updateCommunityCards() {
         !browserManager.isLoaded(record.id)) continue;
     const frame = document.createElement('iframe');
     frame.className = 'community-card-frame';
-    // CSP on the virtual page imposes opaque origin after SW navigation.
-    frame.sandbox = 'allow-scripts allow-forms allow-same-origin';
+    frame.sandbox = 'allow-scripts allow-forms';
     frame.referrerPolicy = 'no-referrer';
     frame.title = record.manifest.name;
     frame.dataset.communityPlugin = record.id;
-    frame.src = browserManager.assetURL(
-      record.id, record.manifest.community);
+    void browserManager.renderAssetFrame(
+      record.id, record.manifest.community, frame).catch(reportLoaderError);
     frame.addEventListener('load', () => frame.contentWindow?.postMessage({
       protocol: 'cluster.settings.context.v1', pluginId: record.id,
       language: repo.getLanguage(), palette: repo.getPalette(),

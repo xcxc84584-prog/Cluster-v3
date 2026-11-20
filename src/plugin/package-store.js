@@ -43,6 +43,22 @@ export function createPackageStore() {
         request.onerror = () => reject(request.error);
       });
     },
+    async getFiles(pluginId) {
+      const db = await dbReady;
+      return new Promise((resolve, reject) => {
+        const request = db.transaction("files", "readonly")
+          .objectStore("files").getAll();
+        request.onsuccess = () => {
+          const files = Object.create(null);
+          for (const entry of request.result) {
+            if (entry.pluginId === pluginId)
+              files[entry.path] = new Uint8Array(entry.data);
+          }
+          resolve(files);
+        };
+        request.onerror = () => reject(request.error);
+      });
+    },
     async install(manifest, files) {
       const db = await dbReady;
       return new Promise((resolve, reject) => {
