@@ -51,3 +51,24 @@ Hello-Cluster/
 - Files over 16 MiB unpacked, 500 entries, or ZIPs above 20 MiB are rejected.
 - A plugin should not assume all catalog APIs are implemented; check the
   `implementation` field.
+
+
+## Browser execution and lifecycle
+
+- Host mounts the package's entry and optional settings/community documents
+  into bounded iframes with `sandbox="allow-scripts allow-forms"`.
+- Host assembles local assets as data URLs and CSS before insertion. Avoid
+  assuming that arbitrary dynamic imports or runtime `fetch("./file")`
+  automatically resolve: this first-generation loader does not virtualize
+  them inside an opaque-origin frame.
+- `Router.register(action, handler, {contract})` publishes the service's
+  input/output JSON Schema to the Host. The Host enforces those contracts
+  at req/rep boundaries.
+- Plugin runtime pages can live offscreen while their Router services
+  remain active; their lifecycle is tied to the installed plugin.
+- `ui.mode` supports embedded, standalone and both. `ui.home` makes
+  a plugin eligible for the default Cluster landing view.
+- The community card is fully plugin-authored `community.html`, while
+  the Host controls iframe size, lifecycle and event source identity.
+- PMU install/uninstall/reload operations are Host-only; plugin RPC is
+  limited to allowed Router, PRMU and diagnostic services.

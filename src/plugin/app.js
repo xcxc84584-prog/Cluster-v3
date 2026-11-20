@@ -578,6 +578,7 @@ function updateCommunityCards() {
       baseColor: repo.getBaseColor()
     }, '*'));
     $('communityCards').append(frame);
+    browserManager.registerAuxiliaryFrame(record.id, frame);
   }
 }
 function syncCommunityCards() {

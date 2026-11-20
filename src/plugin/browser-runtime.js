@@ -18,6 +18,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   const installed = new Map();
   const frames = new Map();
   const pending = new Map();
+  const auxiliaryFrames = new Map();
   let disposed = false;
   const scopeURL = new URL("../../", import.meta.url);
   const assetURL = (id, file) => new URL(
@@ -58,6 +59,10 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     throw Error("Installed plugin file not found: " + id + "/" + path);
   }
   function frameOwner(source) {
+    for (const [frame, id] of auxiliaryFrames) {
+      if (frame.isConnected && frame.contentWindow === source &&
+          frames.has(id)) return id;
+    }
     for (const [id, state] of frames) {
       if (state.iframe.contentWindow === source) return id;
       if (settingsFrame.contentWindow === source &&
@@ -199,6 +204,9 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       }
       state.host.remove();
       frames.delete(pluginId);
+      for (const [frame, owner] of auxiliaryFrames) {
+        if (owner === pluginId) auxiliaryFrames.delete(frame);
+      }
       kernel.unload(pluginId);
     }
     if (installed.has(pluginId)) {
@@ -277,16 +285,26 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     settingsFrame.dataset.pluginId = pluginId;
     sendContext(pluginId, settingsFrame.contentWindow);
   }
+  function registerAuxiliaryFrame(pluginId, frame) {
+    if (!frames.has(pluginId))
+      throw new Error("Plugin is not active: " + pluginId);
+    auxiliaryFrames.set(frame, pluginId);
+    frame.addEventListener("load", () =>
+      sendContext(pluginId, frame.contentWindow));
+    return () => auxiliaryFrames.delete(frame);
+  }
   function syncContext() {
     for (const [id, state] of frames)
       sendContext(id, state.iframe.contentWindow);
+    for (const [frame, id] of auxiliaryFrames)
+      if (frame.isConnected) sendContext(id, frame.contentWindow);
     if (settingsFrame.dataset.pluginId)
       sendContext(settingsFrame.dataset.pluginId, settingsFrame.contentWindow);
   }
   return Object.freeze({
     ready, installZip, installFolder, installFiles, load, unload, reload,
     remove, configure, show, attachSettings, syncContext, assetURL,
-    renderAssetFrame,
+    renderAssetFrame, registerAuxiliaryFrame,
     list: () => [...installed.values()].map(clone),
     get: id => clone(installed.get(id) || null),
     isLoaded: id => frames.has(id),
@@ -299,6 +317,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       }
       pending.clear();
       for (const state of frames.values()) state.host.remove();
+      auxiliaryFrames.clear();
     }
   });
 }

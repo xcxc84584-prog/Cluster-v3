@@ -32,3 +32,33 @@ are free-form HTML/CSS/JS within an iframe boundary; no Host DOM mutation.
 Important: this sample API client is intentionally small and supports only
 the currently implemented Host RPC subset. Review the `implementation`
 field in the full API catalog before relying on another method.
+
+
+## Runtime, standalone and community card
+
+The standard package manifest sets `ui.mode = "both"` and `ui.home = true`.
+The Host presents the plugin in its main workspace and supports standalone
+routing via `/Cluster-v3/?plugin=example.hello`. If the package is set as
+the home plugin, the root URL routes to the installed plugin.
+
+`community.html` is a **plugin-owned UI**, not a Host generated card.
+Cluster embeds it in a bounded sandbox and forwards the same public
+Router/PRMU RPC bridge as the main page. The card may declare its own
+content and interactions, but must not modify the Host DOM.
+
+## API catalog sync
+
+When the developer example ZIP is produced, the Host bundles its live
+registered plugin API contracts together with the versioned core catalog.
+Each entry includes the implementation status and JSON request/response
+contract. Runtime service registration through `Router.register` can
+provide `options.contract` with JSON Schema request and response types.
+The Host rejects invalid payloads and records ELog diagnostics.
+
+## Asset bundling and security limitations
+
+The Host packages local scripts, styles and basic images into a sandboxed
+opaque-origin `srcdoc` document so the browser can execute the plugin
+without granting same-origin access. External URLs still follow browser
+restrictions. Advanced lazy-loaded assets, dynamic module imports and
+network service access must be explicitly supported by the plugin.
