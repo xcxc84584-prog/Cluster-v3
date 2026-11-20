@@ -292,28 +292,25 @@ try {
     "Marketplace search must render empty state");
   await evaluate("document.querySelector('#communitySearch').value='';" +
     "document.querySelector('#communitySearch').dispatchEvent(new Event('input'))");
-  let echoSession = null;
-  for (const session of iframeSessions) {
-    try {
-      const found = await send("Runtime.evaluate", {
-        expression:"Boolean(document.querySelector('#echo'))",
-        returnByValue:true
-      }, session);
-      if (found?.result?.value) { echoSession = session; break; }
-    } catch { /* iframe navigated / was replaced */ }
-  }
-  assert(echoSession, "Cannot locate example plugin runtime frame in Chrome");
-  await send("Runtime.evaluate", {
-    expression:"document.querySelector('#echo').click()",
-    returnByValue:true
-  }, echoSession);
+  // Unsandboxed srcdoc frames inherit Host origin and may run in the
+  // same Chrome target, rather than a separate OOPIF debugging session.
+  await until("Boolean(document.querySelector('.plugin-main-frame')" +
+    "?.contentDocument?.querySelector('#echo'))",
+    "same-origin example plugin runtime frame");
+  const originAccess = await evaluate(
+    "document.querySelector('.plugin-main-frame').contentDocument.origin" +
+    " || document.querySelector('.plugin-main-frame').contentWindow.location.origin");
+  assert(originAccess === new URL(hostURL).origin,
+    "Plugin document must share Host origin after sandbox removal");
+  await evaluate(
+    "document.querySelector('.plugin-main-frame')" +
+    ".contentDocument.querySelector('#echo').click()");
   let echoOk = false;
   for (let i=0; i<100; i++) {
-    const value = await send("Runtime.evaluate", {
-      expression:"document.querySelector('#output')?.textContent",
-      returnByValue:true
-    }, echoSession);
-    if (value?.result?.value?.includes("Hello from Cluster")) {
+    const value = await evaluate(
+      "document.querySelector('.plugin-main-frame')" +
+      ".contentDocument.querySelector('#output')?.textContent");
+    if (value?.includes("Hello from Cluster")) {
       echoOk=true;break;
     }
     await sleep(80);
