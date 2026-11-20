@@ -1,3 +1,4 @@
+import { filterLogEntries, exportListJSON, resolveSettingsURL } from './list-utils.js';
 import { SYSTEM_MANIFEST } from "../core/system-manifest.js";
 import { createPluginKernel } from '../core/plugin-kernel.js';
 import { API_CATALOG, queryCatalog, catalogJSON } from '../core/api-catalog.js';
@@ -24,6 +25,7 @@ function syncLanguage() {
   document.documentElement.lang = locale;
   $('languageSelect').value = locale;
   $('settingsLanguage').value = locale;
+  renderPluginExplorer();
   document.querySelectorAll('[data-i18n]').forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
@@ -116,11 +118,7 @@ $('explorerToggle').addEventListener('click', (event) => {
   event.currentTarget.setAttribute('aria-expanded', String(open));
   event.currentTarget.setAttribute('aria-label', t(open ? 'collapse' : 'expand'));
 });
-$('pluginSearch').addEventListener('input', (event) => {
-  const label = $('pluginList').querySelector('[data-i18n]');
-  label.dataset.i18n = event.target.value.trim() ? 'noPluginSearch' : 'noPlugins';
-  label.textContent = t(label.dataset.i18n);
-});
+$('pluginSearch').addEventListener('input', renderPluginExplorer);
 document.querySelectorAll('[data-tab]').forEach((button) => {
   button.addEventListener('click', () => selectTab(button.dataset.tab));
   button.addEventListener('keydown', (event) => {
@@ -150,6 +148,90 @@ export const hostPublicProperties = repo;
 const kernel = createPluginKernel({ publicRepo: repo, systemVersion: SYSTEM_MANIFEST.version });
 let apiPageNumber = 1;
 let selectedAPI = null;
+let selectedPluginId = 'cluster.pmu';
+
+// The PMU is permanent; ordinary plugin settings are provided by a web page.
+// Plugin management creates the list from registered runtime instances.
+function pluginInstances() {
+  return kernel.plugins.map(id => ({
+    id,
+    core: id === 'cluster.pmu',
+    manifest: kernel.getManifest(id) || {}
+  }));
+}
+function renderPluginExplorer() {
+  if (typeof kernel === 'undefined') return;
+  const needle = $('pluginSearch').value.trim().toLocaleLowerCase();
+  const entries = pluginInstances().filter(entry =>
+    [entry.id, entry.core ? t('publicManagement') : entry.manifest.name]
+      .some(value => String(value || '').toLocaleLowerCase().includes(needle)));
+  $('pluginList').replaceChildren();
+  $('pluginCount').textContent = String(pluginInstances().length).padStart(2, '0');
+  for (const entry of entries) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'plugin-entry';
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', String(selectedPluginId === entry.id));
+    button.dataset.pluginId = entry.id;
+    const glyph = document.createElement('span');
+    glyph.className = 'plugin-glyph';
+    glyph.textContent = entry.core ? '◇' : '▣';
+    const info = document.createElement('span');
+    info.className = 'plugin-entry-label';
+    const title = document.createElement('strong');
+    title.textContent = entry.core ? t('publicManagement') :
+      (entry.manifest.name || entry.id);
+    const desc = document.createElement('small');
+    desc.textContent = entry.core ? t('systemProtected') : entry.id;
+    info.append(title, desc);
+    button.append(glyph, info);
+    button.addEventListener('click', () => choosePlugin(entry.id));
+    $('pluginList').append(button);
+  }
+  if (!entries.length) {
+    const empty = document.createElement('p');
+    empty.className = 'no-plugins';
+    empty.textContent = t('noPluginSearch');
+    $('pluginList').append(empty);
+  }
+}
+function choosePlugin(pluginId) {
+  selectedPluginId = pluginId;
+  apiPageNumber = 1;
+  selectedAPI = null;
+  $('apiDetail').hidden = true;
+  renderPluginExplorer();
+  renderSettings();
+  renderAPIs();
+  renderDiagnostics();
+}
+function renderSettings() {
+  const isCore = selectedPluginId === 'cluster.pmu';
+  $('publicSettings').hidden = !isCore;
+  $('pluginSettingsHost').hidden = isCore;
+  const frame = $('pluginSettingsFrame');
+  if (isCore) {
+    frame.removeAttribute('src');
+    return;
+  }
+  const manifest = kernel.getManifest(selectedPluginId);
+  const settingsURL = resolveSettingsURL(manifest?.settingsUrl, location.href);
+  frame.hidden = !settingsURL;
+  $('pluginSettingsEmpty').hidden = Boolean(settingsURL);
+  if (settingsURL && frame.src !== settingsURL) frame.src = settingsURL;
+  if (!settingsURL) frame.removeAttribute('src');
+}
+function downloadJSON(filename, data) {
+  const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 
 function renderAPIs() {
   const query = queryCatalog({
@@ -158,6 +240,13 @@ function renderAPIs() {
     page: apiPageNumber,
     pageSize: 15
   });
+  if (selectedPluginId !== 'cluster.pmu') {
+    // Plugin-specific APIs will appear once they publish contracts.
+    query.entries = [];
+    query.total = 0;
+    query.pages = 1;
+    query.page = 1;
+  }
   apiPageNumber = query.page;
   $('apiTableBody').replaceChildren();
   for (const api of query.entries) {
@@ -177,7 +266,16 @@ function renderAPIs() {
     }
     $('apiTableBody').append(tr);
   }
-  $('apiTotal').textContent = query.total + ' / ' + API_CATALOG.length + ' API';
+  $('apiTotal').textContent = query.total + ' API';
+  if (query.total === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.className = 'table-empty';
+    cell.textContent = t('noApis');
+    row.append(cell);
+    $('apiTableBody').append(row);
+  }
   $('apiPage').textContent = query.page + ' / ' + query.pages;
   $('apiPrevious').disabled = query.page <= 1;
   $('apiNext').disabled = query.page >= query.pages;
@@ -188,36 +286,48 @@ function showAPI(api) {
   $('apiDetailTitle').textContent = api.id + ' — JSON Contract';
   $('apiDetailJSON').textContent = JSON.stringify(api, null, 2);
 }
-function downloadAPIJSON() {
-  const blob = new Blob([catalogJSON()], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'cluster-v3-api-catalog-v1.json';
-  link.click();
-  URL.revokeObjectURL(url);
+function apiFilteredEntries() {
+  if (selectedPluginId !== 'cluster.pmu') return [];
+  const search = $('apiSearch').value.toLocaleLowerCase().trim();
+  const type = $('apiFilter').value;
+  return API_CATALOG.filter(api =>
+    (type === 'all' || api.type === type) &&
+    (!search || [api.id, api.description, api.signature].some(
+      value => value.toLocaleLowerCase().includes(search))));
+}
+function currentLogs() {
+  // The current ring already contains ELog; fetch it separately only for
+  // history that has rotated out of the last 2,000 entries.
+  const recent = kernel.logs('log');
+  const all = new Map(recent.map(entry => [entry.id, entry]));
+  for (const entry of kernel.logs('elog')) all.set(entry.id, entry);
+  return filterLogEntries([...all.values()].sort(
+    (a, b) => a.timestamp.localeCompare(b.timestamp)), {
+      search: $('logSearch').value,
+      type: $('logType').value,
+      status: $('logStatus').value,
+      pluginId: selectedPluginId
+    });
 }
 function renderDiagnostics() {
-  const events = kernel.logs($('logType').value).slice(-200).reverse();
+  const events = currentLogs();
+  $('logTotal').textContent = events.length + ' ' + t('logEntries');
   $('logList').replaceChildren();
-  for (const entry of events) {
+  for (const entry of events.slice(-200).reverse()) {
     const row = document.createElement('pre');
     row.className = 'diagnostic-row';
     row.textContent = JSON.stringify(entry);
     $('logList').append(row);
   }
-  if (!events.length) $('logList').textContent = 'No entries';
+  if (!events.length) $('logList').textContent = t('noLogs');
   $('routerList').replaceChildren();
-  for (const pluginId of kernel.plugins) {
-    const info = kernel.inspect(pluginId);
-    for (const relation of info.relations.slice(-200).reverse()) {
-      const row = document.createElement('pre');
-      row.className = 'diagnostic-row';
-      row.textContent = JSON.stringify(relation);
-      $('routerList').append(row);
-    }
+  for (const relation of kernel.inspect(selectedPluginId).relations.slice(-200).reverse()) {
+    const row = document.createElement('pre');
+    row.className = 'diagnostic-row';
+    row.textContent = JSON.stringify(relation);
+    $('routerList').append(row);
   }
-  if (!$('routerList').childElementCount) $('routerList').textContent = 'No router relations';
+  if (!$('routerList').childElementCount) $('routerList').textContent = t('noRelations');
 }
 $('apiSearch').addEventListener('input', () => { apiPageNumber = 1; renderAPIs(); });
 $('apiFilter').addEventListener('change', () => { apiPageNumber = 1; renderAPIs(); });
@@ -226,9 +336,22 @@ $('apiNext').addEventListener('click', () => { apiPageNumber++; renderAPIs(); })
 $('apiCopyJSON').addEventListener('click', async () => {
   if (selectedAPI) await navigator.clipboard.writeText(JSON.stringify(selectedAPI, null, 2));
 });
-$('apiDownloadJSON').addEventListener('click', downloadAPIJSON);
+$('apiDownloadList').addEventListener('click', () => downloadJSON(
+  'cluster-v3-api-list.json',
+  exportListJSON('api', apiFilteredEntries(), {
+    pluginId: selectedPluginId, search: $('apiSearch').value,
+    type: $('apiFilter').value
+  })
+));
 $('logType').addEventListener('change', renderDiagnostics);
-$('refreshLogs').addEventListener('click', renderDiagnostics);
+$('logSearch').addEventListener('input', renderDiagnostics);
+$('logStatus').addEventListener('change', renderDiagnostics);
+$('logDownloadList').addEventListener('click', () => downloadJSON(
+  'cluster-v3-log-list.json', exportListJSON('log', currentLogs(), {
+    pluginId: selectedPluginId, search: $('logSearch').value,
+    type: $('logType').value, status: $('logStatus').value
+  })
+));
 $('refreshRouter').addEventListener('click', renderDiagnostics);
 document.querySelectorAll('[data-tab]').forEach(button => {
   button.addEventListener('click', () => {
@@ -237,3 +360,7 @@ document.querySelectorAll('[data-tab]').forEach(button => {
 });
 renderAPIs();
 renderDiagnostics();
+
+void kernel.ready.then(() => renderDiagnostics());
+renderPluginExplorer();
+renderSettings();

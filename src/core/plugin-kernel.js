@@ -255,6 +255,9 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     return instance;
   }
   function unload(pluginId) {
+    if (pluginId === "cluster.pmu") {
+      throw new ClusterError(403, "CORE_PROTECTED", "PMU cannot be unloaded");
+    }
     const item = plugins.get(pluginId);
     if (!item) throw new ClusterError(404, "NOT_FOUND", pluginId);
     item.Router.dispose(); item.PRMU.dispose();
@@ -267,6 +270,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
   const host = load("cluster.pmu", { core: true, version: systemVersion });
   return Object.freeze({
     host, load, unload, repo,
+    getManifest: pluginId => copy(plugins.get(pluginId)?.manifest ?? null),
     get plugins() { return [...plugins.keys()]; },
     catalog: API_CATALOG, queryCatalog,
     log: record,
@@ -275,6 +279,13 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     pluginLogs: pluginId => copy(pluginLogs.get(pluginId) || { log: [], elog: [] }),
     inspect: pluginId => ({ id: pluginId, loaded: plugins.has(pluginId),
       relations: relations.filter(x => x.source === pluginId || x.target === pluginId).map(copy) }),
-    dispose() { for (const key of [...plugins.keys()]) unload(key); if (!publicRepo) repo.destroy(); }
+    dispose() {
+      for (const key of [...plugins.keys()]) {
+        if (key !== "cluster.pmu") unload(key);
+      }
+      host.Router.dispose();
+      host.PRMU.dispose();
+      if (!publicRepo) repo.destroy();
+    }
   });
 }

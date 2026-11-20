@@ -167,3 +167,35 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-l
 .diagnostic-list{overflow:auto;padding:12px;max-height:calc(100vh - 230px)}
 .diagnostic-row{padding:9px 12px;border-bottom:1px solid var(--ui-border);
   white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;color:var(--ui-text)}
+
+/* Plugin Explorer: core management entry is permanent and visually consistent. */
+.plugin-entry{width:100%;padding:11px 13px;display:flex;align-items:center;
+  gap:10px;text-align:left;background:transparent;border:0;border-left:3px solid transparent;
+  color:var(--ui-text)}
+.plugin-entry:hover{background:var(--ui-hover)}
+.plugin-entry[aria-selected="true"]{border-left-color:var(--ui-accent);
+  background:var(--ui-control)}
+.plugin-glyph{font-size:20px;color:var(--ui-accent);width:24px;text-align:center}
+.plugin-entry-label{min-width:0;display:flex;flex-direction:column;gap:4px}
+.plugin-entry-label strong,.plugin-entry-label small{overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.plugin-entry-label small{font-size:10px;color:var(--ui-muted)}
+/* Plugins own their entire settings UI, but never the Host tab/window. */
+.settings-panel:has(.plugin-settings-host:not([hidden])){padding:0;overflow:hidden;height:100%}
+.plugin-settings-host{height:100%;width:100%;min-height:280px;overflow:hidden;
+  background:var(--ui-background)}
+.plugin-settings-frame{width:100%;height:100%;border:0;display:block}
+.plugin-settings-empty{height:100%;display:grid;place-items:center;
+  color:var(--ui-muted);padding:24px;text-align:center}
+.list-download{height:38px;flex:none;display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;white-space:nowrap;background:var(--ui-control);
+  color:var(--ui-text);border:1px solid var(--ui-border);border-radius:5px;padding:0 13px}
+.list-download:hover{background:var(--ui-hover);border-color:var(--ui-accent)}
+.list-download:focus-visible{outline:2px solid var(--ui-accent)}
+.list-meta{font:11px Consolas,monospace;color:var(--ui-muted);margin-bottom:9px}
+@media(max-width:680px){
+  .list-toolbar{flex-wrap:wrap}
+  .list-toolbar .api-search{min-width:100%;flex-basis:100%}
+  .list-toolbar select{min-width:0;flex:1}
+  .list-download{flex:1}
+}
