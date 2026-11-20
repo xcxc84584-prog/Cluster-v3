@@ -136,8 +136,6 @@ repo.subscribe(({type}) => {
   if (type === 'language' || type === 'sync') syncLanguage();
   if (type === 'palette' || type === 'sync') syncPalette();
 });
-syncLanguage();
-syncPalette();
 selectTab('settings');
 
 // Future plugin integration goes through Router -> PRMU, not direct DOM access.
@@ -160,7 +158,6 @@ function pluginInstances() {
   }));
 }
 function renderPluginExplorer() {
-  if (typeof kernel === 'undefined') return;
   const needle = $('pluginSearch').value.trim().toLocaleLowerCase();
   const entries = pluginInstances().filter(entry =>
     [entry.id, entry.core ? t('publicManagement') : entry.manifest.name]
@@ -358,6 +355,8 @@ document.querySelectorAll('[data-tab]').forEach(button => {
     if (['logs', 'router'].includes(button.dataset.tab)) renderDiagnostics();
   });
 });
+syncLanguage();
+syncPalette();
 renderAPIs();
 renderDiagnostics();
 
