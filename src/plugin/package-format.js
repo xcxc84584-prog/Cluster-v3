@@ -213,6 +213,16 @@ export function validatePluginPackage(files) {
       !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(manifest.version || "")) {
     throw packageError("INVALID_MANIFEST", "Invalid schemaVersion/id/name/version");
   }
+  // Browser download capability is opt-in: no same-origin privilege.
+  if (manifest.permissions !== undefined) {
+    if (!manifest.permissions || typeof manifest.permissions !== "object" ||
+        Array.isArray(manifest.permissions) ||
+        Object.keys(manifest.permissions).some(key => key !== "downloads") ||
+        (manifest.permissions.downloads !== undefined &&
+          typeof manifest.permissions.downloads !== "boolean")) {
+      throw packageError("INVALID_MANIFEST", "permissions.downloads must be boolean");
+    }
+  }
   // UI placement is independent of the plugin business code.
   // A plugin can be embedded in Cluster, opened standalone, or both.
   if (manifest.ui !== undefined) {

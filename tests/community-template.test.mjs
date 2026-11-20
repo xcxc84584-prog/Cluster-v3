@@ -60,3 +60,20 @@ test("Host UI has install selectors, iframe slots and example download", () => {
   assert.doesNotMatch(html, /id="openPalette"/);
   assert.doesNotMatch(html, /id="languageSelect"/);
 });
+
+test("download permission must be explicit and must not grant same-origin access", () => {
+  const source = readFileSync(new URL("../src/plugin/browser-runtime.js", import.meta.url), "utf8");
+  assert.match(source, /manifest\.permissions\?\.downloads === true/);
+  assert.match(source, /" allow-downloads"/);
+  assert.doesNotMatch(source, /allow-same-origin/);
+  const files = Object.fromEntries(TEMPLATE_FILES.map(path => [path, readTemplate(path)]));
+  const parsed = validatePluginPackage(files);
+  assert.equal(parsed.manifest.permissions, undefined);
+  const manifest = JSON.parse(new TextDecoder().decode(files["manifest.json"]));
+  manifest.permissions = { downloads: true };
+  files["manifest.json"] = JSON.stringify(manifest);
+  assert.equal(validatePluginPackage(files).manifest.permissions.downloads, true);
+  manifest.permissions = { downloads: "true" };
+  files["manifest.json"] = JSON.stringify(manifest);
+  assert.throws(() => validatePluginPackage(files), /permissions\.downloads/);
+});

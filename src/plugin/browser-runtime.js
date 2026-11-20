@@ -171,7 +171,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     const iframe = document.createElement("iframe");
     iframe.className = "plugin-main-frame";
     // All local files are embedded; opaque-origin sandbox remains enforced.
-    iframe.sandbox = "allow-scripts allow-forms";
+    iframe.sandbox = "allow-scripts allow-forms" +
+      (manifest.permissions?.downloads === true ? " allow-downloads" : "");
     iframe.referrerPolicy = "no-referrer";
     iframe.title = manifest.name;
     host.append(iframe);
