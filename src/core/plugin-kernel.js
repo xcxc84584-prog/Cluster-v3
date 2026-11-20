@@ -3,6 +3,7 @@ import { SYSTEM_MANIFEST } from "./system-manifest.js";
 import { API_CATALOG, queryCatalog } from "./api-catalog.js";
 import { createPublicRepository } from "./public-repository.js";
 import { createElogStore } from "./elog-store.js";
+import { validateServiceContract } from "./contract-validator.js";
 
 const copy = value => value === undefined ? undefined : structuredClone(value);
 const id = prefix => prefix + "-" + globalThis.crypto.randomUUID();
@@ -26,6 +27,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
   const plugins = new Map();
   const registry = new Map();
   const handlers = new Map();
+  const serviceContracts = new Map();
   const relations = [];
   const recent = [];
   const persistent = [];
@@ -52,15 +54,30 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       action: entry.action || "unknown", status: entry.status ?? 200,
       result: entry.result ?? null, error: entry.error || null,
       requestId: entry.requestId || null, traceId: entry.traceId || null,
-      note: entry.note || ""
+      note: entry.note || "", location: entry.location || null,
+      details: entry.details || null
     });
     recent.push(item);
     if (recent.length > 2000) recent.shift();
     if (type === "elog") {
       persistent.push(item);
-      void durableLog.append(item).catch(() => {
-        // Browser quota/storage failures cannot erase the in-memory record.
-        // A production archival backend is needed for guaranteed retention.
+      void durableLog.append(item).catch(error => {
+        // Keep a visible in-memory diagnostic; never recursively persist it.
+        const failure = Object.freeze({
+          schemaVersion: "1.0.0", id: id("log"), sequence: ++sequence,
+          type: "elog", timestamp: now(), level: "error",
+          source: "cluster.pmu", target: "ELog.Store",
+          action: "elog.persist", status: 507,
+          result: null, requestId: null, traceId: null,
+          error: { code: "ELOG_STORAGE_FAILED",
+            message: String(error?.message || error) },
+          location: { module: "elog-store.js", function: "append" },
+          details: { originalLogId: item.id }, note: "Persistence requires recovery"
+        });
+        recent.push(failure);
+        if (recent.length > 2000) recent.shift();
+        persistent.push(failure);
+        for (const listener of listeners.values()) listener(copy(failure));
       });
     }
     for (const pluginId of new Set([item.source, item.target])) {
@@ -174,6 +191,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
         const base = { requestId, traceId, timestamp: now(), source: pluginId, target, action };
         relations.push({ ...base, direction: "req" });
         const handler = handlers.get(target + ":" + action);
+        const contract = serviceContracts.get(target + ":" + action);
         if (!handler || !plugins.has(target)) {
           const error = new ClusterError(503, "SERVICE_UNAVAILABLE", target + ":" + action);
           record("elog", { ...base, status: 503, error: fail(error).error });
@@ -181,6 +199,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
           return fail(error);
         }
         try {
+          if (contract) validateServiceContract(contract, payload);
           const timeoutMs = Math.max(1, Math.min(60000, options.timeoutMs || 5000));
           let timeout;
           let data;
@@ -195,26 +214,38 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
           } finally {
             clearTimeout(timeout);
           }
+          if (contract) validateServiceContract(contract, data, true);
           relations.push({ ...base, direction: "rep", status: 200 });
           record("log", { ...base, status: 200 });
           return result(copy(data));
         } catch (error) {
           relations.push({ ...base, direction: "rep", status: error.status || 500 });
           record("elog", { ...base, status: error.status || 500,
-            error: fail(error).error });
+            error: fail(error).error, location: error.location || null });
           return fail(error);
         }
       },
       respond(requestId, data) { return result({ requestId, data }); },
-      register(action, handler) {
+      register(action, handler, options = {}) {
         check(action, "action");
         if (typeof handler !== "function") throw new ClusterError(400, "BAD_HANDLER", action);
         const key = pluginId + ":" + action;
         if (handlers.has(key)) throw new ClusterError(409, "ALREADY_REGISTERED", action);
+        if (options.contract) {
+          const contract = { ...copy(options.contract), action, owner: pluginId,
+            id: key, version: options.contract.version || "1.0.0" };
+          // Dry-run schema structure before registration.
+          if (contract.request && typeof contract.request !== "object")
+            throw new ClusterError(400, "BAD_CONTRACT", "Request schema must be an object");
+          if (contract.response && typeof contract.response !== "object")
+            throw new ClusterError(400, "BAD_CONTRACT", "Response schema must be an object");
+          serviceContracts.set(key, contract);
+        }
         handlers.set(key, handler); owned.add(key); return result(true, 201);
       },
       unregister(action) { const key = pluginId + ":" + action;
-        handlers.delete(key); owned.delete(key); return result(true); },
+        handlers.delete(key); serviceContracts.delete(key);
+        owned.delete(key); return result(true); },
       get(source, item) { return result({ source, item, relations: relations.length }); },
       list(source, options = {}) {
         const filtered = relations.filter(e => source === "all" ||
@@ -228,7 +259,10 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       probe(target) { return this.request(target, "router.handshake",
         { protocol: "cluster.router.v1" }); },
       trace(traceId) { return result(relations.filter(x => x.traceId === traceId).map(copy)); },
-      dispose() { for (const key of owned) handlers.delete(key); }
+      dispose() { for (const key of owned) {
+        handlers.delete(key);
+        serviceContracts.delete(key);
+      } }
     });
   }
   function load(pluginId, manifest = {}) {
@@ -270,6 +304,29 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
   const host = load("cluster.pmu", { core: true, version: systemVersion });
   return Object.freeze({
     host, load, unload, repo,
+    contract: Object.freeze({
+      get: key => copy(serviceContracts.get(key) || null),
+      list: () => [...serviceContracts.values()].map(copy),
+      register(pluginId, definition) {
+        check(pluginId, "pluginId");
+        check(definition?.action, "action");
+        if (!plugins.has(pluginId)) throw new ClusterError(404, "NOT_FOUND", pluginId);
+        const key = pluginId + ":" + definition.action;
+        if (serviceContracts.has(key)) throw new ClusterError(409, "ALREADY_REGISTERED", key);
+        serviceContracts.set(key, { ...copy(definition), owner: pluginId, id: key });
+        return result({ id: key }, 201);
+      },
+      unregister(pluginId, action) {
+        const key = pluginId + ":" + action;
+        if (!serviceContracts.has(key))
+          throw new ClusterError(404, "NOT_FOUND", key);
+        serviceContracts.delete(key);
+        return result(true);
+      },
+      validate: (pluginId, action, payload, response = false) =>
+        validateServiceContract(serviceContracts.get(pluginId + ":" + action) ||
+          { id: pluginId + ":" + action }, payload, response)
+    }),
     getManifest: pluginId => copy(plugins.get(pluginId)?.manifest ?? null),
     getInstance: pluginId => plugins.get(pluginId) || null,
     get plugins() { return [...plugins.keys()]; },
