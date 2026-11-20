@@ -89,6 +89,17 @@ try {
       try{if(await evaluate(expression))return;}catch{/*navigation*/}
       await sleep(150);
     }
+    try {
+      const diagnosis = await evaluate(
+        "(async()=>({status:document.querySelector('#loaderStatus')?.textContent," +
+        "pluginCount:document.querySelector('#pluginCount')?.textContent," +
+        "api:document.querySelector('#apiTableBody')?.textContent?.slice(0,300)," +
+        "frame:document.querySelector('.plugin-main-frame')?.src," +
+        "controlled:Boolean(navigator.serviceWorker.controller)," +
+        "asset:(await fetch('/Cluster-v3/__cluster_plugins/example.hello/index.html'))" +
+        ".status,logs:document.querySelector('#logList')?.textContent?.slice(-1300)}))()");
+      console.error("Browser diagnostic:", JSON.stringify(diagnosis));
+    } catch (error) { console.error("Diagnostic failed:", error.message); }
     throw Error("Timeout waiting for "+label);
   }
   await send("Page.enable");
