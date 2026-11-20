@@ -67,7 +67,8 @@ const hostOnly = new Set([
   "Runtime.mount", "Runtime.unmount"
 ]);
 const implemented = new Set([
-  "PMU.get", "PMU.list", "Contract.list",
+  "PMU.get", "PMU.list", "Contract.list", "Contract.get",
+  "Contract.register", "Contract.unregister", "Contract.validate",
   "PRMU.get", "PRMU.set", "PRMU.list", "PRMU.register",
   "PRMU.unregister", "PRMU.subscribe", "PRMU.unsubscribe",
   "PRMU.describe", "PRMU.snapshot", "PRMU.batch",

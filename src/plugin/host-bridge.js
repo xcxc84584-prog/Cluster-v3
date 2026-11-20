@@ -15,7 +15,28 @@ export async function dispatchPluginCall(kernel, pluginId, method, args, invoke)
   if (!instance) throw invalid("Plugin is not loaded");
   const canonical = method === "PMU.log" ? "Log.log" :
     method === "PMU.logs" ? "Log.logs" : method;
-  const api = validateAPIRequest(API_CATALOG, canonical, args);
+  // Translate callback-only bridge arguments to a JSON-serializable
+  // placeholder before checking the advertised function signature.
+  const validateArgs = method === "Router.register" ?
+    [args[0], "runtime-callback", args[2]] :
+    method === "PMU.get" && args.length === 1 ?
+      [args[0], "manifest"] :
+    method === "PMU.logs" && args.length === 0 ?
+      [pluginId] :
+    method === "Router.list" && args.length < 2 ?
+      [pluginId, args[0]] :
+    method === "Contract.get" && args.length === 1 ?
+      ["contracts", args[0]] : args;
+  // PMU lifecycle methods are never dispatched by untrusted plugin frames.
+  if (["PMU.install", "PMU.uninstall", "PMU.load",
+       "PMU.unload", "PMU.reload", "Runtime.mount",
+       "Runtime.unmount"].includes(method)) {
+    const denied = new Error("Host-only API: " + method);
+    denied.status = 403;
+    denied.code = "HOST_ONLY";
+    throw denied;
+  }
+  const api = validateAPIRequest(API_CATALOG, canonical, validateArgs);
   let output;
   const run = async () => {
   switch (method) {

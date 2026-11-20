@@ -2446,7 +2446,7 @@
       "description": "Read contract definition",
       "signature": "source:string,item:string,options?:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {
@@ -2562,7 +2562,7 @@
       "description": "Publish a service schema",
       "signature": "definition:object",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {
@@ -2615,7 +2615,7 @@
       "description": "Remove owned schema",
       "signature": "contractId:string",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {
@@ -2668,7 +2668,7 @@
       "description": "Validate payload against contract",
       "signature": "contractId:string,payload:any",
       "version": "1.0.0",
-      "implementation": "planned",
+      "implementation": "initial",
       "request": {
         "type": "object",
         "properties": {

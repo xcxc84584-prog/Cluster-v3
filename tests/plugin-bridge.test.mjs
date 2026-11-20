@@ -21,7 +21,7 @@ test("plugin RPC cannot uninstall, unload or replace PMU", async () => {
   kernel.load("sample.plugin");
   for (const method of ["PMU.uninstall", "PMU.unload", "PMU.install"]) {
     await assert.rejects(dispatchPluginCall(kernel,
-      "sample.plugin", method, []), error => error.status === 404);
+      "sample.plugin", method, []), error => error.status === 403);
   }
   assert.equal(kernel.plugins.length, 2);
 });
