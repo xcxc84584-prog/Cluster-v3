@@ -5,6 +5,7 @@ Hello-Cluster/
 ├─ manifest.json               REQUIRED
 ├─ index.html                  REQUIRED, main entry
 ├─ settings.html               OPTIONAL, plugin-designed UI
+├─ community.html              OPTIONAL, plugin-designed card UI
 ├─ scripts/
 │  ├─ cluster-client.js        Host communication bridge
 │  ├─ app.js                   Plugin main logic

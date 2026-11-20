@@ -1,3 +1,4 @@
+// Plugin-owned card elements only live inside constrained iframe windows.
 import { createBrowserPluginManager } from './browser-runtime.js';
 import { createExamplePackage } from './template-generator.js';
 import { filterLogEntries, exportListJSON, resolveSettingsURL } from './list-utils.js';
@@ -71,6 +72,8 @@ function setColor(candidate) {
   return true;
 }
 function selectTab(name) {
+  if (document.body.classList.contains('standalone-mode') &&
+      name !== 'page') return;
   document.querySelectorAll('[data-tab]').forEach((button) => {
     const selected = button.dataset.tab === name;
     button.setAttribute('aria-selected', String(selected));
@@ -268,8 +271,12 @@ function renderSettings() {
 }
 function renderPluginPage() {
   browserManager?.show(selectedPluginId);
-  $('pluginPageEmpty').hidden = selectedPluginId !== 'cluster.pmu' &&
+  const manifest = browserManager?.get(selectedPluginId)?.manifest;
+  const canOpen = selectedPluginId !== 'cluster.pmu' &&
     browserManager?.isLoaded(selectedPluginId);
+  $('pluginPageEmpty').hidden = Boolean(canOpen);
+  $('pluginStandalone').hidden = !canOpen ||
+    manifest?.ui?.mode === 'embedded';
 }
 function sendSettingsContext() {
   const frame = $('pluginSettingsFrame');
@@ -490,12 +497,71 @@ $('downloadExample').addEventListener('click', async () => {
     setLoaderState('loaderReady');
   } catch (error) { reportLoaderError(error); }
 });
+$('pluginStandalone').addEventListener('click', () => {
+  if (selectedPluginId === 'cluster.pmu') return;
+  const record = browserManager?.get(selectedPluginId);
+  if (record?.manifest?.ui?.mode === 'embedded') return;
+  const url = new URL('../', location.href);
+  url.searchParams.set('plugin', selectedPluginId);
+  window.open(url.href, '_blank', 'noopener');
+});
 $('installExample').addEventListener('click', async () => {
   try {
     await installArchive(await createExamplePackage());
   } catch (error) { reportLoaderError(error); }
 });
 
+function updateCommunityCards() {
+  if (!browserManager) return;
+  for (const existing of $('communityCards').querySelectorAll(
+    '[data-community-plugin]')) existing.remove();
+  for (const record of browserManager.list()) {
+    if (!record.manifest.community ||
+        !browserManager.isLoaded(record.id)) continue;
+    const frame = document.createElement('iframe');
+    frame.className = 'community-card-frame';
+    frame.sandbox = 'allow-scripts allow-forms';
+    frame.referrerPolicy = 'no-referrer';
+    frame.title = record.manifest.name;
+    frame.dataset.communityPlugin = record.id;
+    frame.src = browserManager.assetURL(
+      record.id, record.manifest.community);
+    frame.addEventListener('load', () => frame.contentWindow?.postMessage({
+      protocol: 'cluster.settings.context.v1', pluginId: record.id,
+      language: repo.getLanguage(), palette: repo.getPalette(),
+      baseColor: repo.getBaseColor()
+    }, '*'));
+    $('communityCards').append(frame);
+  }
+}
+function syncCommunityCards() {
+  for (const frame of $('communityCards').querySelectorAll('iframe')) {
+    const id = frame.dataset.communityPlugin || 'example.hello';
+    frame.contentWindow?.postMessage({
+      protocol: 'cluster.settings.context.v1', pluginId: id,
+      language: repo.getLanguage(), palette: repo.getPalette(),
+      baseColor: repo.getBaseColor()
+    }, '*');
+  }
+}
+$('builtinExampleCard').addEventListener('load', syncCommunityCards);
+repo.subscribe(({ type }) => {
+  if (['language','palette','sync'].includes(type)) syncCommunityCards();
+});
+window.addEventListener('message', event => {
+  if (event.source === $('builtinExampleCard').contentWindow &&
+      event.data?.protocol === 'cluster.community.v1' &&
+      event.data?.type === 'install-example') {
+    void createExamplePackage().then(installArchive).catch(reportLoaderError);
+  }
+});
+function setStandaloneMode(pluginId) {
+  document.body.classList.add('standalone-mode');
+  selectedPluginId = pluginId;
+  renderSettings();
+  renderPluginPage();
+  selectTab('page');
+}
 browserManager = createBrowserPluginManager({
   kernel,
   pagesRoot: $('pluginPages'),
@@ -507,6 +573,7 @@ browserManager = createBrowserPluginManager({
     systemVersion: SYSTEM_MANIFEST.version
   }),
   onChange: () => {
+    updateCommunityCards();
     renderPluginExplorer();
     renderSettings();
     renderPluginPage();
@@ -525,7 +592,15 @@ renderPluginPage();
 
 void browserManager.ready.then(() => {
   setLoaderState('loaderReady');
+  updateCommunityCards();
   renderPluginExplorer();
+  const query = new URLSearchParams(location.search);
+  const requested = query.get('plugin');
+  const home = browserManager.list().find(record =>
+    record.enabled && browserManager.isLoaded(record.id) &&
+    record.manifest.ui?.home);
+  const target = requested || (query.get('view') === 'home' ? home?.id : null);
+  if (target && browserManager.isLoaded(target)) setStandaloneMode(target);
 }).catch(reportLoaderError);
 void kernel.ready.then(renderDiagnostics);
 

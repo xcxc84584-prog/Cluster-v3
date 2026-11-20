@@ -8,6 +8,9 @@ or zip the entire directory and load it in the Plugin Explorer.
 - `manifest.json` — required package identity and HTML entry points.
 - `index.html` — self-contained plugin page.
 - `settings.html` — **plugin-owned** settings UI, rendered in the Host tab.
+- `community.html` — plugin-owned community card, kept within a bounded frame.
+- `ui.mode` — choose `embedded`, `standalone`, or `both`;
+  `ui.home` optionally selects the website landing plugin.
 - `scripts/cluster-client.js` — generic Router/PRMU/PMU bridge.
 - `scripts/app.js` — Router service, public-version read and logging examples.
 - `scripts/settings.js` — changes shared language and UI base RGB color.

@@ -25,3 +25,10 @@ pre{white-space:pre-wrap;word-break:break-word;min-height:70px;
 .setting{margin:16px 0;display:flex;align-items:center;justify-content:space-between;
   flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--ui-border);padding-bottom:14px}
 .setting label{font-size:13px}
+
+.community-card-body{min-height:0;overflow:hidden}
+.community-self-card{padding:14px;min-height:180px}
+.community-head{display:flex;gap:10px;align-items:center}
+.community-head .mark{font-size:26px}
+.community-head h2{margin:2px 0;font-size:17px}
+.community-self-card p{margin:10px 0}

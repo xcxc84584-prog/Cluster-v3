@@ -67,6 +67,8 @@
             <div id="pluginPageEmpty" class="plugin-settings-empty"
               data-i18n="choosePluginPage">請選擇已裝載的插件。</div>
             <div id="pluginPages" class="plugin-pages"></div>
+            <button id="pluginStandalone" type="button" class="standalone-launch"
+              data-i18n="openStandalone">獨立開啟</button>
           </section>
           <section class="tab-view" role="tabpanel" data-view="apis" hidden>
             <div class="list-toolbar"><div class="api-search"><input id="apiSearch" type="search" data-i18n-placeholder="searchApis" placeholder="搜尋 API…" aria-label="Search API list"></div><select id="apiFilter" aria-label="API type"><option value="all" data-i18n="all">全部</option><option value="read" data-i18n="read">讀取</option><option value="write" data-i18n="write">寫入</option><option value="execute" data-i18n="execute">執行</option></select><button class="list-download" type="button" id="apiDownloadList" data-i18n="downloadList">下載 List</button></div>
@@ -110,18 +112,18 @@
               <h2 data-i18n="exampleTitle">標準插件開發範例</h2>
               <p data-i18n="exampleDescription">包含標準資料夾、Manifest、完整 API JSON、公共庫規範與可執行的雙頁插件。</p>
             </div>
-            <section class="community-card">
-              <div class="community-icon">◇</div>
-              <div class="community-body"><strong>Hello Cluster · v1.0.0</strong>
-                <p data-i18n="exampleCapabilities">支援 Router req/rep、PRMU 共享屬性、PMU Log、六語和全域色系。</p>
-                <div class="community-actions">
-                  <button type="button" class="list-download" id="downloadExample"
-                    data-i18n="downloadExample">下載標準範例 ZIP</button>
-                  <button type="button" class="list-download" id="installExample"
-                    data-i18n="installExample">直接裝載範例</button>
-                </div>
-              </div>
-            </section>
+            <div id="communityCards" class="community-card-grid">
+              <iframe id="builtinExampleCard" class="community-card-frame"
+                sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer"
+                src="../templates/plugin-example/community.html"
+                title="Hello Cluster community card"></iframe>
+            </div>
+            <div class="community-actions">
+              <button type="button" class="list-download" id="downloadExample"
+                data-i18n="downloadExample">下載標準範例 ZIP</button>
+              <button type="button" class="list-download" id="installExample"
+                data-i18n="installExample">直接裝載範例</button>
+            </div>
             <section class="community-docs">
               <h3 data-i18n="exampleDocuments">開發文件</h3>
               <p data-i18n="exampleDocsHint">ZIP 內包含 PMU API JSON、完整 API Catalog、插件資料夾規範與公共庫說明。</p>

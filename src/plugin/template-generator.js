@@ -3,8 +3,9 @@ import { API_CATALOG, catalogJSON } from "../core/api-catalog.js";
 import { createZip } from "./package-format.js";
 
 export const TEMPLATE_FILES = Object.freeze([
-  "manifest.json", "index.html", "settings.html",
+  "manifest.json", "index.html", "settings.html", "community.html",
   "scripts/cluster-client.js", "scripts/app.js", "scripts/settings.js",
+  "scripts/community.js",
   "styles/main.css", "README.md",
   "docs/Plugin-Standards.md", "docs/Public-Repository.md", "docs/PMU-API.md"
 ]);

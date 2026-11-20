@@ -213,7 +213,16 @@ export function validatePluginPackage(files) {
       !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(manifest.version || "")) {
     throw packageError("INVALID_MANIFEST", "Invalid schemaVersion/id/name/version");
   }
-  for (const key of ["entry", "settings"]) {
+  // UI placement is independent of the plugin business code.
+  // A plugin can be embedded in Cluster, opened standalone, or both.
+  if (manifest.ui !== undefined) {
+    if (!manifest.ui || typeof manifest.ui !== "object" ||
+        !["embedded", "standalone", "both"].includes(manifest.ui.mode))
+      throw packageError("INVALID_MANIFEST", "ui.mode must be embedded, standalone or both");
+    if (manifest.ui.home !== undefined && typeof manifest.ui.home !== "boolean")
+      throw packageError("INVALID_MANIFEST", "ui.home must be boolean");
+  }
+  for (const key of ["entry", "settings", "community"]) {
     if (key === "entry" && !manifest.entry)
       throw packageError("INVALID_MANIFEST", "Missing entry HTML");
     if (!manifest[key]) continue;
