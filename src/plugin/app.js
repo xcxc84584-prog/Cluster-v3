@@ -1,3 +1,5 @@
+import { createPluginKernel } from '../core/plugin-kernel.js';
+import { API_CATALOG, queryCatalog, catalogJSON } from '../core/api-catalog.js';
 /** Cluster-v3 Host UI: one RGB base color with legible derived surfaces. */
 import { translate } from '../core/translations.js';
 import {
@@ -141,3 +143,96 @@ selectTab('settings');
 
 // Future plugin integration goes through Router -> PRMU, not direct DOM access.
 export const hostPublicProperties = repo;
+
+
+/** API list and diagnostic views are driven by executable core metadata. */
+const kernel = createPluginKernel({ publicRepo: repo, systemVersion: "0.1.0" });
+let apiPageNumber = 1;
+let selectedAPI = null;
+
+function renderAPIs() {
+  const query = queryCatalog({
+    search: $('apiSearch').value,
+    type: $('apiFilter').value,
+    page: apiPageNumber,
+    pageSize: 15
+  });
+  apiPageNumber = query.page;
+  $('apiTableBody').replaceChildren();
+  for (const api of query.entries) {
+    const tr = document.createElement('tr');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'api-link';
+    button.textContent = api.id;
+    button.addEventListener('click', () => showAPI(api));
+    const name = document.createElement('td');
+    name.append(button);
+    tr.append(name);
+    for (const value of [api.version, api.type, api.description]) {
+      const cell = document.createElement('td');
+      cell.textContent = value;
+      tr.append(cell);
+    }
+    $('apiTableBody').append(tr);
+  }
+  $('apiTotal').textContent = query.total + ' / ' + API_CATALOG.length + ' API';
+  $('apiPage').textContent = query.page + ' / ' + query.pages;
+  $('apiPrevious').disabled = query.page <= 1;
+  $('apiNext').disabled = query.page >= query.pages;
+}
+function showAPI(api) {
+  selectedAPI = api;
+  $('apiDetail').hidden = false;
+  $('apiDetailTitle').textContent = api.id + ' — JSON Contract';
+  $('apiDetailJSON').textContent = JSON.stringify(api, null, 2);
+}
+function downloadAPIJSON() {
+  const blob = new Blob([catalogJSON()], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'cluster-v3-api-catalog-v1.json';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function renderDiagnostics() {
+  const events = kernel.logs($('logType').value).slice(-200).reverse();
+  $('logList').replaceChildren();
+  for (const entry of events) {
+    const row = document.createElement('pre');
+    row.className = 'diagnostic-row';
+    row.textContent = JSON.stringify(entry);
+    $('logList').append(row);
+  }
+  if (!events.length) $('logList').textContent = 'No entries';
+  $('routerList').replaceChildren();
+  for (const pluginId of kernel.plugins) {
+    const info = kernel.inspect(pluginId);
+    for (const relation of info.relations.slice(-200).reverse()) {
+      const row = document.createElement('pre');
+      row.className = 'diagnostic-row';
+      row.textContent = JSON.stringify(relation);
+      $('routerList').append(row);
+    }
+  }
+  if (!$('routerList').childElementCount) $('routerList').textContent = 'No router relations';
+}
+$('apiSearch').addEventListener('input', () => { apiPageNumber = 1; renderAPIs(); });
+$('apiFilter').addEventListener('change', () => { apiPageNumber = 1; renderAPIs(); });
+$('apiPrevious').addEventListener('click', () => { apiPageNumber--; renderAPIs(); });
+$('apiNext').addEventListener('click', () => { apiPageNumber++; renderAPIs(); });
+$('apiCopyJSON').addEventListener('click', async () => {
+  if (selectedAPI) await navigator.clipboard.writeText(JSON.stringify(selectedAPI, null, 2));
+});
+$('apiDownloadJSON').addEventListener('click', downloadAPIJSON);
+$('logType').addEventListener('change', renderDiagnostics);
+$('refreshLogs').addEventListener('click', renderDiagnostics);
+$('refreshRouter').addEventListener('click', renderDiagnostics);
+document.querySelectorAll('[data-tab]').forEach(button => {
+  button.addEventListener('click', () => {
+    if (['logs', 'router'].includes(button.dataset.tab)) renderDiagnostics();
+  });
+});
+renderAPIs();
+renderDiagnostics();

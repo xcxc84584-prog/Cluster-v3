@@ -19,8 +19,8 @@ const result = (data, status = 200) => ({ ok: status >= 200 && status < 300, sta
 const fail = error => ({ ok: false, status: error.status || 500,
   data: null, error: { code: error.code || "INTERNAL_ERROR", message: error.message } });
 
-export function createPluginKernel({ storage, systemVersion = "0.1.0" } = {}) {
-  const repo = createPublicRepository({ storage });
+export function createPluginKernel({ storage, publicRepo, systemVersion = "0.1.0" } = {}) {
+  const repo = publicRepo || createPublicRepository({ storage });
   const plugins = new Map();
   const registry = new Map();
   const handlers = new Map();
@@ -208,6 +208,6 @@ export function createPluginKernel({ storage, systemVersion = "0.1.0" } = {}) {
     logs: (type = "log") => copy(type === "elog" ? persistent : recent),
     inspect: pluginId => ({ id: pluginId, loaded: plugins.has(pluginId),
       relations: relations.filter(x => x.source === pluginId || x.target === pluginId).map(copy) }),
-    dispose() { for (const key of [...plugins.keys()]) unload(key); repo.destroy(); }
+    dispose() { for (const key of [...plugins.keys()]) unload(key); if (!publicRepo) repo.destroy(); }
   });
 }

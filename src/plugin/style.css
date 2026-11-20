@@ -151,3 +151,19 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-l
 
 @media(max-width:850px){.explorer{width:205px;flex-basis:205px}.topbar{padding:0 11px;gap:8px}.main-heading{padding:0 18px}.tab-view{padding:20px 18px}.tabs{padding-left:8px}.tabs button{padding:0 10px}.release-mark{display:none}}
 @media(max-width:600px){.brand strong{font-size:17px}.toolbar-divider{display:none}.breadcrumb{display:none}.language-control>span{display:none}.language-control select{max-width:110px;font-size:11px}.toolbar-button{padding:8px}.toolbar-button span:last-child{display:none}.explorer{position:absolute;left:0;top:56px;bottom:32px;z-index:5;box-shadow:10px 0 28px #0009;width:min(270px,85vw);flex-basis:auto}.setting-row{align-items:flex-start;flex-direction:column;gap:12px;padding:17px}.section-heading{padding:17px}.section-intro{align-items:flex-start}.palette-dialog{inset:12px;margin:auto}.statusbar [data-i18n=footerVersion]{display:none}}
+
+/* Live contract inspector; colors derive from the shared palette. */
+.api-detail{margin:12px 18px 22px;border:1px solid var(--ui-border);
+  border-radius:7px;background:var(--ui-panel);overflow:hidden}
+.api-detail-header{display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;padding:11px;border-bottom:1px solid var(--ui-border)}
+.api-detail-header>div{display:flex;gap:8px}
+.api-detail button{padding:7px 10px;border:1px solid var(--ui-border);
+  background:var(--ui-control);border-radius:5px}
+.api-detail pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;
+  overflow:auto;padding:12px;margin:0;color:var(--ui-text)}
+.api-link{border:0;background:transparent;color:var(--ui-accent);
+  text-align:left;text-decoration:underline;text-underline-offset:3px}
+.diagnostic-list{overflow:auto;padding:12px;max-height:calc(100vh - 230px)}
+.diagnostic-row{padding:9px 12px;border-bottom:1px solid var(--ui-border);
+  white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;color:var(--ui-text)}
