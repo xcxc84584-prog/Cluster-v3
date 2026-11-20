@@ -40,4 +40,14 @@ ui("record").addEventListener("click", async () => {
   }));
 });
 void Cluster.Router.register("demo.echo", payload =>
-  ({ echoed: payload.text, at: new Date().toISOString() }));
+  ({ echoed: payload.text, at: new Date().toISOString() }), {
+    contract: {
+      version: "1.0.0",
+      request: { type: "object", required: ["text"],
+        properties: { text: { type: "string" } } },
+      response: { type: "object", required: ["echoed", "at"],
+        properties: { echoed: { type: "string" }, at: { type: "string" } } }
+    }
+  });
+// The API List is sourced from the live service registry.
+

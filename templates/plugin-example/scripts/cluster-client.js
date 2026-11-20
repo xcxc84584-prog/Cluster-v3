@@ -74,8 +74,9 @@
     Router: Object.freeze({
       request: (target, action, payload) =>
         request("Router.request", target, action, payload),
-      async register(action, handler) {
-        const result = await request("Router.register", action);
+      async register(action, handler, options = {}) {
+        const result = await request("Router.register",
+          action, "runtime-callback", options);
         if (result.ok) handlers.set(action, handler);
         return result;
       },
@@ -84,6 +85,11 @@
         if (result.ok) handlers.delete(action);
         return result;
       }
+    }),
+    Contract: Object.freeze({
+      register: definition => request("Contract.register", definition),
+      unregister: id => request("Contract.unregister", id),
+      list: () => request("Contract.list", "all")
     }),
     PMU: Object.freeze({
       log: (type, entry) => request("PMU.log", type, entry),

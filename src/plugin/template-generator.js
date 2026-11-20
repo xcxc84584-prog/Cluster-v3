@@ -9,7 +9,7 @@ export const TEMPLATE_FILES = Object.freeze([
   "styles/main.css", "README.md",
   "docs/Plugin-Standards.md", "docs/Public-Repository.md", "docs/PMU-API.md"
 ]);
-export async function createExamplePackage() {
+export async function createExamplePackage({ liveContracts = [] } = {}) {
   const root = new URL("../../templates/plugin-example/", import.meta.url);
   const entries = await Promise.all(TEMPLATE_FILES.map(async name => {
     const response = await fetch(new URL(name, root), { cache: "no-store" });
@@ -17,11 +17,17 @@ export async function createExamplePackage() {
     return [name, new Uint8Array(await response.arrayBuffer())];
   }));
   const files = Object.fromEntries(entries);
-  files["docs/Cluster-API-Catalog.json"] = catalogJSON();
+  files["docs/Cluster-API-Catalog.json"] = JSON.stringify({
+    schemaVersion: "1.0.0", generatedFrom: "Cluster live registry",
+    apiCount: API_CATALOG.length + liveContracts.length,
+    apis: [...API_CATALOG, ...liveContracts]
+  }, null, 2);
   files["docs/PMU-API.json"] = JSON.stringify({
     schemaVersion: "1.0.0",
     source: "Cluster-v3 PMU",
-    apis: API_CATALOG.filter(api => api.unit === "PMU" || api.unit === "Log")
+    apis: [...API_CATALOG.filter(api => api.unit === "PMU" ||
+      api.unit === "Log"), ...liveContracts.filter(api =>
+      api.owner === "cluster.pmu")]
   }, null, 2);
   return createZip(files);
 }

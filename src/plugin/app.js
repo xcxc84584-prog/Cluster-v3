@@ -316,20 +316,44 @@ function downloadJSON(filename, data) {
 }
 
 
+function visibleAPIContracts() {
+  if (selectedPluginId === 'cluster.pmu') return API_CATALOG;
+  return kernel.contract.list().filter(contract => contract.owner === selectedPluginId)
+    .map(contract => ({
+      id: contract.id, unit: selectedPluginId,
+      method: contract.action, type: 'execute',
+      description: contract.description || contract.action,
+      signature: contract.action + '(payload)',
+      version: contract.version || '1.0.0',
+      implementation: 'initial',
+      request: contract.request || {},
+      response: contract.response || {},
+      errors: [400, 404, 408, 500, 503]
+    }));
+}
+function filteredContracts() {
+  const term = $('apiSearch').value.trim().toLowerCase();
+  const type = $('apiFilter').value;
+  return visibleAPIContracts().filter(api =>
+    (type === 'all' || api.type === type) &&
+    (!term || [api.id, api.description, api.signature].some(
+      s => String(s).toLowerCase().includes(term))));
+}
 function renderAPIs() {
-  const query = queryCatalog({
+  const matched = filteredContracts();
+  const pages = Math.max(1, Math.ceil(matched.length / 15));
+  apiPageNumber = Math.max(1, Math.min(pages, apiPageNumber));
+  const query = {
+    entries: matched.slice((apiPageNumber - 1) * 15, apiPageNumber * 15),
+    total: matched.length, pages, page: apiPageNumber
+  };
+  /* Legacy queryCatalog continues to power external API catalog readers. */
+  /* const query = queryCatalog({
     search: $('apiSearch').value,
     type: $('apiFilter').value,
     page: apiPageNumber,
     pageSize: 15
-  });
-  if (selectedPluginId !== 'cluster.pmu') {
-    // Plugin-specific APIs will appear once they publish contracts.
-    query.entries = [];
-    query.total = 0;
-    query.pages = 1;
-    query.page = 1;
-  }
+  }); */
   apiPageNumber = query.page;
   $('apiTableBody').replaceChildren();
   for (const api of query.entries) {
@@ -370,13 +394,7 @@ function showAPI(api) {
   $('apiDetailJSON').textContent = JSON.stringify(api, null, 2);
 }
 function apiFilteredEntries() {
-  if (selectedPluginId !== 'cluster.pmu') return [];
-  const search = $('apiSearch').value.toLocaleLowerCase().trim();
-  const type = $('apiFilter').value;
-  return API_CATALOG.filter(api =>
-    (type === 'all' || api.type === type) &&
-    (!search || [api.id, api.description, api.signature].some(
-      value => value.toLocaleLowerCase().includes(search))));
+  return filteredContracts();
 }
 function currentLogs() {
   // The current ring already contains ELog; fetch it separately only for
@@ -493,7 +511,8 @@ $('pluginFolderInput').addEventListener('change', async event => {
 $('downloadExample').addEventListener('click', async () => {
   try {
     setLoaderState('loaderBusy');
-    downloadArchive('Cluster-v3-Plugin-Example.zip', await createExamplePackage());
+    downloadArchive('Cluster-v3-Plugin-Example.zip',
+      await createExamplePackage({ liveContracts: kernel.contract.list() }));
     setLoaderState('loaderReady');
   } catch (error) { reportLoaderError(error); }
 });
@@ -507,7 +526,9 @@ $('pluginStandalone').addEventListener('click', () => {
 });
 $('installExample').addEventListener('click', async () => {
   try {
-    await installArchive(await createExamplePackage());
+    await installArchive(await createExamplePackage({
+      liveContracts: kernel.contract.list()
+    }));
   } catch (error) { reportLoaderError(error); }
 });
 
@@ -552,7 +573,8 @@ window.addEventListener('message', event => {
   if (event.source === $('builtinExampleCard').contentWindow &&
       event.data?.protocol === 'cluster.community.v1' &&
       event.data?.type === 'install-example') {
-    void createExamplePackage().then(installArchive).catch(reportLoaderError);
+    void createExamplePackage({ liveContracts: kernel.contract.list() })
+      .then(installArchive).catch(reportLoaderError);
   }
 });
 function setStandaloneMode(pluginId) {

@@ -11,7 +11,7 @@ test("Host RPC checks typed arguments and avoids invoking invalid API", async ()
     "PRMU.get", ["parameters", "system.version"]);
   assert.equal(valid.status,200);
   await assert.rejects(dispatchPluginCall(kernel,"demo.plugin",
-    "PMU.uninstall",["cluster.pmu"]), e => e.status === 404);
+    "PMU.uninstall",["cluster.pmu"]), e => e.status === 403);
 });
 test("Contract registration is scoped to plugin identity", async () => {
   const kernel = createPluginKernel();
