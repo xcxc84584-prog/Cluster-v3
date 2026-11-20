@@ -196,6 +196,19 @@ try {
       JSON.stringify(marketplaceLayout));
   assert(await evaluate("document.querySelectorAll('.plugin-entry-wrapper').length") >= 1,
     "Explorer must include PMU row");
+  assert(await evaluate("document.querySelector('#pluginStandalone') === null"),
+    "Page-level standalone button must be removed");
+  const explorerActions = await evaluate(`(() => {
+    const rows = [...document.querySelectorAll('.plugin-entry-wrapper')];
+    return { coreActions: rows[0]?.querySelectorAll('.plugin-action').length ?? -1,
+      plugins: rows.slice(1).map(row =>
+        [...row.querySelectorAll('.plugin-action')].map(button =>
+          ({ symbol: button.textContent, label: button.getAttribute('aria-label') })))
+    };
+  })()`);
+  assert(explorerActions.coreActions === 0,
+    "Protected PMU must not have plugin controls");
+
   await evaluate("document.querySelector('[data-tab=router]').click();"+
     "document.querySelector('#refreshRouter').click()");
   assert(await evaluate("document.querySelector('#refreshRouter').classList.contains('is-refreshing')"),
@@ -209,6 +222,34 @@ try {
   await evaluate("document.querySelector('.community-install-button').click()");
   await until("document.querySelector('#pluginCount')?.textContent === '02'",
     "example plugin installation");
+  const openAction = await evaluate(`(() => {
+    const row = document.querySelector('[data-plugin-id="example.hello"]')
+      ?.closest('.plugin-entry-wrapper');
+    const actions = [...(row?.querySelectorAll('.plugin-action') || [])];
+    return { symbols: actions.map(button => button.textContent),
+      accessible: actions.every(button => Boolean(button.getAttribute('aria-label'))) };
+  })()`);
+  assert(JSON.stringify(openAction.symbols) === JSON.stringify(['↗','■','×']) &&
+    openAction.accessible,
+    "Explorer installed plugin must have accessible Open/Stop/Remove icons: " +
+      JSON.stringify(openAction));
+  const launchedUrl = await evaluate(`(async () => {
+    let launched = "";
+    const previous = window.open;
+    window.open = () => ({ location: { replace: url => { launched = url; } },
+      close: () => {} });
+    try {
+      document.querySelector('[data-plugin-id="example.hello"]')
+        .closest('.plugin-entry-wrapper')
+        .querySelector('.plugin-open-action').click();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      return launched;
+    } finally { window.open = previous; }
+  })()`);
+  assert(launchedUrl.includes('/Cluster-v3/?plugin=example.hello'),
+    "Explorer Open button must launch correct plugin standalone site: " +
+      launchedUrl);
+
   await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
     "installed iframe");
   const overlayCheck = await evaluate(`(() => {

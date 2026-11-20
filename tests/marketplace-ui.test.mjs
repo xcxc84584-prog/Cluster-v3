@@ -40,3 +40,16 @@ test("Marketplace has horizontal fixed-width actions and a clipped preview", () 
   assert.match(code, /community-card-preview/);
   assert.match(code, /community-card-actions/);
 });
+
+test("Explorer provides Open/Stop/Remove icons, without page-level launcher", () => {
+  const code = readFileSync(new URL("../src/plugin/app.js", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../plugin/index.html", import.meta.url), "utf8");
+  assert.match(code, /actions\.append\(open, toggle, remove\)/);
+  assert.match(code, /open\.textContent = '↗'/);
+  assert.match(code, /open\.setAttribute\('aria-label'/);
+  assert.match(code, /url\.searchParams\.set\('plugin', pluginId\)/);
+  assert.match(code, /window\.open\('about:blank', '_blank'\)/);
+  assert.match(code, /await hostPMU\.load\(pluginId\)/);
+  assert.doesNotMatch(html, /id="pluginStandalone"/);
+  assert.doesNotMatch(code, /\$\('pluginStandalone'\)/);
+});
