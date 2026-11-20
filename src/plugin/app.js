@@ -1,3 +1,5 @@
+import { createBrowserPluginManager } from './browser-runtime.js';
+import { createExamplePackage } from './template-generator.js';
 import { filterLogEntries, exportListJSON, resolveSettingsURL } from './list-utils.js';
 import { SYSTEM_MANIFEST } from "../core/system-manifest.js";
 import { createPluginKernel } from '../core/plugin-kernel.js';
@@ -144,6 +146,7 @@ export const hostPublicProperties = repo;
 
 /** API list and diagnostic views are driven by executable core metadata. */
 const kernel = createPluginKernel({ publicRepo: repo, systemVersion: SYSTEM_MANIFEST.version });
+let browserManager = null;
 let apiPageNumber = 1;
 let selectedAPI = null;
 let selectedPluginId = 'cluster.pmu';
@@ -151,11 +154,15 @@ let selectedPluginId = 'cluster.pmu';
 // The PMU is permanent; ordinary plugin settings are provided by a web page.
 // Plugin management creates the list from registered runtime instances.
 function pluginInstances() {
-  return kernel.plugins.map(id => ({
-    id,
-    core: id === 'cluster.pmu',
-    manifest: kernel.getManifest(id) || {}
-  }));
+  const installed = browserManager?.list() || [];
+  return [
+    { id: 'cluster.pmu', core: true,
+      manifest: kernel.getManifest('cluster.pmu') || {}, loaded: true },
+    ...installed.map(record => ({
+      id: record.id, core: false, manifest: record.manifest,
+      loaded: browserManager.isLoaded(record.id)
+    }))
+  ];
 }
 function renderPluginExplorer() {
   const needle = $('pluginSearch').value.trim().toLocaleLowerCase();
@@ -184,7 +191,43 @@ function renderPluginExplorer() {
     info.append(title, desc);
     button.append(glyph, info);
     button.addEventListener('click', () => choosePlugin(entry.id));
-    $('pluginList').append(button);
+    const line = document.createElement('div');
+    line.className = 'plugin-entry-wrapper';
+    line.append(button);
+    if (!entry.core) {
+      const actions = document.createElement('span');
+      actions.className = 'plugin-entry-actions';
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'plugin-action';
+      toggle.textContent = t(entry.loaded ? 'pluginUnload' : 'pluginStart');
+      toggle.title = toggle.textContent;
+      toggle.addEventListener('click', async () => {
+        try {
+          setLoaderState('loaderBusy');
+          if (entry.loaded) await browserManager.unload(entry.id);
+          else await browserManager.load(entry.id);
+          setLoaderState('loaderReady');
+          choosePlugin(entry.id);
+        } catch (error) { reportLoaderError(error); }
+      });
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'plugin-action';
+      remove.textContent = '×';
+      remove.title = t('pluginRemove');
+      remove.setAttribute('aria-label', t('pluginRemove') + ': ' + entry.id);
+      remove.addEventListener('click', async () => {
+        if (!window.confirm(t('confirmRemove'))) return;
+        try {
+          await browserManager.remove(entry.id);
+          if (selectedPluginId === entry.id) choosePlugin('cluster.pmu');
+        } catch (error) { reportLoaderError(error); }
+      });
+      actions.append(toggle, remove);
+      line.append(actions);
+    }
+    $('pluginList').append(line);
   }
   if (!entries.length) {
     const empty = document.createElement('p');
@@ -202,6 +245,7 @@ function choosePlugin(pluginId) {
   renderSettings();
   renderAPIs();
   renderDiagnostics();
+  renderPluginPage();
   selectTab(pluginId === 'cluster.pmu' ? 'apis' : 'settings');
 }
 function renderSettings() {
@@ -214,12 +258,18 @@ function renderSettings() {
     return;
   }
   const manifest = kernel.getManifest(selectedPluginId);
-  const settingsURL = resolveSettingsURL(manifest?.settingsUrl, location.href);
+  const settingsURL = browserManager?.isLoaded(selectedPluginId) ?
+    resolveSettingsURL(manifest?.settingsUrl, location.href) : null;
   frame.hidden = !settingsURL;
   $('pluginSettingsEmpty').hidden = Boolean(settingsURL);
   if (settingsURL && frame.src !== settingsURL) frame.src = settingsURL;
   if (settingsURL) sendSettingsContext();
   if (!settingsURL) frame.removeAttribute('src');
+}
+function renderPluginPage() {
+  browserManager?.show(selectedPluginId);
+  $('pluginPageEmpty').hidden = selectedPluginId !== 'cluster.pmu' &&
+    browserManager?.isLoaded(selectedPluginId);
 }
 function sendSettingsContext() {
   const frame = $('pluginSettingsFrame');
@@ -235,10 +285,17 @@ function sendSettingsContext() {
     baseColor: repo.getBaseColor()
   }, '*');
 }
-$('pluginSettingsFrame').addEventListener('load', sendSettingsContext);
+$('pluginSettingsFrame').addEventListener('load', () => {
+  sendSettingsContext();
+  if (selectedPluginId !== 'cluster.pmu' &&
+      browserManager?.isLoaded(selectedPluginId)) {
+    browserManager.attachSettings(selectedPluginId);
+  }
+});
 repo.subscribe(({ type }) => {
   if (type === 'language' || type === 'palette' || type === 'sync') {
     sendSettingsContext();
+    browserManager?.syncContext();
   }
 });
 function downloadJSON(filename, data) {
@@ -377,11 +434,98 @@ document.querySelectorAll('[data-tab]').forEach(button => {
     if (['logs', 'router'].includes(button.dataset.tab)) renderDiagnostics();
   });
 });
+function setLoaderState(key, description = "") {
+  $('loaderStatus').textContent = t(key) + (description ? ': ' + description : '');
+}
+function reportLoaderError(error) {
+  const message = error?.message || String(error);
+  setLoaderState('loaderFailed', message);
+  kernel.log('elog', { source: 'cluster.pmu', target: 'plugin.loader',
+    action: 'plugin.load', status: error?.status || 500,
+    error: { code: error?.code || 'PLUGIN_LOAD_FAILED', message } });
+  renderDiagnostics();
+}
+function downloadArchive(name, data) {
+  const url = URL.createObjectURL(new Blob([data], { type: 'application/zip' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = name;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+async function installArchive(source) {
+  try {
+    setLoaderState('loaderBusy');
+    const manifest = await browserManager.installZip(source);
+    setLoaderState('loaderInstalled', manifest.name);
+    choosePlugin(manifest.id);
+    selectTab('page');
+  } catch (error) {
+    reportLoaderError(error);
+  }
+}
+$('loadPlugin').addEventListener('click', () => $('pluginZipInput').click());
+$('loadPluginFolder').addEventListener('click', () => $('pluginFolderInput').click());
+$('pluginZipInput').addEventListener('change', async event => {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (file) await installArchive(new Uint8Array(await file.arrayBuffer()));
+});
+$('pluginFolderInput').addEventListener('change', async event => {
+  const files = [...event.target.files];
+  event.target.value = '';
+  if (!files.length) return;
+  try {
+    setLoaderState('loaderBusy');
+    const manifest = await browserManager.installFolder(files);
+    setLoaderState('loaderInstalled', manifest.name);
+    choosePlugin(manifest.id);
+    selectTab('page');
+  } catch (error) { reportLoaderError(error); }
+});
+$('downloadExample').addEventListener('click', async () => {
+  try {
+    setLoaderState('loaderBusy');
+    downloadArchive('Cluster-v3-Plugin-Example.zip', await createExamplePackage());
+    setLoaderState('loaderReady');
+  } catch (error) { reportLoaderError(error); }
+});
+$('installExample').addEventListener('click', async () => {
+  try {
+    await installArchive(await createExamplePackage());
+  } catch (error) { reportLoaderError(error); }
+});
+
+browserManager = createBrowserPluginManager({
+  kernel,
+  pagesRoot: $('pluginPages'),
+  settingsFrame: $('pluginSettingsFrame'),
+  getContext: () => ({
+    language: repo.getLanguage(),
+    palette: repo.getPalette(),
+    baseColor: repo.getBaseColor(),
+    systemVersion: SYSTEM_MANIFEST.version
+  }),
+  onChange: () => {
+    renderPluginExplorer();
+    renderSettings();
+    renderPluginPage();
+    renderAPIs();
+    renderDiagnostics();
+  },
+  onFailure: reportLoaderError
+});
 syncLanguage();
 syncPalette();
 renderAPIs();
 renderDiagnostics();
-
-void kernel.ready.then(() => renderDiagnostics());
 renderPluginExplorer();
 renderSettings();
+renderPluginPage();
+
+void browserManager.ready.then(() => {
+  setLoaderState('loaderReady');
+  renderPluginExplorer();
+}).catch(reportLoaderError);
+void kernel.ready.then(renderDiagnostics);
+
