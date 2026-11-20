@@ -307,11 +307,39 @@ function choosePlugin(pluginId) {
   renderPluginPage();
   selectTab(pluginId === 'cluster.pmu' ? 'apis' : 'settings');
 }
+/**
+ * Host markup and JS can become out of sync after a cached deployment.
+ * Report the exact missing ID but do not turn a UI placeholder failure into
+ * an unsuccessful plugin package installation.
+ */
+const missingHostNodes = new Set();
+function hostNode(id) {
+  const element = $(id);
+  if (element) return element;
+  if (!missingHostNodes.has(id)) {
+    missingHostNodes.add(id);
+    kernel.log('elog', {
+      source: 'cluster.pmu', target: 'plugin.ui',
+      action: 'ui.missing-element', status: 500,
+      error: { code: 'HOST_DOM_MISMATCH',
+        message: 'Missing Host element #' + id +
+          '; refresh the page to synchronize HTML and JavaScript.' },
+      location: { module: 'src/plugin/app.js', elementId: id },
+      details: { selectedPluginId, pathname: location.pathname }
+    });
+  }
+  return null;
+}
+function setHostHidden(id, hidden) {
+  const element = hostNode(id);
+  if (element) element.hidden = hidden;
+}
 function renderSettings() {
   const isCore = selectedPluginId === 'cluster.pmu';
-  $('publicSettings').hidden = !isCore;
-  $('pluginSettingsHost').hidden = isCore;
-  const frame = $('pluginSettingsFrame');
+  setHostHidden('publicSettings', !isCore);
+  setHostHidden('pluginSettingsHost', isCore);
+  const frame = hostNode('pluginSettingsFrame');
+  if (!frame) return;
   if (isCore) {
     frame.removeAttribute('src');
     return;
@@ -320,7 +348,7 @@ function renderSettings() {
   const settingsURL = browserManager?.isLoaded(selectedPluginId) ?
     resolveSettingsURL(manifest?.settingsUrl, location.href) : null;
   frame.hidden = !settingsURL;
-  $('pluginSettingsEmpty').hidden = Boolean(settingsURL);
+  setHostHidden('pluginSettingsEmpty', Boolean(settingsURL));
   const settingsPath = manifest?.settings;
   if (settingsURL && settingsPath &&
       frame.dataset.pluginId !== selectedPluginId) {
@@ -339,7 +367,7 @@ function renderPluginPage() {
   browserManager?.show(selectedPluginId);
   const canOpen = selectedPluginId !== 'cluster.pmu' &&
     browserManager?.isLoaded(selectedPluginId);
-  $('pluginPageEmpty').hidden = Boolean(canOpen);
+  setHostHidden('pluginPageEmpty', Boolean(canOpen));
 }
 function sendSettingsContext() {
   const frame = $('pluginSettingsFrame');
@@ -547,7 +575,14 @@ function reportLoaderError(error) {
   setLoaderState('loaderFailed', message);
   kernel.log('elog', { source: 'cluster.pmu', target: 'plugin.loader',
     action: 'plugin.load', status: error?.status || 500,
-    error: { code: error?.code || 'PLUGIN_LOAD_FAILED', message } });
+    error: { code: error?.code || 'PLUGIN_LOAD_FAILED', message },
+    location: error?.location || {
+      module: 'src/plugin/app.js', function: 'reportLoaderError'
+    },
+    details: { selectedPluginId,
+      stack: String(error?.stack || '').slice(0, 2400),
+      page: location.pathname }
+  });
   renderDiagnostics();
 }
 function downloadArchive(name, data) {

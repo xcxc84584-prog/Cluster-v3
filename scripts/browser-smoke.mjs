@@ -252,6 +252,18 @@ try {
 
   await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
     "installed iframe");
+  // Simulate a stale Host DOM without the optional page placeholder.
+  // Selecting a plugin must not abort its otherwise valid installation.
+  const safeMissingNode = await evaluate(`(() => {
+    const placeholder = document.querySelector('#pluginPageEmpty');
+    placeholder?.remove();
+    document.querySelector('[data-tab=page]').click();
+    const frame = document.querySelector('.plugin-main-frame');
+    return Boolean(frame?.srcdoc);
+  })()`);
+  assert(safeMissingNode,
+    "Missing Host placeholder must not prevent plugin iframe mounting");
+
   const overlayCheck = await evaluate(`(() => {
     const hint = document.querySelector('#pluginPageEmpty');
     const page = document.querySelector('[data-view=page]');
