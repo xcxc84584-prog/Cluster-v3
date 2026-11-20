@@ -1,0 +1,10 @@
+{
+  "name": "cluster-v3",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/core/translations.js && node --check src/core/public-repository.js && node --check src/plugin/app.js"
+  }
+}
