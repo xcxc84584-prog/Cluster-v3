@@ -120,6 +120,13 @@ try {
         "pluginCount:document.querySelector('#pluginCount')?.textContent," +
         "api:document.querySelector('#apiTableBody')?.textContent?.slice(0,300)," +
         "frame:document.querySelector('.plugin-main-frame')?.src," +
+        "connected:document.querySelector('.plugin-main-frame')?.isConnected," +
+        "hasWindow:Boolean(document.querySelector('.plugin-main-frame')?.contentWindow)," +
+        "sandbox:document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')," +
+        "pageHidden:document.querySelector('[data-view=page]')?.hidden," +
+        "pageDisplay:getComputedStyle(document.querySelector('[data-view=page]')).display," +
+        "hostInactive:document.querySelector('.plugin-main-host')?.dataset.inactive," +
+        "hostDisplay:getComputedStyle(document.querySelector('.plugin-main-host')).display," +
         "frameEvents:(window.__clusterFrameEvents||[]).slice(-12)," +
         "controlled:Boolean(navigator.serviceWorker.controller)," +
         "asset:(await fetch('/Cluster-v3/__cluster_plugins/example.hello/index.html'))" +
