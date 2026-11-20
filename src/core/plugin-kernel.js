@@ -132,13 +132,21 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
         registry.delete(key); emitRegistry(key, undefined); return result(true);
       },
       subscribe(source, item, callback) {
+        if (typeof callback !== "function")
+          throw new ClusterError(400, "BAD_CALLBACK", "callback must be a function");
         const key = id("sub");
-        const un = source === "properties" || source === "ui" ?
-          repo.subscribe(({ type, snapshot }) => {
-          if ((source === "properties" && item === "system.language" && type === "language") ||
-              (source === "ui" && type === "palette")) callback(copy(snapshot));
-        });
-        subscriptions.set(key, un); return key;
+        let un;
+        if (source === "properties" || source === "ui") {
+          un = repo.subscribe(({ type, snapshot }) => {
+            if ((source === "properties" && item === "system.language" && type === "language") ||
+                (source === "ui" && type === "palette")) callback(copy(snapshot));
+          });
+        } else {
+          registryListeners.set(key, { key: source + "." + item, callback });
+          un = () => registryListeners.delete(key);
+        }
+        subscriptions.set(key, un);
+        return key;
       },
       unsubscribe(key) { subscriptions.get(key)?.(); subscriptions.delete(key); },
       describe(source, item) {
