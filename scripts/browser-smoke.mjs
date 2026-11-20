@@ -174,7 +174,9 @@ try {
     "Host initialization and Service Worker activation");
   await evaluate("window.__clusterFrameEvents=[];window.addEventListener('message',"+ 
     "e=>window.__clusterFrameEvents.push({origin:e.origin,data:e.data}));");
-  await evaluate("document.querySelector('#installExample').click()");
+  await until("document.querySelector('.community-install-button') !== null",
+    "marketplace card displayed");
+  await evaluate("document.querySelector('.community-install-button').click()");
   await until("document.querySelector('#pluginCount')?.textContent === '02'",
     "example plugin installation");
   await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
@@ -192,6 +194,15 @@ try {
     "document.querySelector('[data-community-plugin=\"example.hello\"]')?.getAttribute('sandbox')");
   assert(communitySandbox === "allow-scripts allow-forms",
     "Community card must be opaque and container bounded");
+  const uniqueCards = await evaluate(
+    "document.querySelectorAll('[data-community-id=\\\"example.hello\\\"]').length");
+  assert(uniqueCards === 1, "Marketplace must not duplicate installed example");
+  await evaluate("document.querySelector('#communitySearch').value='nonexistent';" +
+    "document.querySelector('#communitySearch').dispatchEvent(new Event('input'))");
+  assert(await evaluate("document.querySelector('#communityEmpty').hidden") === false,
+    "Marketplace search must render empty state");
+  await evaluate("document.querySelector('#communitySearch').value='';" +
+    "document.querySelector('#communitySearch').dispatchEvent(new Event('input'))");
   let echoSession = null;
   for (const session of iframeSessions) {
     try {
@@ -222,6 +233,12 @@ try {
   await evaluate("document.querySelector('[data-tab=apis]').click()");
   await until("document.querySelector('#apiTableBody')?.textContent.includes('demo.echo')",
     "plugin runtime contract registration");
+  await evaluate("document.querySelector('.api-link').click()");
+  assert(await evaluate("document.querySelector('#apiDetail').open"),
+    "API JSON must open in a modal dialog");
+  await evaluate("document.querySelector('#apiModalClose').click()");
+  assert(!(await evaluate("document.querySelector('#apiDetail').open")),
+    "API modal must close using its button");
   const url=new URL("../",hostURL);
   url.searchParams.set("plugin","example.hello");
   await send("Page.navigate",{url:url.href});

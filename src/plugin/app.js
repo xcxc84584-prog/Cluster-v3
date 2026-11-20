@@ -560,7 +560,8 @@ async function exampleArchive() {
 }
 async function communityInstall(id) {
   try {
-    if (id !== 'example.hello' && browserManager?.get(id)) {
+    if (browserManager?.get(id)) {
+      if (!browserManager.isLoaded(id)) await hostPMU.load(id);
       setLoaderState('loaderReady');
       choosePlugin(id);
       return;

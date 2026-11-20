@@ -39,8 +39,10 @@ test("all six locales cover loader and example UI labels", () => {
     "loaderInstalled","loaderFailed","pluginPage","choosePluginPage",
     "pluginUnload","pluginStart","pluginRemove","confirmRemove",
     "exampleTitle","exampleDescription","exampleCapabilities",
-    "downloadExample","installExample","exampleDocuments",
-    "exampleDocsHint","viewExampleSource"];
+    "communityDownload","communityQuickInstall","communityOpen",
+    "communityTitle","communitySubtitle","searchCommunity","allPlugins",
+    "communityInstalled","communityAvailable","sortByName",
+    "sortByVersion","noCommunityResults","downloadJson","modalClose"];
   for (const [locale] of SUPPORTED_LANGUAGES) {
     for (const key of keys) assert.ok(TRANSLATIONS[locale][key], locale + "/" + key);
   }
@@ -49,7 +51,12 @@ test("Host UI has install selectors, iframe slots and example download", () => {
   const html = readFileSync(new URL("../plugin/index.html", import.meta.url), "utf8");
   for (const id of ["loadPlugin","loadPluginFolder","pluginZipInput",
     "pluginFolderInput","pluginPages","pluginSettingsFrame",
-    "installExample","downloadExample"]) {
+    "communityCards","communitySearch","communityFilter",
+    "communitySort","apiDetail","apiModalClose","apiDownloadJSON"]) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
+  assert.doesNotMatch(html, /id="builtinExampleCard"/);
+  assert.doesNotMatch(html, /class="community-docs"/);
+  assert.doesNotMatch(html, /id="openPalette"/);
+  assert.doesNotMatch(html, /id="languageSelect"/);
 });
