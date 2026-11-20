@@ -50,6 +50,7 @@ async function freePort() {
 }
 const pending = new Map();
 const browserErrors = [];
+const iframeSessions = new Set();
 try {
   await new Promise(resolve=>http.listen(0,"127.0.0.1",resolve));
   const hostURL="http://127.0.0.1:"+http.address().port+"/Cluster-v3/plugin/";
@@ -90,6 +91,9 @@ try {
         target:message.params?.targetInfo});
       const session = message.params?.sessionId;
       if (session) {
+        if (message.params?.targetInfo?.type === "iframe") {
+          iframeSessions.add(session);
+        }
         void send("Runtime.enable",{},session).catch(()=>{});
         void send("Log.enable",{},session).catch(()=>{});
         void send("Network.enable",{},session).catch(()=>{});
@@ -177,6 +181,39 @@ try {
     "window.__clusterFrameEvents.find(e=>e.data?.method==='Router.register')?.origin");
   assert(requester === "null",
     "Plugin iframe must have opaque origin after CSP sandbox: "+requester);
+  await until("Boolean(document.querySelector('[data-community-plugin=example.hello]')?.srcdoc)",
+    "plugin-provided community card");
+  const communitySandbox = await evaluate(
+    "document.querySelector('[data-community-plugin=example.hello]')?.getAttribute('sandbox')");
+  assert(communitySandbox === "allow-scripts allow-forms",
+    "Community card must be opaque and container bounded");
+  let echoSession = null;
+  for (const session of iframeSessions) {
+    try {
+      const found = await send("Runtime.evaluate", {
+        expression:"Boolean(document.querySelector('#echo'))",
+        returnByValue:true
+      }, session);
+      if (found?.result?.value) { echoSession = session; break; }
+    } catch { /* iframe navigated / was replaced */ }
+  }
+  assert(echoSession, "Cannot locate example plugin runtime frame in Chrome");
+  await send("Runtime.evaluate", {
+    expression:"document.querySelector('#echo').click()",
+    returnByValue:true
+  }, echoSession);
+  let echoOk = false;
+  for (let i=0; i<100; i++) {
+    const value = await send("Runtime.evaluate", {
+      expression:"document.querySelector('#output')?.textContent",
+      returnByValue:true
+    }, echoSession);
+    if (value?.result?.value?.includes("Hello from Cluster")) {
+      echoOk=true;break;
+    }
+    await sleep(80);
+  }
+  assert(echoOk, "Plugin Router req/rep in real Chrome must return Echo");
   await evaluate("document.querySelector('[data-tab=apis]').click()");
   await until("document.querySelector('#apiTableBody')?.textContent.includes('demo.echo')",
     "plugin runtime contract registration");
