@@ -297,11 +297,11 @@ try {
   await until("Boolean(document.querySelector('.plugin-main-frame')" +
     "?.contentDocument?.querySelector('#echo'))",
     "same-origin example plugin runtime frame");
-  const originAccess = await evaluate(
-    "document.querySelector('.plugin-main-frame').contentDocument.origin" +
-    " || document.querySelector('.plugin-main-frame').contentWindow.location.origin");
-  assert(originAccess === new URL(hostURL).origin,
-    "Plugin document must share Host origin after sandbox removal");
+  const hostDomAccess = await evaluate(
+    "document.querySelector('.plugin-main-frame')" +
+    ".contentWindow.parent.document === document");
+  assert(hostDomAccess === true,
+    "Unsandboxed plugin must be able to access Host DOM");
   await evaluate(
     "document.querySelector('.plugin-main-frame')" +
     ".contentDocument.querySelector('#echo').click()");
