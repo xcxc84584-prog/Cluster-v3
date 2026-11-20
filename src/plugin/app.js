@@ -1,4 +1,4 @@
-// Plugin-owned card elements only live inside constrained iframe windows.
+// Plugin-owned card elements only live inside plugin iframe windows.
 import { createBrowserPluginManager } from './browser-runtime.js';
 import { createHostPMU } from './host-pmu.js';
 import { createExamplePackage } from './template-generator.js';
