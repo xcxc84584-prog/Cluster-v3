@@ -622,6 +622,7 @@ renderPluginPage();
 
 void browserManager.ready.then(() => {
   setLoaderState('loaderReady');
+  document.documentElement.dataset.clusterReady = '1';
   updateCommunityCards();
   renderPluginExplorer();
   const query = new URLSearchParams(location.search);
