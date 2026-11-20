@@ -188,36 +188,34 @@ function renderPluginExplorer() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'plugin-entry';
-    button.setAttribute('role', 'option');
-    button.setAttribute('aria-selected', String(selectedPluginId === entry.id));
+    button.setAttribute('aria-current',
+      selectedPluginId === entry.id ? 'true' : 'false');
     button.dataset.pluginId = entry.id;
     const glyph = document.createElement('span');
     glyph.className = 'plugin-glyph';
     glyph.textContent = entry.core ? '◇' : '⬡';
     const info = document.createElement('span');
     info.className = 'plugin-entry-label';
-    const heading = document.createElement('span');
-    heading.className = 'plugin-entry-heading';
-    const title = document.createElement('strong');
+    const title = document.createElement('span');
+    title.className = 'plugin-entry-name';
     title.textContent = entry.core ? t('publicManagement') :
       (entry.manifest.name || entry.id);
-    const version = document.createElement('small');
-    version.className = 'plugin-version';
-    version.textContent = entry.core ? 'CORE' : 'v' + (entry.manifest.version || '0.0.0');
-    heading.append(title, version);
-    const desc = document.createElement('small');
-    desc.className = 'plugin-summary';
-    desc.textContent = entry.core ? t('systemProtected') :
+    const state = document.createElement('span');
+    state.className = 'plugin-led';
+    state.dataset.running = String(entry.loaded);
+    state.setAttribute('aria-hidden', 'true');
+    info.append(title);
+    const description = entry.core ? t('systemProtected') :
       (entry.manifest.description || entry.id);
-    const state = document.createElement('small');
-    state.className = 'plugin-state';
-    state.textContent = entry.core ? '● ' + t('systemProtected') :
-      (entry.loaded ? '● ' + t('pluginStart') : '○ ' + t('pluginUnload'));
-    info.append(heading, desc, state);
-    button.append(glyph, info);
+    button.title = title.textContent + ' · ' +
+      (entry.core ? 'CORE' : 'v' + (entry.manifest.version || '0.0.0')) +
+      '\n' + description;
+    button.setAttribute('aria-label', button.title);
+    button.append(glyph, info, state);
     button.addEventListener('click', () => choosePlugin(entry.id));
     const line = document.createElement('div');
     line.className = 'plugin-entry-wrapper';
+    line.setAttribute('role', 'listitem');
     line.append(button);
     if (!entry.core) {
       const actions = document.createElement('span');
@@ -225,8 +223,9 @@ function renderPluginExplorer() {
       const toggle = document.createElement('button');
       toggle.type = 'button';
       toggle.className = 'plugin-action';
-      toggle.textContent = t(entry.loaded ? 'pluginUnload' : 'pluginStart');
-      toggle.title = toggle.textContent;
+      toggle.textContent = entry.loaded ? '■' : '▶';
+      toggle.title = t(entry.loaded ? 'pluginUnload' : 'pluginStart');
+      toggle.setAttribute('aria-label', toggle.title + ': ' + entry.id);
       toggle.addEventListener('click', async () => {
         try {
           setLoaderState('loaderBusy');
@@ -496,7 +495,13 @@ $('logDownloadList').addEventListener('click', () => downloadJSON(
     type: $('logType').value, status: $('logStatus').value
   })
 ));
-$('refreshRouter').addEventListener('click', renderDiagnostics);
+$('refreshRouter').addEventListener('click', () => {
+  const button = $('refreshRouter');
+  button.classList.remove('is-refreshing');
+  void button.offsetWidth;
+  button.classList.add('is-refreshing');
+  renderDiagnostics();
+});
 document.querySelectorAll('[data-tab]').forEach(button => {
   button.addEventListener('click', () => {
     if (['logs', 'router'].includes(button.dataset.tab)) renderDiagnostics();
@@ -611,53 +616,72 @@ function buildCommunityCard(item) {
   article.className = 'community-card';
   article.dataset.communityId = item.id;
   article.setAttribute('role', 'listitem');
-  const visual = document.createElement('div');
-  visual.className = 'community-visual';
-  const hasCustom = Boolean(item.installed && item.manifest.community &&
-    browserManager?.isLoaded(item.id));
-  if (hasCustom) {
+
+  // Use the previous Explorer-style identity card for every plugin.
+  // Third-party previews stay in a clipped iframe and do not own Host buttons.
+  const head = document.createElement('div');
+  head.className = 'community-card-identity';
+  const glyph = document.createElement('span');
+  glyph.className = 'community-card-glyph';
+  glyph.textContent = '⬡';
+  glyph.setAttribute('aria-hidden', 'true');
+  const information = document.createElement('div');
+  information.className = 'community-card-information';
+  const heading = document.createElement('div');
+  heading.className = 'community-card-heading';
+  const title = document.createElement('strong');
+  title.textContent = item.name;
+  title.title = item.name;
+  const version = document.createElement('small');
+  version.textContent = 'v' + item.version;
+  heading.append(title, version);
+  const summary = document.createElement('p');
+  summary.className = 'community-card-description';
+  summary.textContent = item.description;
+  const details = document.createElement('small');
+  details.className = 'community-card-status';
+  details.textContent = item.installed ?
+    t('communityInstalled') : t('communityAvailable');
+  information.append(heading, summary, details);
+  head.append(glyph, information);
+  article.append(head);
+
+  const custom = item.installed && item.manifest.community &&
+    browserManager?.isLoaded(item.id);
+  if (custom) {
+    // A plugin may design its own preview, but the Host controls the
+    // border, size, overflow and install/download action layout.
+    const preview = document.createElement('div');
+    preview.className = 'community-card-preview';
     const frame = document.createElement('iframe');
     frame.className = 'community-card-frame';
     frame.sandbox = 'allow-scripts allow-forms';
     frame.referrerPolicy = 'no-referrer';
     frame.title = item.name;
     frame.dataset.communityPlugin = item.id;
-    visual.append(frame);
+    preview.append(frame);
+    article.append(preview);
     browserManager.registerAuxiliaryFrame(item.id, frame);
-    void browserManager.renderAssetFrame(item.id, item.manifest.community, frame)
-      .catch(reportLoaderError);
-  } else {
-    // Default browser card follows the original screenshot; all custom
-    // content is isolated within a frame and cannot resize the card.
-    const info = document.createElement('div');
-    info.className = 'community-default-info';
-    const icon = document.createElement('span');
-    icon.className = 'community-default-icon';
-    icon.textContent = '⬡';
-    const header = document.createElement('div');
-    const heading = document.createElement('h3');
-    heading.textContent = item.name;
-    const version = document.createElement('small');
-    version.textContent = 'v' + item.version;
-    header.append(heading, version);
-    const description = document.createElement('p');
-    description.textContent = item.description;
-    info.append(icon, header);
-    visual.append(info, description);
+    void browserManager.renderAssetFrame(
+      item.id, item.manifest.community, frame).catch(reportLoaderError);
   }
+
   const actions = document.createElement('div');
   actions.className = 'community-card-actions';
   const download = document.createElement('button');
   download.type = 'button';
+  download.className = 'community-download-button';
   download.textContent = '↓ ' + t('communityDownload');
+  download.title = t('communityDownload');
   download.addEventListener('click', () => void communityDownload(item.id));
   const install = document.createElement('button');
   install.type = 'button';
   install.className = 'community-install-button';
-  install.textContent = item.installed ? t('communityOpen') : t('communityQuickInstall');
+  install.textContent = item.installed ?
+    t('communityOpen') : t('communityQuickInstall');
   install.addEventListener('click', () => void communityInstall(item.id));
   actions.append(download, install);
-  article.append(visual, actions);
+  article.append(actions);
   return article;
 }
 function updateCommunityCards() {

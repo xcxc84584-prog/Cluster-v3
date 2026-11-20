@@ -172,6 +172,36 @@ try {
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host initialization and Service Worker activation");
+  // Measure only after opening the community tab; hidden tabs have zero geometry.
+  await evaluate("document.querySelector('[data-tab=community]').click()");
+  // Real browser geometry catches flex-wrap and vertical text regressions.
+  const marketplaceLayout = await evaluate(`(() => {
+    const card = document.querySelector('.community-card');
+    const buttons = [...(card?.querySelectorAll('.community-card-actions button') || [])];
+    const rows = buttons.map(button => {
+      const rect = button.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      return { width: rect.width, height: rect.height,
+        writingMode: style.writingMode, whiteSpace: style.whiteSpace };
+    });
+    return { count: document.querySelectorAll('.community-card').length,
+      rows };
+  })()`);
+  assert(marketplaceLayout.count === 1, "Default example card must appear once");
+  assert(marketplaceLayout.rows.length === 2, "Download and quick install required");
+  assert(marketplaceLayout.rows.every(row =>
+    row.width > 65 && row.height < 55 &&
+    row.writingMode === "horizontal-tb" && row.whiteSpace === "nowrap"),
+    "Marketplace buttons must stay horizontally readable: " +
+      JSON.stringify(marketplaceLayout));
+  assert(await evaluate("document.querySelectorAll('.plugin-entry-wrapper').length") >= 1,
+    "Explorer must include PMU row");
+  await evaluate("document.querySelector('[data-tab=router]').click();"+
+    "document.querySelector('#refreshRouter').click()");
+  assert(await evaluate("document.querySelector('#refreshRouter').classList.contains('is-refreshing')"),
+    "Router refresh icon must update visually");
+  await evaluate("document.querySelector('[data-tab=community]').click()");
+
   await evaluate("window.__clusterFrameEvents=[];window.addEventListener('message',"+ 
     "e=>window.__clusterFrameEvents.push({origin:e.origin,data:e.data}));");
   await until("document.querySelector('.community-install-button') !== null",

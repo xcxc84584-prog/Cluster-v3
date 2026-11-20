@@ -30,7 +30,7 @@
           <input id="pluginZipInput" type="file" accept=".zip,.cluster-plugin" hidden>
           <input id="pluginFolderInput" type="file" webkitdirectory directory multiple hidden>
         <div class="explorer-section" data-i18n="installed">已裝載插件</div>
-        <div id="pluginList" class="explorer-list" role="listbox" aria-label="Plugins"></div>
+        <div id="pluginList" class="explorer-list" role="list" aria-label="Plugins"></div>
         <div class="explorer-footer"><span class="status-dot muted"></span><span id="loaderStatus" data-i18n="loaderReady">裝載系統已就緒</span></div>
       </aside>
       <main class="main-content" id="mainContent">
@@ -97,7 +97,20 @@
             <div class="diagnostic-list" id="logList" role="list"></div>
           </section>
           <section class="tab-view" role="tabpanel" data-view="router" hidden>
-            <div class="list-toolbar"><strong>Router / req &amp; rep</strong><button type="button" id="refreshRouter">Refresh</button></div>
+            <div class="list-toolbar router-toolbar">
+              <strong>Router / req &amp; rep</strong>
+              <button type="button" id="refreshRouter" class="router-refresh"
+                aria-label="Refresh Router status" title="Refresh Router status"
+                data-i18n-title="refreshRouter">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 7v5h-5"/>
+                  <path d="M4 17v-5h5"/>
+                  <path d="M5.7 9a7 7 0 0 1 12-2L20 12"/>
+                  <path d="M18.3 15a7 7 0 0 1-12 2L4 12"/>
+                </svg>
+                <span data-i18n="refreshRouter">重新整理</span>
+              </button>
+            </div>
             <div class="diagnostic-list" id="routerList" role="list"></div>
           </section>
           <section class="tab-view community-view" role="tabpanel" data-view="community" hidden>

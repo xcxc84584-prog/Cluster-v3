@@ -32,3 +32,9 @@ pre{white-space:pre-wrap;word-break:break-word;min-height:70px;
 .community-head .mark{font-size:26px}
 .community-head h2{margin:2px 0;font-size:17px}
 .community-self-card p{margin:10px 0}
+
+.community-card-body{min-height:0;overflow:hidden}
+.community-preview-content{padding:10px 12px;max-height:95px;overflow:hidden}
+.community-preview-content small{letter-spacing:.8px}
+.community-preview-content p{font-size:11px;line-height:1.55;
+  margin:7px 0;color:var(--ui-muted)}
