@@ -15,7 +15,7 @@ const http = createServer(async (req, res) => {
     res.writeHead(404);res.end();return;
   }
   const p = decodeURIComponent(url.pathname.slice("/Cluster-v3/".length));
-  const path = resolve(root, p.endsWith("/") ? p + "index.html" : p);
+  const path = resolve(root, (!p || p.endsWith("/")) ? p + "index.html" : p);
   if (!path.startsWith(root + "/")) {
     res.writeHead(403);res.end();return;
   }
@@ -132,7 +132,7 @@ try {
     }
     try {
       const diagnosis = await evaluate(
-        "(async()=>({status:document.querySelector('#loaderStatus')?.textContent," +
+        "(async()=>({url:location.href,readyState:document.readyState,status:document.querySelector('#loaderStatus')?.textContent," +
         "pluginCount:document.querySelector('#pluginCount')?.textContent," +
         "api:document.querySelector('#apiTableBody')?.textContent?.slice(0,300)," +
         "frame:document.querySelector('.plugin-main-frame')?.dataset.virtualPath," +
@@ -140,9 +140,9 @@ try {
         "hasWindow:Boolean(document.querySelector('.plugin-main-frame')?.contentWindow)," +
         "sandbox:document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')," +
         "pageHidden:document.querySelector('[data-view=page]')?.hidden," +
-        "pageDisplay:getComputedStyle(document.querySelector('[data-view=page]')).display," +
+        "pageDisplay:document.querySelector('[data-view=page]')?.style.display," +
         "hostInactive:document.querySelector('.plugin-main-host')?.dataset.inactive," +
-        "hostDisplay:getComputedStyle(document.querySelector('.plugin-main-host')).display," +
+        "hostDisplay:document.querySelector('.plugin-main-host')?.style.display," +
         "frameEvents:(window.__clusterFrameEvents||[]).slice(-12)," +
         "controlled:Boolean(navigator.serviceWorker.controller)," +
         "asset:(await fetch('/Cluster-v3/__cluster_plugins/example.hello/index.html'))" +
