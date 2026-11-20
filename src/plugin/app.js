@@ -202,6 +202,7 @@ function choosePlugin(pluginId) {
   renderSettings();
   renderAPIs();
   renderDiagnostics();
+  selectTab(pluginId === 'cluster.pmu' ? 'apis' : 'settings');
 }
 function renderSettings() {
   const isCore = selectedPluginId === 'cluster.pmu';
@@ -217,8 +218,29 @@ function renderSettings() {
   frame.hidden = !settingsURL;
   $('pluginSettingsEmpty').hidden = Boolean(settingsURL);
   if (settingsURL && frame.src !== settingsURL) frame.src = settingsURL;
+  if (settingsURL) sendSettingsContext();
   if (!settingsURL) frame.removeAttribute('src');
 }
+function sendSettingsContext() {
+  const frame = $('pluginSettingsFrame');
+  if (selectedPluginId === 'cluster.pmu' || !frame.src ||
+      frame.hidden || !frame.contentWindow) return;
+  // Opaque-origin iframe: only send nonsecret UI context to the selected frame.
+  // Plugin authors can subscribe to this message without Host DOM access.
+  frame.contentWindow.postMessage({
+    protocol: 'cluster.settings.context.v1',
+    pluginId: selectedPluginId,
+    language: repo.getLanguage(),
+    palette: repo.getPalette(),
+    baseColor: repo.getBaseColor()
+  }, '*');
+}
+$('pluginSettingsFrame').addEventListener('load', sendSettingsContext);
+repo.subscribe(({ type }) => {
+  if (type === 'language' || type === 'palette' || type === 'sync') {
+    sendSettingsContext();
+  }
+});
 function downloadJSON(filename, data) {
   const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
