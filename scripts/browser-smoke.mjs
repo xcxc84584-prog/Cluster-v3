@@ -195,7 +195,8 @@ try {
   assert(communitySandbox === "allow-scripts allow-forms",
     "Community card must be opaque and container bounded");
   const uniqueCards = await evaluate(
-    "document.querySelectorAll('[data-community-id=\\\"example.hello\\\"]').length");
+    "[...document.querySelectorAll('.community-card')].filter(" +
+    "x=>x.dataset.communityId==='example.hello').length");
   assert(uniqueCards === 1, "Marketplace must not duplicate installed example");
   await evaluate("document.querySelector('#communitySearch').value='nonexistent';" +
     "document.querySelector('#communitySearch').dispatchEvent(new Event('input'))");
