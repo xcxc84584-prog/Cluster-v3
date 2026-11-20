@@ -85,6 +85,21 @@ try {
   let serial=0;
   socket.onmessage=event=>{
     const message=JSON.parse(event.data);
+    if (message.method === "Target.attachedToTarget") {
+      browserErrors.push({method:"Target.attachedToTarget",
+        target:message.params?.targetInfo});
+      const session = message.params?.sessionId;
+      if (session) {
+        void send("Runtime.enable",{},session).catch(()=>{});
+        void send("Log.enable",{},session).catch(()=>{});
+        void send("Network.enable",{},session).catch(()=>{});
+      }
+    }
+    if (message.method === "Network.responseReceived" &&
+        message.params?.response?.url?.includes("__cluster_plugins")) {
+      browserErrors.push({method:"Network.responseReceived",
+        response:message.params.response});
+    }
     if (message.method === "Runtime.exceptionThrown" ||
         message.method === "Log.entryAdded" ||
         message.method === "Runtime.consoleAPICalled") {
@@ -96,11 +111,12 @@ try {
     if(message.error)waiting.reject(Error(JSON.stringify(message.error)));
     else waiting.resolve(message.result);
   };
-  function send(method,params={}) {
+  function send(method,params={},sessionId=null) {
     const id=++serial;
     return new Promise((resolve,reject)=>{
       pending.set(id,{resolve,reject});
-      socket.send(JSON.stringify({id,method,params}));
+      socket.send(JSON.stringify({id,method,params,
+        ...(sessionId ? {sessionId} : {})}));
     });
   }
   async function evaluate(expression) {
@@ -141,6 +157,9 @@ try {
   await send("Page.enable");
   await send("Runtime.enable");
   await send("Log.enable");
+  await send("Target.setAutoAttach", {
+    autoAttach:true,waitForDebuggerOnStart:false,flatten:true
+  });
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host initialization and Service Worker activation");
