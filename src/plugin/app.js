@@ -1,5 +1,6 @@
 // Plugin-owned card elements only live inside constrained iframe windows.
 import { createBrowserPluginManager } from './browser-runtime.js';
+import { createHostPMU } from './host-pmu.js';
 import { createExamplePackage } from './template-generator.js';
 import { filterLogEntries, exportListJSON, resolveSettingsURL } from './list-utils.js';
 import { SYSTEM_MANIFEST } from "../core/system-manifest.js";
@@ -125,7 +126,10 @@ $('explorerToggle').addEventListener('click', (event) => {
 });
 $('pluginSearch').addEventListener('input', renderPluginExplorer);
 document.querySelectorAll('[data-tab]').forEach((button) => {
-  button.addEventListener('click', () => selectTab(button.dataset.tab));
+  button.addEventListener('click', () => {
+    selectTab(button.dataset.tab);
+    if (button.dataset.tab === 'apis') renderAPIs();
+  });
   button.addEventListener('keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     const tabs = [...document.querySelectorAll('[data-tab]')];
@@ -150,6 +154,7 @@ export const hostPublicProperties = repo;
 /** API list and diagnostic views are driven by executable core metadata. */
 const kernel = createPluginKernel({ publicRepo: repo, systemVersion: SYSTEM_MANIFEST.version });
 let browserManager = null;
+let hostPMU = null;
 let apiPageNumber = 1;
 let selectedAPI = null;
 let selectedPluginId = 'cluster.pmu';
@@ -208,8 +213,8 @@ function renderPluginExplorer() {
       toggle.addEventListener('click', async () => {
         try {
           setLoaderState('loaderBusy');
-          if (entry.loaded) await browserManager.unload(entry.id);
-          else await browserManager.load(entry.id);
+          if (entry.loaded) await hostPMU.unload(entry.id);
+          else await hostPMU.load(entry.id);
           setLoaderState('loaderReady');
           choosePlugin(entry.id);
         } catch (error) { reportLoaderError(error); }
@@ -223,7 +228,7 @@ function renderPluginExplorer() {
       remove.addEventListener('click', async () => {
         if (!window.confirm(t('confirmRemove'))) return;
         try {
-          await browserManager.remove(entry.id);
+          await hostPMU.uninstall(entry.id);
           if (selectedPluginId === entry.id) choosePlugin('cluster.pmu');
         } catch (error) { reportLoaderError(error); }
       });
@@ -481,7 +486,8 @@ function downloadArchive(name, data) {
 async function installArchive(source) {
   try {
     setLoaderState('loaderBusy');
-    const manifest = await browserManager.installZip(source);
+    const installed = await hostPMU.install(source);
+    const manifest = installed.data;
     setLoaderState('loaderInstalled', manifest.name);
     choosePlugin(manifest.id);
     selectTab('page');
@@ -502,7 +508,8 @@ $('pluginFolderInput').addEventListener('change', async event => {
   if (!files.length) return;
   try {
     setLoaderState('loaderBusy');
-    const manifest = await browserManager.installFolder(files);
+    const installed = await hostPMU.install(files, {format:'folder'});
+    const manifest = installed.data;
     setLoaderState('loaderInstalled', manifest.name);
     choosePlugin(manifest.id);
     selectTab('page');
@@ -604,6 +611,7 @@ browserManager = createBrowserPluginManager({
   },
   onFailure: reportLoaderError
 });
+hostPMU = createHostPMU({kernel, runtime:browserManager});
 syncLanguage();
 syncPalette();
 renderAPIs();

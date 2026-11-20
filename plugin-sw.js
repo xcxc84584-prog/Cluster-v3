@@ -51,7 +51,10 @@ self.addEventListener("fetch", event => {
           "Access-Control-Allow-Origin": "*",
           "Cross-Origin-Resource-Policy": "cross-origin",
           "Cache-Control": "no-store",
-          "X-Content-Type-Options": "nosniff"
+          "X-Content-Type-Options": "nosniff",
+          // Also sandbox package pages opened outside the Host iframe.
+          "Content-Security-Policy":
+            "sandbox allow-scripts allow-forms; object-src 'none'; base-uri 'none'"
         }
       });
     } catch {

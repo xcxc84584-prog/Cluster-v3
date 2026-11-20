@@ -31,6 +31,8 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
   const relations = [];
   const recent = [];
   const persistent = [];
+  const failedElogWrites = new Map();
+  let elogLastError = null;
   const pluginLogs = new Map();
   const durableLog = elogStore || createElogStore();
   const ready = durableLog.load().then(entries => {
@@ -77,6 +79,8 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     if (type === "elog") {
       persistent.push(item);
       void durableLog.append(item).catch(error => {
+        failedElogWrites.set(item.id, item);
+        elogLastError = String(error?.message || error);
         // Keep a visible in-memory diagnostic; never recursively persist it.
         const failure = Object.freeze({
           schemaVersion: "1.0.0", id: id("log"), sequence: ++sequence,
@@ -105,6 +109,22 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     }
     for (const cb of listeners.values()) cb(copy(item));
     return copy(item);
+  }
+  async function retryElogPersistence() {
+    let succeeded = 0;
+    for (const [logId, event] of [...failedElogWrites]) {
+      try {
+        await durableLog.append(event);
+        failedElogWrites.delete(logId);
+        succeeded++;
+      } catch (error) {
+        elogLastError = String(error?.message || error);
+        break;
+      }
+    }
+    if (!failedElogWrites.size) elogLastError = null;
+    return { ok: !failedElogWrites.size, pending: failedElogWrites.size,
+      recovered: succeeded, error: elogLastError };
   }
   function publicEntry(pluginId, source, item) {
     const key = source + "." + item;
@@ -350,6 +370,9 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     logs: (type = "log") => copy(type === "elog" ? persistent : recent),
     ready,
     pluginLogs: pluginId => copy(pluginLogs.get(pluginId) || { log: [], elog: [] }),
+    elogStatus: () => ({ pending: failedElogWrites.size, error: elogLastError,
+      durable: durableLog.durable ?? null }),
+    retryElogPersistence,
     inspect: pluginId => ({ id: pluginId, loaded: plugins.has(pluginId),
       relations: relations.filter(x => x.source === pluginId || x.target === pluginId).map(copy) }),
     dispose() {
