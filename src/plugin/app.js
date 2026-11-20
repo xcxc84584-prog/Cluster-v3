@@ -27,9 +27,9 @@ function hexFromChannels(channels) {
 function syncLanguage() {
   const locale = repo.getLanguage();
   document.documentElement.lang = locale;
-  $('languageSelect').value = locale;
   $('settingsLanguage').value = locale;
   renderPluginExplorer();
+  if (browserManager) updateCommunityCards();
   document.querySelectorAll('[data-i18n]').forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
@@ -97,9 +97,7 @@ function showPalette() {
 function hidePalette() {
   if (dialog.open) dialog.close();
 }
-$('languageSelect').addEventListener('change', (e) => repo.setLanguage(e.target.value));
 $('settingsLanguage').addEventListener('change', (e) => repo.setLanguage(e.target.value));
-$('openPalette').addEventListener('click', showPalette);
 $('settingsPalette').addEventListener('click', showPalette);
 $('closePalette').addEventListener('click', hidePalette);
 $('donePalette').addEventListener('click', hidePalette);
@@ -195,15 +193,27 @@ function renderPluginExplorer() {
     button.dataset.pluginId = entry.id;
     const glyph = document.createElement('span');
     glyph.className = 'plugin-glyph';
-    glyph.textContent = entry.core ? '◇' : '▣';
+    glyph.textContent = entry.core ? '◇' : '⬡';
     const info = document.createElement('span');
     info.className = 'plugin-entry-label';
+    const heading = document.createElement('span');
+    heading.className = 'plugin-entry-heading';
     const title = document.createElement('strong');
     title.textContent = entry.core ? t('publicManagement') :
       (entry.manifest.name || entry.id);
+    const version = document.createElement('small');
+    version.className = 'plugin-version';
+    version.textContent = entry.core ? 'CORE' : 'v' + (entry.manifest.version || '0.0.0');
+    heading.append(title, version);
     const desc = document.createElement('small');
-    desc.textContent = entry.core ? t('systemProtected') : entry.id;
-    info.append(title, desc);
+    desc.className = 'plugin-summary';
+    desc.textContent = entry.core ? t('systemProtected') :
+      (entry.manifest.description || entry.id);
+    const state = document.createElement('small');
+    state.className = 'plugin-state';
+    state.textContent = entry.core ? '● ' + t('systemProtected') :
+      (entry.loaded ? '● ' + t('pluginStart') : '○ ' + t('pluginUnload'));
+    info.append(heading, desc, state);
     button.append(glyph, info);
     button.addEventListener('click', () => choosePlugin(entry.id));
     const line = document.createElement('div');
@@ -255,7 +265,7 @@ function choosePlugin(pluginId) {
   selectedPluginId = pluginId;
   apiPageNumber = 1;
   selectedAPI = null;
-  $('apiDetail').hidden = true;
+  if ($('apiDetail').open) $('apiDetail').close();
   renderPluginExplorer();
   renderSettings();
   renderAPIs();
@@ -412,9 +422,9 @@ function renderAPIs() {
 }
 function showAPI(api) {
   selectedAPI = api;
-  $('apiDetail').hidden = false;
-  $('apiDetailTitle').textContent = api.id + ' — JSON Contract';
+  $('apiDetailTitle').textContent = api.id;
   $('apiDetailJSON').textContent = JSON.stringify(api, null, 2);
+  if (!$('apiDetail').open) $('apiDetail').showModal();
 }
 function apiFilteredEntries() {
   return filteredContracts();
@@ -457,6 +467,16 @@ $('apiSearch').addEventListener('input', () => { apiPageNumber = 1; renderAPIs()
 $('apiFilter').addEventListener('change', () => { apiPageNumber = 1; renderAPIs(); });
 $('apiPrevious').addEventListener('click', () => { apiPageNumber--; renderAPIs(); });
 $('apiNext').addEventListener('click', () => { apiPageNumber++; renderAPIs(); });
+$('apiModalClose').addEventListener('click', () => $('apiDetail').close());
+$('apiModalDone').addEventListener('click', () => $('apiDetail').close());
+$('apiDetail').addEventListener('click', event => {
+  if (event.target === $('apiDetail')) $('apiDetail').close();
+});
+$('apiDownloadJSON').addEventListener('click', () => {
+  if (selectedAPI) downloadJSON(
+    'cluster-api-' + selectedAPI.id.replace(/[^a-zA-Z0-9.-]/g, '-') + '.json',
+    JSON.stringify(selectedAPI, null, 2));
+});
 $('apiCopyJSON').addEventListener('click', async () => {
   if (selectedAPI) await navigator.clipboard.writeText(JSON.stringify(selectedAPI, null, 2));
 });
@@ -533,75 +553,148 @@ $('pluginFolderInput').addEventListener('change', async event => {
     selectTab('page');
   } catch (error) { reportLoaderError(error); }
 });
-$('downloadExample').addEventListener('click', async () => {
+// The Community catalog currently contains the bundled example and installed
+// local plugins. No remote marketplace packages are claimed or fabricated.
+async function exampleArchive() {
+  return createExamplePackage({ liveContracts: kernel.contract.list() });
+}
+async function communityInstall(id) {
+  try {
+    if (browserManager?.get(id)) {
+      if (!browserManager.isLoaded(id)) await hostPMU.load(id);
+      setLoaderState('loaderReady');
+      choosePlugin(id);
+      return;
+    }
+    if (id !== 'example.hello') throw Error('No downloadable package: ' + id);
+    await installArchive(await exampleArchive());
+  } catch (error) { reportLoaderError(error); }
+}
+async function communityDownload(id) {
   try {
     setLoaderState('loaderBusy');
-    downloadArchive('Cluster-v3-Plugin-Example.zip',
-      await createExamplePackage({ liveContracts: kernel.contract.list() }));
+    const archive = id === 'example.hello' ?
+      await exampleArchive() : await browserManager.exportZip(id);
+    downloadArchive(id.replace(/[^a-z0-9.-]/gi, '-') + '.zip', archive);
     setLoaderState('loaderReady');
   } catch (error) { reportLoaderError(error); }
-});
-$('pluginStandalone').addEventListener('click', () => {
-  if (selectedPluginId === 'cluster.pmu') return;
-  const record = browserManager?.get(selectedPluginId);
-  if (record?.manifest?.ui?.mode === 'embedded') return;
-  const url = new URL('../', location.href);
-  url.searchParams.set('plugin', selectedPluginId);
-  window.open(url.href, '_blank', 'noopener');
-});
-$('installExample').addEventListener('click', async () => {
-  try {
-    await installArchive(await createExamplePackage({
-      liveContracts: kernel.contract.list()
-    }));
-  } catch (error) { reportLoaderError(error); }
-});
-
-function updateCommunityCards() {
-  if (!browserManager) return;
-  for (const existing of $('communityCards').querySelectorAll(
-    '[data-community-plugin]')) existing.remove();
-  for (const record of browserManager.list()) {
-    if (!record.manifest.community ||
-        !browserManager.isLoaded(record.id)) continue;
+}
+function communityCatalog() {
+  const installed = browserManager?.list() || [];
+  return [{
+    id: 'example.hello', installed: installed.some(x => x.id === 'example.hello'),
+    name: 'Hello Cluster', version: '1.0.0',
+    description: t('exampleDescription'), isExample: true,
+    manifest: installed.find(x => x.id === 'example.hello')?.manifest || {}
+  }, ...installed.filter(x => x.id !== 'example.hello').map(record => ({
+    id: record.id, installed: true, name: record.manifest.name || record.id,
+    version: record.manifest.version || '0.0.0',
+    description: record.manifest.description || record.id,
+    manifest: record.manifest, isExample: false
+  }))];
+}
+function communityVisibleEntries() {
+  const text = $('communitySearch').value.trim().toLocaleLowerCase();
+  const filter = $('communityFilter').value;
+  const sort = $('communitySort').value;
+  return communityCatalog().filter(item =>
+    (filter === 'all' ||
+      (filter === 'installed' ? item.installed : !item.installed)) &&
+    [item.name, item.id, item.description].some(value =>
+      String(value).toLocaleLowerCase().includes(text)))
+    .sort((a, b) => sort === 'version' ?
+      b.version.localeCompare(a.version, undefined, { numeric: true }) :
+      a.name.localeCompare(b.name));
+}
+function buildCommunityCard(item) {
+  const article = document.createElement('article');
+  article.className = 'community-card';
+  article.dataset.communityId = item.id;
+  article.setAttribute('role', 'listitem');
+  const visual = document.createElement('div');
+  visual.className = 'community-visual';
+  const hasCustom = Boolean(item.installed && item.manifest.community &&
+    browserManager?.isLoaded(item.id));
+  if (hasCustom) {
     const frame = document.createElement('iframe');
     frame.className = 'community-card-frame';
     frame.sandbox = 'allow-scripts allow-forms';
     frame.referrerPolicy = 'no-referrer';
-    frame.title = record.manifest.name;
-    frame.dataset.communityPlugin = record.id;
-    void browserManager.renderAssetFrame(
-      record.id, record.manifest.community, frame).catch(reportLoaderError);
-    frame.addEventListener('load', () => frame.contentWindow?.postMessage({
-      protocol: 'cluster.settings.context.v1', pluginId: record.id,
-      language: repo.getLanguage(), palette: repo.getPalette(),
-      baseColor: repo.getBaseColor()
-    }, '*'));
-    $('communityCards').append(frame);
-    browserManager.registerAuxiliaryFrame(record.id, frame);
+    frame.title = item.name;
+    frame.dataset.communityPlugin = item.id;
+    visual.append(frame);
+    browserManager.registerAuxiliaryFrame(item.id, frame);
+    void browserManager.renderAssetFrame(item.id, item.manifest.community, frame)
+      .catch(reportLoaderError);
+  } else {
+    // Default browser card follows the original screenshot; all custom
+    // content is isolated within a frame and cannot resize the card.
+    const info = document.createElement('div');
+    info.className = 'community-default-info';
+    const icon = document.createElement('span');
+    icon.className = 'community-default-icon';
+    icon.textContent = '⬡';
+    const header = document.createElement('div');
+    const heading = document.createElement('h3');
+    heading.textContent = item.name;
+    const version = document.createElement('small');
+    version.textContent = 'v' + item.version;
+    header.append(heading, version);
+    const description = document.createElement('p');
+    description.textContent = item.description;
+    info.append(icon, header);
+    visual.append(info, description);
   }
+  const actions = document.createElement('div');
+  actions.className = 'community-card-actions';
+  const download = document.createElement('button');
+  download.type = 'button';
+  download.textContent = '↓ ' + t('communityDownload');
+  download.addEventListener('click', () => void communityDownload(item.id));
+  const install = document.createElement('button');
+  install.type = 'button';
+  install.className = 'community-install-button';
+  install.textContent = item.installed ? t('communityOpen') : t('communityQuickInstall');
+  install.addEventListener('click', () => void communityInstall(item.id));
+  actions.append(download, install);
+  article.append(visual, actions);
+  return article;
+}
+function updateCommunityCards() {
+  if (!browserManager) return;
+  const cards = $('communityCards');
+  const entries = communityVisibleEntries();
+  cards.replaceChildren(...entries.map(buildCommunityCard));
+  $('communityCount').textContent = String(entries.length).padStart(2, '0');
+  $('communityEmpty').hidden = entries.length !== 0;
 }
 function syncCommunityCards() {
   for (const frame of $('communityCards').querySelectorAll('iframe')) {
-    const id = frame.dataset.communityPlugin || 'example.hello';
     frame.contentWindow?.postMessage({
-      protocol: 'cluster.settings.context.v1', pluginId: id,
+      protocol: 'cluster.settings.context.v1', pluginId: frame.dataset.communityPlugin,
       language: repo.getLanguage(), palette: repo.getPalette(),
       baseColor: repo.getBaseColor()
     }, '*');
   }
 }
-$('builtinExampleCard').addEventListener('load', syncCommunityCards);
+$('communitySearch').addEventListener('input', updateCommunityCards);
+$('communityFilter').addEventListener('change', updateCommunityCards);
+$('communitySort').addEventListener('change', updateCommunityCards);
 repo.subscribe(({ type }) => {
-  if (['language','palette','sync'].includes(type)) syncCommunityCards();
+  if (type === 'language' || type === 'palette' || type === 'sync') {
+    updateCommunityCards();
+    syncCommunityCards();
+  }
 });
 window.addEventListener('message', event => {
-  if (event.source === $('builtinExampleCard').contentWindow &&
-      event.data?.protocol === 'cluster.community.v1' &&
-      event.data?.type === 'install-example') {
-    void createExamplePackage({ liveContracts: kernel.contract.list() })
-      .then(installArchive).catch(reportLoaderError);
-  }
+  const frame = [...$('communityCards').querySelectorAll('iframe')].find(
+    item => item.contentWindow === event.source);
+  if (!frame || event.data?.protocol !== 'cluster.community.v1') return;
+  const id = frame.dataset.communityPlugin;
+  if (event.data.type === 'install-example' && id === 'example.hello')
+    void communityInstall(id);
+  if (event.data.type === 'download' && id)
+    void communityDownload(id);
 });
 function setStandaloneMode(pluginId) {
   document.body.classList.add('standalone-mode');

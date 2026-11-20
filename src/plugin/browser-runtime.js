@@ -1,5 +1,5 @@
 /** Browser loader: package -> IndexedDB -> service-worker URL -> sandbox. */
-import { validatePluginPackage, readZip } from "./package-format.js";
+import { validatePluginPackage, readZip, createZip } from "./package-format.js";
 import { createPackageStore } from "./package-store.js";
 import { dispatchPluginCall } from "./host-bridge.js";
 import { buildPluginDocument } from "./document-bundler.js";
@@ -263,6 +263,14 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     onChange();
     return manifest;
   }
+  async function exportZip(pluginId) {
+    const item = installed.get(pluginId);
+    if (!item) throw new Error("Plugin not installed: " + pluginId);
+    const files = await store.getFiles?.(pluginId);
+    if (!files || !Object.keys(files).length)
+      throw new Error("Plugin files are unavailable for download: " + pluginId);
+    return createZip(files);
+  }
   async function installZip(input) {
     const unpacked = await readZip(input);
     return installFiles(unpacked);
@@ -302,7 +310,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       sendContext(settingsFrame.dataset.pluginId, settingsFrame.contentWindow);
   }
   return Object.freeze({
-    ready, installZip, installFolder, installFiles, load, unload, reload,
+    ready, installZip, installFolder, installFiles, exportZip, load, unload, reload,
     remove, configure, show, attachSettings, syncContext, assetURL,
     renderAssetFrame, registerAuxiliaryFrame,
     list: () => [...installed.values()].map(clone),
