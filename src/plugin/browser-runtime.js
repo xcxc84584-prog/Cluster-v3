@@ -92,57 +92,44 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   function post(source, payload) {
     source?.postMessage({ protocol: PROTOCOL, ...payload }, "*");
   }
+  /** Resolve UI capability using the generic PRMU registration. */
+  async function resolveCapability(capability) {
+    if (typeof capability !== "string" ||
+        !/^[a-z][a-z0-9.-]{2,100}$/.test(capability)) {
+      const error = new Error("Invalid capability ID");
+      error.status = 400; error.code = "BAD_CAPABILITY"; throw error;
+    }
+    const entries = kernel.host.PRMU.list("capabilities", { limit: 1000 }).data;
+    const selected = entries.find(entry =>
+      entry.key === "capabilities." + capability);
+    if (!selected) {
+      const error = new Error("Capability not registered: " + capability);
+      error.status = 404; error.code = "CAPABILITY_NOT_FOUND"; throw error;
+    }
+    const pluginId = selected.owner;
+    const record = installed.get(pluginId);
+    if (!record?.enabled || !frames.has(pluginId)) {
+      const error = new Error("Capability provider is not loaded");
+      error.status = 503; error.code = "PROVIDER_UNAVAILABLE"; throw error;
+    }
+    const descriptor = kernel.host.PRMU.get("capabilities", capability).data;
+    if (descriptor?.kind !== "ui.embed" || descriptor?.version !== "1.0.0") {
+      const error = new Error("Unsupported capability descriptor");
+      error.status = 400; error.code = "BAD_DESCRIPTOR"; throw error;
+    }
+    const files = temporaryFiles.get(pluginId) ||
+      await store.getFiles?.(pluginId);
+    const entry = record.manifest.entry;
+    if (!files?.[entry]) throw Error("Provider entry resource unavailable");
+    return { capability, pluginId, version: record.manifest.version,
+      html: buildPluginDocument(files, entry) };
+  }
+
   async function onMessage(event) {
     const pluginId = frameOwner(event.source);
     if (!pluginId) return;
     const message = event.data;
     if (disposed || !message) return;
-    // Public Repository workspace discovery. Only the trusted Editor frame
-    // may embed the independently installed Explorer. No caller-supplied URL.
-    if (message.protocol === "cluster.public.v1") {
-      if (pluginId !== "cluster.text-editor" ||
-          event.source !== currentWindow(pluginId)) return;
-      const reply = payload => event.source?.postMessage({
-        protocol: "cluster.public.v1", ...payload
-      }, "*");
-      if (message.type === "subscribe") {
-        reply({ type: "snapshot", ...getContext() });
-        return;
-      }
-      if (message.type !== "request" ||
-          message.method !== "Plugin.resolve" ||
-          typeof message.requestId !== "string") return;
-      const targetId = message.params?.id;
-      if (targetId !== "cluster.explorer" ||
-          message.params?.capability !== "workspace.explorer.v1") {
-        reply({ type: "response", requestId: message.requestId,
-          ok: false, error: { code: "CAPABILITY_DENIED",
-            message: "Unsupported workspace capability" } });
-        return;
-      }
-      const target = installed.get(targetId);
-      if (!target?.enabled || !frames.has(targetId)) {
-        reply({ type: "response", requestId: message.requestId,
-          ok: false, error: { code: "PLUGIN_NOT_LOADED",
-            message: "Please install and load Cluster Explorer" } });
-        return;
-      }
-      try {
-        const files = temporaryFiles.get(targetId) ||
-          await store.getFiles?.(targetId);
-        if (!files?.[target.manifest.entry])
-          throw new Error("Explorer entry is not available");
-        const html = buildPluginDocument(files, target.manifest.entry);
-        reply({ type: "response", requestId: message.requestId,
-          ok: true, data: { pluginId: targetId,
-            version: target.manifest.version, html } });
-      } catch (error) {
-        reply({ type: "response", requestId: message.requestId,
-          ok: false, error: { code: "PLUGIN_RESOLVE_FAILED",
-            message: String(error?.message || error) } });
-      }
-      return;
-    }
     if (message.protocol !== PROTOCOL) return;
     if (message.type === "invoke-result") {
       const item = pending.get(message.requestId);
@@ -171,7 +158,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
         message.method.length > 128) return;
     try {
       const output = await dispatchPluginCall(
-        kernel, pluginId, message.method, message.args, invoke);
+        kernel, pluginId, message.method, message.args, invoke, resolveCapability);
       post(event.source, { type: "response",
         requestId: message.requestId, ...output });
       // Plugin APIs are registered asynchronously after iframe load.
