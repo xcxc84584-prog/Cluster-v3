@@ -2,7 +2,7 @@
 import { createBrowserPluginManager } from './browser-runtime.js';
 import { createHostPMU } from './host-pmu.js';
 import { createExamplePackage } from './template-generator.js';
-import { COMMUNITY_PLUGINS, fetchCommunityPlugin } from './community-remote.js';
+import { fetchCommunityIndex, fetchCommunityPlugin } from './community-remote.js';
 import { createZip } from './package-format.js';
 import { createProjectArchive, readProjectArchive, unpackProjectFiles,
   fetchGitHubProject } from './project-repository.js';
@@ -798,8 +798,21 @@ $('pluginFolderInput').addEventListener('change', async event => {
     selectTab('page');
   } catch (error) { reportLoaderError(error); }
 });
-// Built-in Hello Cluster and the two published Folder packages share the
-// same Host-owned community card and install/download actions.
+// The catalog is discovered from the public repository's authoritative index.
+let remoteCommunity = [];
+let remoteCommunityError = null;
+async function refreshRemoteCommunity() {
+  try {
+    const incoming = await fetchCommunityIndex(repo.getCommunityConfig());
+    remoteCommunity = incoming;
+    remoteCommunityError = null;
+  } catch (error) {
+    remoteCommunityError = error;
+    // Retain the last successful snapshot when a network refresh fails.
+    console.warn("Community index refresh failed:", error);
+  }
+  updateCommunityCards();
+}
 async function exampleArchive() {
   return createExamplePackage({ liveContracts: kernel.contract.list() });
 }
@@ -811,20 +824,22 @@ async function communityInstall(id) {
       choosePlugin(id);
       return;
     }
-    if (id === 'example.hello') {
-      await installArchive(await exampleArchive());
-    } else {
-      const pkg = await fetchCommunityPlugin(id);
-      await installArchive(createZip(pkg.files));
-    }
+    const settings = repo.getCommunityConfig();
+    const item = remoteCommunity.find(entry => entry.id === id);
+    const archive = id === settings.example.id ?
+      await exampleArchive() :
+      item ? createZip((await fetchCommunityPlugin(item, settings)).files) : null;
+    if (!archive) throw Error('No indexed community package: ' + id);
+    await installArchive(archive);
   } catch (error) { reportLoaderError(error); }
 }
 async function communityDownload(id) {
   try {
     setLoaderState('loaderBusy');
-    const archive = id === 'example.hello' ? await exampleArchive() :
-      COMMUNITY_PLUGINS.some(entry => entry.id === id) ?
-        createZip((await fetchCommunityPlugin(id)).files) :
+    const settings = repo.getCommunityConfig();
+    const item = remoteCommunity.find(entry => entry.id === id);
+    const archive = id === settings.example.id ? await exampleArchive() :
+      item ? createZip((await fetchCommunityPlugin(item, settings)).files) :
         await browserManager.exportZip(id);
     downloadArchive(id.replace(/[^a-z0-9.-]/gi, '-') + '.zip', archive);
     setLoaderState('loaderReady');
@@ -832,17 +847,17 @@ async function communityDownload(id) {
 }
 function communityCatalog() {
   const installed = browserManager?.list() || [];
+  const example = repo.getCommunityConfig().example;
+  const known = new Set([example.id, ...remoteCommunity.map(entry => entry.id)]);
   return [{
-    id: 'example.hello', installed: installed.some(x => x.id === 'example.hello'),
-    name: 'Hello Cluster', version: '1.0.0',
+    ...example, installed: installed.some(x => x.id === example.id),
     description: t('exampleDescription'), isExample: true,
-    manifest: installed.find(x => x.id === 'example.hello')?.manifest || {}
-  }, ...COMMUNITY_PLUGINS.map(entry => ({
+    manifest: installed.find(x => x.id === example.id)?.manifest || {}
+  }, ...remoteCommunity.filter(entry => entry.id !== example.id).map(entry => ({
     ...entry, installed: installed.some(record => record.id === entry.id),
     isExample: false,
     manifest: installed.find(record => record.id === entry.id)?.manifest || {}
-  })), ...installed.filter(x => x.id !== 'example.hello' &&
-    !COMMUNITY_PLUGINS.some(entry => entry.id === x.id)).map(record => ({
+  })), ...installed.filter(x => !known.has(x.id)).map(record => ({
     id: record.id, installed: true, name: record.manifest.name || record.id,
     version: record.manifest.version || '0.0.0',
     description: record.manifest.description || record.id,
@@ -942,6 +957,10 @@ function updateCommunityCards() {
   cards.replaceChildren(...entries.map(buildCommunityCard));
   $('communityCount').textContent = String(entries.length).padStart(2, '0');
   $('communityEmpty').hidden = entries.length !== 0;
+  if (!entries.length && remoteCommunityError) {
+    $('communityEmpty').hidden = false;
+    $('communityEmpty').textContent = String(remoteCommunityError.message || remoteCommunityError);
+  }
 }
 function syncCommunityCards() {
   for (const frame of $('communityCards').querySelectorAll('iframe')) {
@@ -966,7 +985,7 @@ window.addEventListener('message', event => {
     item => item.contentWindow === event.source);
   if (!frame || event.data?.protocol !== 'cluster.community.v1') return;
   const id = frame.dataset.communityPlugin;
-  if (event.data.type === 'install-example' && id === 'example.hello')
+  if (event.data.type === 'install-example' && id === repo.getCommunityConfig().example.id)
     void communityInstall(id);
   if (event.data.type === 'download' && id)
     void communityDownload(id);
@@ -1015,6 +1034,7 @@ void browserManager.ready.then(() => {
   setLoaderState('loaderReady');
   document.documentElement.dataset.clusterReady = '1';
   updateCommunityCards();
+  void refreshRemoteCommunity();
   renderPluginExplorer();
   const query = new URLSearchParams(location.search);
   const requested = query.get('plugin');
