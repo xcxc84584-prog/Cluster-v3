@@ -129,6 +129,17 @@
             </div>
             <div id="logTotal" class="list-meta"></div>
             <div class="diagnostic-list" id="logList" role="list"></div>
+            <nav class="log-pagination" aria-label="LOG pages">
+              <label for="logPageSize" data-i18n="logPageSize">每頁筆數</label>
+              <select id="logPageSize" aria-label="Entries per page">
+                <option value="20">20</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+              </select>
+              <button id="logPrevious" type="button" data-i18n="logPrevious">上一頁</button>
+              <span id="logPage" aria-live="polite">1 / 1</span>
+              <button id="logNext" type="button" data-i18n="logNext">下一頁</button>
+            </nav>
           </section>
           <section class="tab-view" role="tabpanel" data-view="router" hidden>
             <div class="list-toolbar router-toolbar">
