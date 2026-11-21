@@ -172,28 +172,24 @@ try {
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host initialization and Service Worker activation");
-  // Verify project replacement dialog geometry in an actual Chrome layout.
-  const projectArrow = await evaluate(`(() => {
+  // Check two-column replacement summary without the removed arrow.
+  const projectSummary = await evaluate(`(() => {
     const dialog = document.querySelector('#projectSwitchDialog');
     dialog.showModal();
     const summary = dialog.querySelector('.project-switch-summary');
-    const arrow = dialog.querySelector('.project-switch-arrow svg');
-    const box = arrow.getBoundingClientRect();
-    const container = summary.getBoundingClientRect();
-    const css = getComputedStyle(arrow);
-    const result = { width:box.width, height:box.height,
-      centerDeltaY:Math.abs((box.top + box.height/2) -
-        (container.top + container.height/2)),
-      centerDeltaX:Math.abs((box.left + box.width/2) -
-        (container.left + container.width/2)),
-      stroke:css.stroke, columns:getComputedStyle(summary).gridTemplateColumns };
+    const children = [...summary.children];
+    const boxes = children.map(child => child.getBoundingClientRect());
+    const result = { count: children.length,
+      arrowCount: summary.querySelectorAll('.project-switch-arrow, svg').length,
+      sameRow: Math.abs(boxes[0].top - boxes[1].top) <= 3,
+      balanced: Math.abs(boxes[0].width - boxes[1].width) <= 3 };
     dialog.close();
     return result;
   })()`);
-  assert(projectArrow.width >= 30 && projectArrow.height >= 30,
-    "Project switch arrow must remain legible");
-  assert(projectArrow.centerDeltaY <= 3 && projectArrow.centerDeltaX <= 3,
-    "Project switch arrow must be centered in the summary");
+  assert(projectSummary.count === 2 && projectSummary.arrowCount === 0,
+    "Project switch summary should contain two plugin counts and no arrow");
+  assert(projectSummary.sameRow && projectSummary.balanced,
+    "Project switch counts must remain side-by-side and balanced");
   // Measure only after opening the community tab; hidden tabs have zero geometry.
   await evaluate("document.querySelector('[data-tab=community]').click()");
   // Real browser geometry catches flex-wrap and vertical text regressions.
