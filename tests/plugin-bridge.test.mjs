@@ -78,3 +78,22 @@ test("shared PRMU palette write updates Host snapshot and stays API discoverable
     "PRMU.setUIColorBaseColor",["not-a-color"]));
   kernel.dispose();
 });
+
+test("PRMU.openUIColorPalette opens the existing Host palette modal", async () => {
+  const kernel = createPluginKernel({elogStore:{
+    load: async () => [], append: async () => {}
+  }});
+  kernel.load("sample.palette-plugin");
+  let opens = 0;
+  const reply = await dispatchPluginCall(kernel, "sample.palette-plugin",
+    "PRMU.openUIColorPalette", [], undefined, undefined, () => { opens++; });
+  assert.equal(reply.status, 200);
+  assert.deepEqual(reply.data, { opened: true });
+  assert.equal(opens, 1);
+  assert.ok(kernel.catalog.some(api =>
+    api.id === "PRMU.openUIColorPalette" && api.implementation === "initial"));
+  await assert.rejects(dispatchPluginCall(kernel, "sample.palette-plugin",
+    "PRMU.openUIColorPalette", []), error =>
+    error.status === 503 && error.code === "UI_UNAVAILABLE");
+  kernel.dispose();
+});
