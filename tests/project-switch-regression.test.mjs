@@ -51,3 +51,12 @@ test('dialog styling uses Host theme tokens and six localized strings', () => {
   assert.equal((translations.match(/projectSwitchConfirm:/g) || []).length, 6);
   assert.match(html, /data-i18n="projectSwitchWarning"/);
 });
+
+test('project switch arrow is large and vertically centered at every viewport', () => {
+  assert.match(html, /class="project-switch-arrow"/);
+  assert.match(html, /<svg viewBox="0 0 40 40"/);
+  assert.match(styles, /\.project-switch-summary\{display:grid;grid-template-columns:/);
+  assert.match(styles, /\.project-switch-arrow\{width:48px;height:48px;display:grid;place-items:center;/);
+  assert.match(styles, /\.project-switch-arrow svg\{display:block;width:34px;height:34px;/);
+  assert.match(styles, /\.project-switch-arrow\{width:40px;height:40px\}/);
+});
