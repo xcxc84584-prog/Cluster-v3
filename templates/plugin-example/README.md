@@ -70,3 +70,24 @@ If installation, API registration, UI themes, navigation, or file persistence
 fails, read [Common Problems and Solutions](docs/Troubleshooting.md) before
 changing the Host. The checklist distinguishes plugin-only fixes from changes
 that require Host Router or browser support; check ELog for the exact failure.
+
+## Compose UI with the generic Capability Registry
+
+Providers may publish one embeddable UI using `PRMU.register("capabilities",
+{ key: "example.hello.ui.v1", value: {kind:"ui.embed",version:"1.0.0"} })`.
+This registration is scoped to the provider's active lifecycle; never store
+HTML, an unverified URL, or a hard-coded peer ID in the registry.
+
+Consumers use `Cluster.PRMU.resolveCapability("example.hello.ui.v1")`.
+The Host verifies the provider and returns `data.html` (a packaged HTML
+entry) plus `data.pluginId` and `data.version`. The consumer may render
+that document in a child iframe, while data operations remain on Router.
+The embedding consumer must forward a suitable Host bridge or scope requests
+carefully; loading HTML alone does not magically grant the embedded frame
+its own Host plugin identity.
+
+The capability becomes unavailable when its provider is unloaded. For the
+Explorer + Editor example, register `workspace.explorer.v1` from Explorer and
+resolve it from Editor. API List includes `PRMU.resolveCapability` as a Host
+API; provider-specific service calls should separately register Router
+contracts for their own API List entries.
