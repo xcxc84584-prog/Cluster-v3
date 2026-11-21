@@ -4,6 +4,7 @@ const groups = {
     ["get","read","Read a public value","source:string,item:string,options?:object"],
     ["resolveCapability","read","Resolve registered embeddable UI capability via Host","capability:string"],
     ["getUIColorParameters","read","Read global UI base RGB and all derived palette tokens",""],
+    ["setUIColorBaseColor","write","Set the authoritative shared base RGB color for all plugin UIs","color:string"],
     ["getVersion","read","Read authoritative Host system version",""],
     ["getPluginSiteUrl","read","Read Plugin Manager landing page URL",""],
     ["set","write","Update a writable public value","source:string,item:string,value:any,options?:object"],
@@ -73,7 +74,8 @@ const hostOnly = new Set([
 const implemented = new Set([
   "PMU.get", "PMU.list", "Contract.list", "Contract.get",
   "Contract.register", "Contract.unregister", "Contract.validate",
-  "PRMU.get", "PRMU.resolveCapability", "PRMU.getUIColorParameters", "PRMU.getVersion",
+  "PRMU.get", "PRMU.resolveCapability", "PRMU.getUIColorParameters",
+  "PRMU.setUIColorBaseColor", "PRMU.getVersion",
   "PRMU.getPluginSiteUrl", "PRMU.set", "PRMU.list", "PRMU.register",
   "PRMU.unregister", "PRMU.subscribe", "PRMU.unsubscribe",
   "PRMU.describe", "PRMU.snapshot", "PRMU.batch",
