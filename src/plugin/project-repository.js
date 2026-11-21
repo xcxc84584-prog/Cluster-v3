@@ -99,7 +99,7 @@ export function parseGitHubLocation(input) {
   if (!repo) throw packageError("BAD_GITHUB_URL", "Repository is missing");
   let ref = url.searchParams.get("ref") || "";
   let folder = "";
-  if (parts[2] === "tree" && parts[3]) {
+  if (["tree", "blob"].includes(parts[2]) && parts[3]) {
     ref ||= parts[3];
     folder = parts.slice(4).join("/");
   } else if (parts.length > 2) {
@@ -108,13 +108,14 @@ export function parseGitHubLocation(input) {
   if (folder) normalizePackagePath(folder);
   if (ref && (!/^[\w./-]+$/.test(ref) || ref.includes("..")))
     throw packageError("BAD_GITHUB_REF", "Invalid Git ref");
-  return { owner, repo, ref, folder };
+  return { owner, repo, ref, folder, singleFile: parts[2] === "blob" };
 }
 
 export async function fetchGitHubProject(input, fetcher = fetch) {
   const location = parseGitHubLocation(input);
   const prefix = `https://api.github.com/repos/${location.owner}/${location.repo}/contents/`;
   const files = {};
+  const archives = [];
   const queue = [location.folder];
   let total = 0, requests = 0;
   async function request(url) {
@@ -135,13 +136,17 @@ export async function fetchGitHubProject(input, fetcher = fetch) {
     for (const entry of entries) {
       if (entry.type === "dir") { queue.push(entry.path); continue; }
       if (entry.type !== "file") continue; // Skip submodules and symlinks.
-      const relative = location.folder ?
+      const relative = location.singleFile ? entry.name : location.folder ?
         entry.path.slice(location.folder.length + 1) : entry.path;
       normalizePackagePath(relative);
       if (Object.keys(files).length >= MAX_PROJECT_FILES ||
           total + (entry.size || 0) > MAX_PROJECT_BYTES)
         throw packageError("LIMIT_EXCEEDED", "GitHub repository exceeds project limits");
-      const data = await request(entry.url);
+      const fileUrl = new URL(entry.url);
+      if (fileUrl.protocol !== "https:" || fileUrl.hostname !== "api.github.com" ||
+          !fileUrl.pathname.startsWith(`/repos/${location.owner}/${location.repo}/contents/`))
+        throw packageError("GITHUB_UNTRUSTED_URL", "Unexpected GitHub file endpoint");
+      const data = await request(fileUrl.href);
       if (data.encoding !== "base64" || typeof data.content !== "string")
         throw packageError("GITHUB_FILE_UNSUPPORTED", "GitHub file must be <1 MiB");
       const binary = atob(data.content.replace(/\s/g, ""));
@@ -149,8 +154,22 @@ export async function fetchGitHubProject(input, fetcher = fetch) {
       total += bytes.length;
       if (total > MAX_PROJECT_BYTES)
         throw packageError("LIMIT_EXCEEDED", "GitHub project exceeds 16 MiB");
-      files[relative] = bytes;
+      if (relative.toLowerCase().endsWith(".zip")) {
+        archives.push(...await readProjectArchive(bytes));
+      } else {
+        files[relative] = bytes;
+      }
     }
   }
-  return unpackProjectFiles(files);
+  const folderPlugins = Object.keys(files).some(path =>
+    path.endsWith("manifest.json")) ? unpackProjectFiles(files) : [];
+  const merged = [...folderPlugins, ...archives];
+  if (!merged.length) throw packageError("MISSING_MANIFEST", "No plugin package found");
+  const seen = new Set();
+  for (const item of merged) {
+    if (seen.has(item.manifest.id))
+      throw packageError("DUPLICATE_PLUGIN", item.manifest.id);
+    seen.add(item.manifest.id);
+  }
+  return merged;
 }
