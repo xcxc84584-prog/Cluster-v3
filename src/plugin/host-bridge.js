@@ -41,6 +41,9 @@ export async function dispatchPluginCall(kernel, pluginId, method, args, invoke)
   const run = async () => {
   switch (method) {
     case "PRMU.get": return instance.PRMU.get(args[0], args[1]);
+    case "PRMU.getUIColorParameters": return instance.PRMU.getUIColorParameters();
+    case "PRMU.getVersion": return instance.PRMU.getVersion();
+    case "PRMU.getPluginSiteUrl": return instance.PRMU.getPluginSiteUrl();
     case "PRMU.set": return instance.PRMU.set(args[0], args[1], args[2]);
     case "PRMU.list": return instance.PRMU.list(args[0], args[1]);
     case "PRMU.describe": return instance.PRMU.describe(args[0], args[1]);
