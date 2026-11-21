@@ -122,6 +122,12 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
         kernel, pluginId, message.method, message.args, invoke);
       post(event.source, { type: "response",
         requestId: message.requestId, ...output });
+      // Plugin APIs are registered asynchronously after iframe load.
+      // Refresh the selected plugin's API List as soon as its registry changes.
+      if (output?.ok && ["Router.register", "Router.unregister",
+          "Contract.register", "Contract.unregister"].includes(message.method)) {
+        onChange?.();
+      }
     } catch (error) {
       const failure = errorResult(error);
       kernel.log("elog", { source: pluginId, target: "cluster.pmu",
