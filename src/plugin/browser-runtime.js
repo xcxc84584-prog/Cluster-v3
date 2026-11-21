@@ -16,6 +16,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   packageStore = null, registerServiceWorker = null }) {
   const store = packageStore || createPackageStore();
   const installed = new Map();
+  const temporaryFiles = new Map(); // Session-only: never stored in IndexedDB.
   const frames = new Map();
   const pending = new Map();
   const auxiliaryFrames = new Map();
@@ -45,7 +46,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     targetWindow?.postMessage(context(id), "*");
   }
   async function renderAssetFrame(id, path, frame) {
-    const files = await store.getFiles?.(id);
+    const files = temporaryFiles.get(id) || await store.getFiles?.(id);
     if (files && files[path] && typeof DOMParser !== "undefined") {
       frame.removeAttribute("src");
       frame.srcdoc = buildPluginDocument(files, path);
@@ -186,7 +187,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     iframe.addEventListener("load", () => sendContext(pluginId, iframe.contentWindow));
     try {
       await renderAssetFrame(pluginId, manifest.entry, iframe);
-      if (save) await store.setEnabled(pluginId, true);
+      if (save && !temporaryFiles.has(pluginId))
+        await store.setEnabled(pluginId, true);
       record.enabled = true;
       onChange();
       return instance;
@@ -216,7 +218,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       kernel.unload(pluginId);
     }
     if (installed.has(pluginId)) {
-      await store.setEnabled(pluginId, false);
+      if (!temporaryFiles.has(pluginId)) await store.setEnabled(pluginId, false);
       installed.get(pluginId).enabled = false;
     }
     onChange();
@@ -240,7 +242,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   async function remove(pluginId) {
     if (pluginId === "cluster.pmu") throw new Error("Cannot remove PMU");
     await unload(pluginId);
-    await store.remove(pluginId);
+    if (!temporaryFiles.has(pluginId)) await store.remove(pluginId);
+    temporaryFiles.delete(pluginId);
     installed.delete(pluginId);
     onChange();
   }
@@ -269,10 +272,41 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     onChange();
     return manifest;
   }
+  async function installTemporaryFiles(rawFiles) {
+    await ready;
+    const { manifest, files } = validatePluginPackage(rawFiles);
+    const id = manifest.id;
+    if (installed.has(id) && !temporaryFiles.has(id)) {
+      const error = new Error("Plugin already installed persistently: " + id);
+      error.code = "PLUGIN_ID_CONFLICT"; error.status = 409;
+      throw error;
+    }
+    if (frames.has(id)) await unload(id);
+    temporaryFiles.set(id, files);
+    installed.set(id, { id, manifest, enabled: true, temporary: true });
+    try { await load(id, false); }
+    catch (error) {
+      temporaryFiles.delete(id); installed.delete(id); onChange(); throw error;
+    }
+    onChange();
+    return manifest;
+  }
+  async function exportProjectPackages() {
+    await ready;
+    const packages = [];
+    for (const record of installed.values()) {
+      const files = temporaryFiles.get(record.id) ||
+        await store.getFiles?.(record.id);
+      if (!files) throw new Error("Missing plugin files: " + record.id);
+      packages.push({ manifest: record.manifest, files });
+    }
+    return packages;
+  }
   async function exportZip(pluginId) {
     const item = installed.get(pluginId);
     if (!item) throw new Error("Plugin not installed: " + pluginId);
-    const files = await store.getFiles?.(pluginId);
+    const files = temporaryFiles.get(pluginId) ||
+      await store.getFiles?.(pluginId);
     if (!files || !Object.keys(files).length)
       throw new Error("Plugin files are unavailable for download: " + pluginId);
     return createZip(files);
@@ -316,7 +350,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       sendContext(settingsFrame.dataset.pluginId, settingsFrame.contentWindow);
   }
   return Object.freeze({
-    ready, installZip, installFolder, installFiles, exportZip, load, unload, reload,
+    ready, installZip, installFolder, installFiles, installTemporaryFiles,
+    exportProjectPackages, exportZip, load, unload, reload,
     remove, configure, show, attachSettings, syncContext, assetURL,
     renderAssetFrame, registerAuxiliaryFrame,
     list: () => [...installed.values()].map(clone),
@@ -332,6 +367,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       pending.clear();
       for (const state of frames.values()) state.host.remove();
       auxiliaryFrames.clear();
+      temporaryFiles.clear();
     }
   });
 }
