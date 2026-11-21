@@ -7,6 +7,7 @@ export const SUPPORTED_LANGUAGES = Object.freeze([
 
 const dictionaries = {
   'zh-TW': {
+    repoRunConfirm: "將從 GitHub 載入並執行第三方插件程式碼。請確認信任此公開倉庫。是否繼續？",
     projectRepository: "專案倉庫",
     repoIntro: "匯出目前所有插件，或從本地與 GitHub 暫時載入插件包。",
     repoExport: "下載專案 ZIP",
@@ -114,6 +115,7 @@ const dictionaries = {
     footerVersion: '視覺基礎版 · 語言與調色盤已啟用',
   },
   en: {
+    repoRunConfirm: "This will load and execute third-party plugin code from GitHub. Continue only if you trust this public repository.",
     projectRepository: "Project Repository",
     repoIntro: "Export all current plugins, or load packages temporarily from local files and GitHub.",
     repoExport: "Download Project ZIP",
@@ -220,6 +222,7 @@ const dictionaries = {
     footerVersion: 'UI foundation · language and palette enabled',
   },
   fr: {
+    repoRunConfirm: "Cela chargera et exécutera du code tiers depuis GitHub. Continuez uniquement si vous faites confiance à ce dépôt.",
     projectRepository: "Dépôt du projet",
     repoIntro: "Exportez tous les plugins ou chargez temporairement des fichiers locaux et GitHub.",
     repoExport: "Télécharger ZIP",
@@ -325,6 +328,7 @@ const dictionaries = {
     footerVersion: 'Base UI · langue et palette actives',
   },
   ja: {
+    repoRunConfirm: "GitHub から第三者のプラグインコードを読み込んで実行します。信頼できるリポジトリの場合のみ続行してください。",
     projectRepository: "プロジェクトリポジトリ",
     repoIntro: "全プラグインを書き出すか、ローカルと GitHub から一時的に読み込みます。",
     repoExport: "プロジェクト ZIP を保存",
@@ -430,6 +434,7 @@ const dictionaries = {
     footerVersion: 'UI 基盤 · 言語と配色が有効',
   },
   es: {
+    repoRunConfirm: "Se cargará y ejecutará código de terceros desde GitHub. Continúa solo si confías en este repositorio.",
     projectRepository: "Repositorio del proyecto",
     repoIntro: "Exporta todos los plugins o carga paquetes temporales desde archivos y GitHub.",
     repoExport: "Descargar ZIP",
@@ -535,6 +540,7 @@ const dictionaries = {
     footerVersion: 'Base UI · idioma y paleta activos',
   },
   hi: {
+    repoRunConfirm: "GitHub से तृतीय-पक्ष प्लगइन कोड लोड और चलाया जाएगा। केवल विश्वसनीय रिपॉज़िटरी पर आगे बढ़ें।",
     projectRepository: "परियोजना रिपॉज़िटरी",
     repoIntro: "सभी प्लगइन निर्यात करें या स्थानीय फ़ाइलों और GitHub से अस्थायी रूप से लोड करें।",
     repoExport: "प्रोजेक्ट ZIP डाउनलोड",
