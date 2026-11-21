@@ -96,7 +96,54 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     const pluginId = frameOwner(event.source);
     if (!pluginId) return;
     const message = event.data;
-    if (disposed || !message || message.protocol !== PROTOCOL) return;
+    if (disposed || !message) return;
+    // Public Repository workspace discovery. Only the trusted Editor frame
+    // may embed the independently installed Explorer. No caller-supplied URL.
+    if (message.protocol === "cluster.public.v1") {
+      if (pluginId !== "cluster.text-editor" ||
+          event.source !== currentWindow(pluginId)) return;
+      const reply = payload => event.source?.postMessage({
+        protocol: "cluster.public.v1", ...payload
+      }, "*");
+      if (message.type === "subscribe") {
+        reply({ type: "snapshot", ...getContext() });
+        return;
+      }
+      if (message.type !== "request" ||
+          message.method !== "Plugin.resolve" ||
+          typeof message.requestId !== "string") return;
+      const targetId = message.params?.id;
+      if (targetId !== "cluster.explorer" ||
+          message.params?.capability !== "workspace.explorer.v1") {
+        reply({ type: "response", requestId: message.requestId,
+          ok: false, error: { code: "CAPABILITY_DENIED",
+            message: "Unsupported workspace capability" } });
+        return;
+      }
+      const target = installed.get(targetId);
+      if (!target?.enabled || !frames.has(targetId)) {
+        reply({ type: "response", requestId: message.requestId,
+          ok: false, error: { code: "PLUGIN_NOT_LOADED",
+            message: "Please install and load Cluster Explorer" } });
+        return;
+      }
+      try {
+        const files = temporaryFiles.get(targetId) ||
+          await store.getFiles?.(targetId);
+        if (!files?.[target.manifest.entry])
+          throw new Error("Explorer entry is not available");
+        const html = buildPluginDocument(files, target.manifest.entry);
+        reply({ type: "response", requestId: message.requestId,
+          ok: true, data: { pluginId: targetId,
+            version: target.manifest.version, html } });
+      } catch (error) {
+        reply({ type: "response", requestId: message.requestId,
+          ok: false, error: { code: "PLUGIN_RESOLVE_FAILED",
+            message: String(error?.message || error) } });
+      }
+      return;
+    }
+    if (message.protocol !== PROTOCOL) return;
     if (message.type === "invoke-result") {
       const item = pending.get(message.requestId);
       if (!item || item.pluginId !== pluginId) return;
