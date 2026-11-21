@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1.0",
   "generatedFrom": "src/core/api-catalog.js",
-  "apiCount": 53,
+  "apiCount": 54,
   "apis": [
     {
       "id": "PRMU.get",
@@ -122,6 +122,53 @@
       "method": "getUIColorParameters",
       "type": "read",
       "description": "Read global UI base RGB and all derived palette tokens",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.openUIColorPalette",
+      "unit": "PRMU",
+      "method": "openUIColorPalette",
+      "type": "execute",
+      "description": "Open the Host public UI palette settings dialog",
       "signature": "",
       "version": "1.1.0",
       "implementation": "initial",
