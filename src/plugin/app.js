@@ -2,6 +2,8 @@
 import { createBrowserPluginManager } from './browser-runtime.js';
 import { createHostPMU } from './host-pmu.js';
 import { createExamplePackage } from './template-generator.js';
+import { COMMUNITY_PLUGINS, fetchCommunityPlugin } from './community-remote.js';
+import { createZip } from './package-format.js';
 import { createProjectArchive, readProjectArchive, unpackProjectFiles,
   fetchGitHubProject } from './project-repository.js';
 import { filterLogEntries, exportListJSON, resolveSettingsURL } from './list-utils.js';
@@ -796,8 +798,8 @@ $('pluginFolderInput').addEventListener('change', async event => {
     selectTab('page');
   } catch (error) { reportLoaderError(error); }
 });
-// The Community catalog currently contains the bundled example and installed
-// local plugins. No remote marketplace packages are claimed or fabricated.
+// Built-in Hello Cluster and the two published Folder packages share the
+// same Host-owned community card and install/download actions.
 async function exampleArchive() {
   return createExamplePackage({ liveContracts: kernel.contract.list() });
 }
@@ -809,15 +811,21 @@ async function communityInstall(id) {
       choosePlugin(id);
       return;
     }
-    if (id !== 'example.hello') throw Error('No downloadable package: ' + id);
-    await installArchive(await exampleArchive());
+    if (id === 'example.hello') {
+      await installArchive(await exampleArchive());
+    } else {
+      const pkg = await fetchCommunityPlugin(id);
+      await installArchive(createZip(pkg.files));
+    }
   } catch (error) { reportLoaderError(error); }
 }
 async function communityDownload(id) {
   try {
     setLoaderState('loaderBusy');
-    const archive = id === 'example.hello' ?
-      await exampleArchive() : await browserManager.exportZip(id);
+    const archive = id === 'example.hello' ? await exampleArchive() :
+      COMMUNITY_PLUGINS.some(entry => entry.id === id) ?
+        createZip((await fetchCommunityPlugin(id)).files) :
+        await browserManager.exportZip(id);
     downloadArchive(id.replace(/[^a-z0-9.-]/gi, '-') + '.zip', archive);
     setLoaderState('loaderReady');
   } catch (error) { reportLoaderError(error); }
@@ -829,7 +837,12 @@ function communityCatalog() {
     name: 'Hello Cluster', version: '1.0.0',
     description: t('exampleDescription'), isExample: true,
     manifest: installed.find(x => x.id === 'example.hello')?.manifest || {}
-  }, ...installed.filter(x => x.id !== 'example.hello').map(record => ({
+  }, ...COMMUNITY_PLUGINS.map(entry => ({
+    ...entry, installed: installed.some(record => record.id === entry.id),
+    isExample: false,
+    manifest: installed.find(record => record.id === entry.id)?.manifest || {}
+  })), ...installed.filter(x => x.id !== 'example.hello' &&
+    !COMMUNITY_PLUGINS.some(entry => entry.id === x.id)).map(record => ({
     id: record.id, installed: true, name: record.manifest.name || record.id,
     version: record.manifest.version || '0.0.0',
     description: record.manifest.description || record.id,
