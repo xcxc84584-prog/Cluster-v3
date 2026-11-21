@@ -317,7 +317,18 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
 .api-modal::backdrop{background:#000b;backdrop-filter:blur(4px)}
 .api-modal-header,.api-modal-footer{display:flex;align-items:center;
   justify-content:space-between;gap:12px;padding:15px 20px}
-.api-modal-header{border-bottom:1px solid var(--ui-border)}
+.api-modal-header{position:relative;border-bottom:1px solid var(--ui-border);
+  padding-right:74px;min-height:74px}
+.api-modal-header>div{min-width:0;overflow-wrap:anywhere}
+.api-modal-header #apiModalClose{position:absolute;top:18px;right:20px;
+  width:36px;height:36px;min-width:36px;min-height:36px;
+  padding:0;display:grid;place-items:center;flex:none;
+  line-height:1;font-size:18px;transform:none;margin:0;z-index:1}
+.api-modal-header #apiModalClose:hover{background:var(--ui-hover)}
+@media(max-width:480px){
+  .api-modal-header{padding-right:62px}
+  .api-modal-header #apiModalClose{right:12px}
+}
 .api-modal-header small{font:10px Consolas,monospace;color:var(--ui-muted)}
 .api-modal-header h2{margin:5px 0 0;font-size:17px}
 .api-modal-header button,.api-modal-footer button{min-height:36px;border-radius:7px;
