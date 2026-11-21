@@ -62,10 +62,10 @@ test('public GitHub plugin folders can load without persistent storage', async (
     'https://api.github.com/repos/tester/repo/contents/plugins/remote?ref=main':
       Object.entries(pkg.files).map(([name, data]) => ({
         type:'file', path:'plugins/remote/' + name, size:data.length,
-        url:'https://api.github.com/blob/' + name
+        url:'https://api.github.com/repos/tester/repo/contents/plugins/remote/' + name
       })),
     ...Object.fromEntries(Object.entries(pkg.files).map(([name, data]) =>
-      ['https://api.github.com/blob/' + name, {
+      ['https://api.github.com/repos/tester/repo/contents/plugins/remote/' + name, {
         encoding:'base64', content:Buffer.from(data).toString('base64')
       }]))
   };
