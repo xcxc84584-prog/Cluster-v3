@@ -102,3 +102,21 @@ relation per group with an `occurrences` count. Download List exports the
 same deduplicated rows as JSON. This is **display/export deduplication**:
 the underlying individual req/rep events and ELog remain unchanged so
 traces and request diagnostics still work.
+
+### Switching to another project
+
+Every Project Repository import (local ZIP, local folder, or GitHub) first
+validates the incoming project. If existing plugins are present, Cluster
+displays a themed modal showing the old and incoming plugin counts. GitHub
+imports also display the third-party execution warning even if the current
+project is empty. Cancel/Escape leaves the current project intact.
+
+After confirmation, the Host snapshots all current plugin package bytes and
+enabled states, removes existing plugins **including persistent installations**
+from IndexedDB, and loads the new packages in **session memory only**. This
+deliberately replaces rather than merges project membership. The PMU core
+remains loaded and cannot be deleted. If a replacement fails, Cluster
+attempts to restore the old project; an incomplete rollback is reported
+explicitly. Users should export a Project ZIP before replacing an important
+project. In-flight plugin state and unsaved edits cannot be guaranteed to
+survive a switch, even when installed package bytes can be restored.
