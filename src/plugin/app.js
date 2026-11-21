@@ -2,6 +2,8 @@
 import { createBrowserPluginManager } from './browser-runtime.js';
 import { createHostPMU } from './host-pmu.js';
 import { createExamplePackage } from './template-generator.js';
+import { createProjectArchive, readProjectArchive, unpackProjectFiles,
+  fetchGitHubProject } from './project-repository.js';
 import { filterLogEntries, exportListJSON, resolveSettingsURL } from './list-utils.js';
 import { SYSTEM_MANIFEST } from "../core/system-manifest.js";
 import { createPluginKernel } from '../core/plugin-kernel.js';
@@ -43,6 +45,7 @@ function syncLanguage() {
   toggle.setAttribute('aria-label',
     t(toggle.getAttribute('aria-expanded') === 'true' ? 'collapse' : 'expand'));
   document.title = 'Cluster-v3 · ' + t('brand');
+  renderProjectRepository();
 }
 function syncPalette() {
   const palette = repo.getPalette();
@@ -150,7 +153,7 @@ repo.subscribe(({type}) => {
   if (type === 'language' || type === 'sync') syncLanguage();
   if (type === 'palette' || type === 'sync') syncPalette();
 });
-selectTab('settings');
+selectTab('repository');
 
 // Future plugin integration goes through Router -> PRMU, not direct DOM access.
 export const hostPublicProperties = repo;
@@ -163,6 +166,111 @@ let hostPMU = null;
 let apiPageNumber = 1;
 let selectedAPI = null;
 let selectedPluginId = 'cluster.pmu';
+
+/* Project repository: export installed + session packages; session imports
+   never call the persistent PMU.install / IndexedDB path. */
+function setRepositoryStatus(message, error = false) {
+  $('repoStatus').textContent = message;
+  $('repoStatus').dataset.error = String(error);
+}
+function renderProjectRepository() {
+  const records = browserManager?.list() || [];
+  $('repoCount').textContent = String(records.length).padStart(2, '0');
+  const list = $('repoPackages');
+  list.replaceChildren();
+  for (const entry of records) {
+    const row = document.createElement('div');
+    row.className = 'repo-file';
+    row.setAttribute('role', 'listitem');
+    const icon = document.createElement('span');
+    icon.className = 'repo-file-icon';
+    icon.textContent = '▤';
+    const info = document.createElement('div');
+    info.className = 'repo-file-info';
+    const name = document.createElement('strong');
+    name.textContent = entry.manifest.name || entry.id;
+    const details = document.createElement('small');
+    details.textContent = entry.id + ' · v' + entry.manifest.version;
+    info.append(name, details);
+    const badge = document.createElement('span');
+    badge.className = 'repo-file-badge';
+    badge.textContent = t(entry.temporary ? 'repoSession' : 'repoInstalled');
+    row.append(icon, info, badge);
+    list.append(row);
+  }
+  if (!records.length) {
+    const empty = document.createElement('div');
+    empty.className = 'repo-empty';
+    empty.textContent = t('repoEmpty');
+    list.append(empty);
+  }
+  $('repoExport').disabled = !records.length;
+}
+async function loadSessionPackages(packages) {
+  if (!packages.length) throw Error(t('repoEmpty'));
+  // Packages are validated before install; duplicates are refused by runtime.
+  const ids = new Set();
+  for (const { manifest } of packages) {
+    if (ids.has(manifest.id)) throw Error('Duplicate plugin: ' + manifest.id);
+    ids.add(manifest.id);
+  }
+  let completed = 0;
+  for (const pkg of packages) {
+    await browserManager.installTemporaryFiles(pkg.files);
+    completed++;
+  }
+  renderProjectRepository();
+  setRepositoryStatus(t('repoImportDone') + ': ' + completed);
+}
+async function runRepoOperation(callback) {
+  for (const id of ['repoExport','repoImportZip','repoImportFolder',
+      'repoGitHubConnect']) $(id).disabled = true;
+  setRepositoryStatus(t('repoBusy'));
+  try { await callback(); }
+  catch (error) {
+    setRepositoryStatus(t('repoFailed') + ': ' + String(error.message || error), true);
+    reportLoaderError(error);
+  } finally {
+    for (const id of ['repoImportZip','repoImportFolder',
+        'repoGitHubConnect']) $(id).disabled = false;
+    renderProjectRepository();
+  }
+}
+$('repoExport').addEventListener('click', () => void runRepoOperation(async () => {
+  const packages = await browserManager.exportProjectPackages();
+  const archive = createProjectArchive(packages);
+  downloadArchive('cluster-v3-project.zip', archive);
+  setRepositoryStatus(t('repoExportDone') + ': ' + packages.length);
+}));
+$('repoImportZip').addEventListener('click', () => $('repoZipInput').click());
+$('repoImportFolder').addEventListener('click', () => $('repoFolderInput').click());
+$('repoZipInput').addEventListener('change', event => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+  void runRepoOperation(async () => loadSessionPackages(
+    await readProjectArchive(new Uint8Array(await file.arrayBuffer()))));
+});
+$('repoFolderInput').addEventListener('change', event => {
+  const selected = [...event.target.files];
+  event.target.value = '';
+  if (!selected.length) return;
+  void runRepoOperation(async () => {
+    const files = {};
+    for (const file of selected) {
+      const path = file.webkitRelativePath || file.name;
+      files[path] = new Uint8Array(await file.arrayBuffer());
+    }
+    await loadSessionPackages(unpackProjectFiles(files));
+  });
+});
+$('repoGitHubForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const address = $('repoGitHubUrl').value.trim();
+  void runRepoOperation(async () =>
+    loadSessionPackages(await fetchGitHubProject(address)));
+});
+
 
 // The PMU is permanent; ordinary plugin settings are provided by a web page.
 // Plugin management creates the list from registered runtime instances.
@@ -475,6 +583,16 @@ function currentLogs() {
       pluginId: selectedPluginId
     });
 }
+function uniqueRouterRelations() {
+  const distinct = new Map();
+  for (const event of kernel.inspect(selectedPluginId).relations) {
+    const key = [event.source, event.target, event.action,
+      event.direction, event.status ?? ''].join('\u0000');
+    const old = distinct.get(key);
+    distinct.set(key, { ...event, occurrences: (old?.occurrences || 0) + 1 });
+  }
+  return [...distinct.values()];
+}
 function renderDiagnostics() {
   const events = currentLogs();
   $('logTotal').textContent = events.length + ' ' + t('logEntries');
@@ -487,7 +605,7 @@ function renderDiagnostics() {
   }
   if (!events.length) $('logList').textContent = t('noLogs');
   $('routerList').replaceChildren();
-  for (const relation of kernel.inspect(selectedPluginId).relations.slice(-200).reverse()) {
+  for (const relation of uniqueRouterRelations().slice(-200).reverse()) {
     const row = document.createElement('pre');
     row.className = 'diagnostic-row';
     row.textContent = JSON.stringify(relation);
@@ -528,6 +646,10 @@ $('logDownloadList').addEventListener('click', () => downloadJSON(
     type: $('logType').value, status: $('logStatus').value
   })
 ));
+$('routerDownloadList').addEventListener('click', () => downloadJSON(
+  'cluster-v3-router-list.json', exportListJSON('router', uniqueRouterRelations(), {
+    pluginId: selectedPluginId, deduplicated: true
+  })));
 $('refreshRouter').addEventListener('click', () => {
   const button = $('refreshRouter');
   button.classList.remove('is-refreshing');
@@ -774,6 +896,7 @@ browserManager = createBrowserPluginManager({
   onChange: () => {
     updateCommunityCards();
     renderPluginExplorer();
+    renderProjectRepository();
     renderSettings();
     renderPluginPage();
     renderAPIs();
@@ -787,6 +910,7 @@ syncPalette();
 renderAPIs();
 renderDiagnostics();
 renderPluginExplorer();
+renderProjectRepository();
 renderSettings();
 renderPluginPage();
 
