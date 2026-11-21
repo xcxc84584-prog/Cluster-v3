@@ -241,7 +241,7 @@ try {
     "e=>window.__clusterFrameEvents.push({origin:e.origin,data:e.data}));");
   await until("document.querySelector('.community-install-button') !== null",
     "marketplace card displayed");
-  await evaluate("document.querySelector('.community-install-button').click()");
+  await evaluate("document.querySelector('[data-community-id=\"example.hello\"] .community-install-button').click()");
   await until("document.querySelector('#pluginCount')?.textContent === '02'",
     "example plugin installation");
   const openAction = await evaluate(`(() => {
