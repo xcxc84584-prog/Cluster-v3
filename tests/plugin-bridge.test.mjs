@@ -34,3 +34,30 @@ test("PMU.log records real plugin id rather than a spoofed source", async () => 
   const item = kernel.logs("log").at(-1);
   assert.equal(item.source, "sample.plugin");
 });
+
+test("PRMU Capability Registry is generic and appears in the API catalog", async () => {
+  const kernel = createPluginKernel();
+  kernel.load("sample.provider");
+  kernel.load("sample.consumer");
+  assert.ok(kernel.catalog.some(api => api.id === "PRMU.resolveCapability" &&
+    api.implementation !== "planned"));
+  const registered = await dispatchPluginCall(kernel, "sample.provider",
+    "PRMU.register", ["capabilities", {
+      key:"sample.panel.v1", value:{ kind:"ui.embed",version:"1.0.0" },
+      sharedWrite:false,persistent:false
+    }]);
+  assert.equal(registered.status,201);
+  const resolver = async capability => {
+    assert.equal(capability,"sample.panel.v1");
+    return { capability, pluginId:"sample.provider",
+      version:"1.0.0", html:"<!doctype html><title>Panel</title>" };
+  };
+  const result = await dispatchPluginCall(kernel, "sample.consumer",
+    "PRMU.resolveCapability", ["sample.panel.v1"], undefined, resolver);
+  assert.equal(result.data.pluginId,"sample.provider");
+  assert.match(result.data.html,/Panel/);
+  assert.equal(kernel.host.PRMU.list("capabilities").data[0].owner,
+    "sample.provider");
+  kernel.unload("sample.provider");
+  assert.equal(kernel.host.PRMU.list("capabilities").data.length, 0);
+});
