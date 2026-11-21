@@ -181,6 +181,42 @@
     <footer class="statusbar"><span class="status-dot"></span><span data-i18n="statusReady">已就緒</span><span class="footer-divider"></span><span data-i18n="statusLocal">本地 UI 設定</span><div class="spacer"></div><span data-i18n="footerVersion">視覺基礎版 · 語言與調色盤已啟用</span><span>Cluster-v3</span></footer>
   </div>
 
+  <dialog id="projectSwitchDialog" class="project-switch-dialog"
+    aria-labelledby="projectSwitchTitle" aria-describedby="projectSwitchDescription">
+    <div class="project-switch-head">
+      <span class="project-switch-icon" aria-hidden="true">◇</span>
+      <div class="project-switch-heading">
+        <small>CLUSTER / PROJECT REPOSITORY</small>
+        <h2 id="projectSwitchTitle" data-i18n="projectSwitchTitle">切換專案倉庫？</h2>
+      </div>
+      <button type="button" id="projectSwitchClose" class="icon-button"
+        aria-label="Close" data-i18n-title="modalClose">×</button>
+    </div>
+    <div class="project-switch-body">
+      <p id="projectSwitchDescription" data-i18n="projectSwitchDescription">
+        載入新專案前，會移除目前的插件包並停止其運行。
+      </p>
+      <div class="project-switch-summary">
+        <div><small data-i18n="projectSwitchCurrent">目前專案插件</small>
+          <strong id="projectSwitchCurrentCount">0</strong></div>
+        <span aria-hidden="true">→</span>
+        <div><small data-i18n="projectSwitchIncoming">即將載入插件</small>
+          <strong id="projectSwitchIncomingCount">0</strong></div>
+      </div>
+      <p class="project-switch-warning" data-i18n="projectSwitchWarning">
+        舊插件將從目前環境移除，包含已儲存的安裝包。建議先下載專案 ZIP 備份。
+      </p>
+      <p id="projectSwitchThirdParty" class="project-switch-warning" hidden
+        data-i18n="projectSwitchThirdParty">
+        GitHub 插件可能執行第三方程式碼，請確認來源可信。
+      </p>
+    </div>
+    <div class="project-switch-actions">
+      <button type="button" id="projectSwitchCancel" data-i18n="projectSwitchCancel">取消</button>
+      <button type="button" class="project-switch-confirm" id="projectSwitchConfirm"
+        data-i18n="projectSwitchConfirm">清空並載入</button>
+    </div>
+  </dialog>
   <dialog id="apiDetail" class="api-modal" aria-labelledby="apiDetailTitle">
     <div class="api-modal-header">
       <div><small>API / CONTRACT JSON</small><h2 id="apiDetailTitle">API JSON</h2></div>
