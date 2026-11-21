@@ -2,6 +2,9 @@
 const groups = {
   PRMU: [
     ["get","read","Read a public value","source:string,item:string,options?:object"],
+    ["getUIColorParameters","read","Read global UI base RGB and all derived palette tokens",""],
+    ["getVersion","read","Read authoritative Host system version",""],
+    ["getPluginSiteUrl","read","Read Plugin Manager landing page URL",""],
     ["set","write","Update a writable public value","source:string,item:string,value:any,options?:object"],
     ["list","read","Enumerate public entries","source:string,options?:object"],
     ["register","write","Register owned public data","source:string,definition:object"],
@@ -61,7 +64,7 @@ const groups = {
     ["validate","execute","Validate payload against contract","contractId:string,payload:any"]
   ]
 };
-export const API_CATALOG_VERSION = "1.0.0";
+export const API_CATALOG_VERSION = "1.1.0";
 const hostOnly = new Set([
   "PMU.install", "PMU.uninstall", "PMU.load", "PMU.unload",
   "Runtime.mount", "Runtime.unmount"
@@ -69,7 +72,8 @@ const hostOnly = new Set([
 const implemented = new Set([
   "PMU.get", "PMU.list", "Contract.list", "Contract.get",
   "Contract.register", "Contract.unregister", "Contract.validate",
-  "PRMU.get", "PRMU.set", "PRMU.list", "PRMU.register",
+  "PRMU.get", "PRMU.getUIColorParameters", "PRMU.getVersion",
+  "PRMU.getPluginSiteUrl", "PRMU.set", "PRMU.list", "PRMU.register",
   "PRMU.unregister", "PRMU.subscribe", "PRMU.unsubscribe",
   "PRMU.describe", "PRMU.snapshot", "PRMU.batch",
   "Router.request", "Router.register", "Router.unregister",
@@ -79,7 +83,7 @@ const implemented = new Set([
 function requestSchema(signature) {
   const properties = {};
   const required = [];
-  for (const part of signature.split(",")) {
+  for (const part of signature ? signature.split(",") : []) {
     const [rawKey, rawType] = part.trim().split(":");
     const optional = rawKey.endsWith("?");
     const key = optional ? rawKey.slice(0, -1) : rawKey;
