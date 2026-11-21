@@ -1,5 +1,5 @@
 /** Download an actually installable template with API docs from the live catalog. */
-import { API_CATALOG, catalogJSON } from "../core/api-catalog.js";
+import { API_CATALOG, API_CATALOG_VERSION, catalogJSON } from "../core/api-catalog.js";
 import { createZip } from "./package-format.js";
 
 export const TEMPLATE_FILES = Object.freeze([
@@ -7,7 +7,8 @@ export const TEMPLATE_FILES = Object.freeze([
   "scripts/cluster-client.js", "scripts/app.js", "scripts/settings.js",
   "scripts/community.js",
   "styles/main.css", "README.md",
-  "docs/Plugin-Standards.md", "docs/Public-Repository.md", "docs/PMU-API.md"
+  "docs/Plugin-Standards.md", "docs/Public-Repository.md", "docs/PMU-API.md",
+  "docs/Troubleshooting.md"
 ]);
 export async function createExamplePackage({ liveContracts = [] } = {}) {
   const root = new URL("../../templates/plugin-example/", import.meta.url);
@@ -18,12 +19,12 @@ export async function createExamplePackage({ liveContracts = [] } = {}) {
   }));
   const files = Object.fromEntries(entries);
   files["docs/Cluster-API-Catalog.json"] = JSON.stringify({
-    schemaVersion: "1.0.0", generatedFrom: "Cluster live registry",
+    schemaVersion: API_CATALOG_VERSION, generatedFrom: "Cluster live registry",
     apiCount: API_CATALOG.length + liveContracts.length,
     apis: [...API_CATALOG, ...liveContracts]
   }, null, 2);
   files["docs/PMU-API.json"] = JSON.stringify({
-    schemaVersion: "1.0.0",
+    schemaVersion: API_CATALOG_VERSION,
     source: "Cluster-v3 PMU",
     apis: [...API_CATALOG.filter(api => api.unit === "PMU" ||
       api.unit === "Log"), ...liveContracts.filter(api =>
