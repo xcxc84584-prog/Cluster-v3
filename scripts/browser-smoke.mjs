@@ -205,7 +205,11 @@ try {
     return { count: document.querySelectorAll('.community-card').length,
       rows };
   })()`);
-  assert(marketplaceLayout.count === 1, "Default example card must appear once");
+  assert(marketplaceLayout.count === 3, "Hello Cluster plus both published plugins must appear");
+  const cardIds = await evaluate("[...document.querySelectorAll('.community-card')].map(x => x.dataset.communityId)");
+  assert(cardIds.length === new Set(cardIds).size &&
+    ['example.hello','cluster.explorer','cluster.text-editor'].every(id => cardIds.includes(id)),
+    "Community cards must include each published plugin exactly once");
   assert(marketplaceLayout.rows.length === 2, "Download and quick install required");
   assert(marketplaceLayout.rows.every(row =>
     row.width > 65 && row.height < 55 &&
