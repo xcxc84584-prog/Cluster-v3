@@ -264,11 +264,19 @@ $('repoFolderInput').addEventListener('change', event => {
     await loadSessionPackages(unpackProjectFiles(files));
   });
 });
+const GITHUB_REPOSITORY_KEY = 'cluster-v3.project.github-url.v1';
+try { $('repoGitHubUrl').value = localStorage.getItem(GITHUB_REPOSITORY_KEY) || ''; }
+catch { /* Browser storage is optional; linked packages remain session-only. */ }
 $('repoGitHubForm').addEventListener('submit', event => {
   event.preventDefault();
   const address = $('repoGitHubUrl').value.trim();
-  void runRepoOperation(async () =>
-    loadSessionPackages(await fetchGitHubProject(address)));
+  if (!window.confirm(t('repoRunConfirm'))) return;
+  void runRepoOperation(async () => {
+    const packages = await fetchGitHubProject(address);
+    await loadSessionPackages(packages);
+    try { localStorage.setItem(GITHUB_REPOSITORY_KEY, address); }
+    catch { /* URL memory is optional; plugin packages are never persisted. */ }
+  });
 });
 
 
