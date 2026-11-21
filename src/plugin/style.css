@@ -621,3 +621,17 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
   .project-switch-body{padding:14px}
   .project-switch-actions{padding:12px 14px}
 }
+
+/* LOG pagination: bound DOM rows and keep controls visible beneath list. */
+.log-pagination{display:flex;align-items:center;justify-content:flex-end;
+  gap:9px;flex-wrap:wrap;border-top:1px solid var(--ui-border);
+  background:var(--ui-panel);padding:10px 12px;
+  color:var(--ui-text);font-size:12px}
+.log-pagination select,.log-pagination button{border:1px solid var(--ui-border);
+  background:var(--ui-control);color:var(--ui-on-control,var(--ui-text));
+  border-radius:5px;padding:6px 10px;cursor:pointer}
+.log-pagination button:disabled{opacity:.4;cursor:not-allowed}
+.log-pagination button:not(:disabled):hover{background:var(--ui-hover);
+  color:var(--ui-on-hover,var(--ui-text))}
+#logPage{min-width:52px;text-align:center;font:12px Consolas,monospace}
+@media(max-width:580px){.log-pagination{justify-content:center;gap:6px}}
