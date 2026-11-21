@@ -505,3 +505,57 @@ input[type=search]:focus-visible,select:focus-visible,button:focus-visible{
 
 /* Explorer 'open website' icon: same compact controls as stop/remove. */
 .plugin-open-action{font-size:17px;font-weight:600}
+
+
+/* Project Repository — compact GitHub-inspired controls, themed with Host tokens. */
+.project-repository{overflow:auto;min-height:0}
+.repo-topline{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:18px;margin-bottom:18px}
+.repo-topline small{font:10px Consolas,monospace;letter-spacing:1px;color:var(--ui-muted)}
+.repo-topline h2{font-size:22px;margin:7px 0 8px;color:var(--ui-text)}
+.repo-topline p,.repo-github p{margin:0;color:var(--ui-muted);line-height:1.6}
+.repo-count{font:14px Consolas,monospace;padding:8px 12px;border-radius:8px;
+  color:var(--ui-accent);background:var(--ui-control);border:1px solid var(--ui-border)}
+.repo-toolbar{display:flex;flex-wrap:wrap;gap:9px;padding:14px;
+  border:1px solid var(--ui-border);background:var(--ui-panel);
+  border-radius:10px 10px 0 0}
+.repo-toolbar button,.repo-github-form button{display:inline-flex;
+  align-items:center;justify-content:center;gap:9px;min-height:36px;
+  padding:8px 13px;background:var(--ui-control);border:1px solid var(--ui-border);
+  border-radius:7px;color:var(--ui-text);font-weight:600}
+.repo-toolbar button:hover,.repo-github-form button:hover{background:var(--ui-hover)}
+.repo-toolbar .repo-primary{background:var(--ui-accent);color:var(--ui-background);
+  border-color:var(--ui-accent)}
+.repo-github{display:flex;flex-wrap:wrap;align-items:center;
+  justify-content:space-between;gap:12px;padding:17px 15px;
+  border:1px solid var(--ui-border);border-top:0;background:var(--ui-panel)}
+.repo-github strong{display:block;margin-bottom:5px}
+.repo-github-form{display:flex;flex:1;min-width:min(100%,280px);gap:8px}
+.repo-github-form input{flex:1;min-width:0;background:var(--ui-control);
+  border:1px solid var(--ui-border);border-radius:7px;
+  padding:8px 11px;color:var(--ui-text)}
+.repo-github-form input:focus-visible{outline:2px solid var(--ui-accent)}
+.repo-list-header{display:flex;justify-content:space-between;flex-wrap:wrap;
+  gap:8px;padding:14px 15px;border:1px solid var(--ui-border);border-top:0;
+  background:var(--ui-surface)}
+.repo-list-header span{color:var(--ui-muted);font-size:11px}
+.repo-list{border:1px solid var(--ui-border);border-top:0;border-radius:0 0 10px 10px;
+  overflow:hidden;background:var(--ui-panel)}
+.repo-file{display:flex;align-items:center;gap:12px;min-height:52px;
+  border-bottom:1px solid var(--ui-border);padding:9px 15px}
+.repo-file:last-child{border-bottom:0}
+.repo-file-icon{color:var(--ui-accent);font-size:20px}
+.repo-file-info{flex:1;min-width:0}
+.repo-file-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.repo-file-info small{display:block;margin-top:4px;color:var(--ui-muted)}
+.repo-file-badge{font:10px Consolas,monospace;padding:5px 7px;border-radius:5px;
+  border:1px solid var(--ui-border);color:var(--ui-muted);white-space:nowrap}
+.repo-empty{color:var(--ui-muted);padding:24px 15px;text-align:center}
+.repo-status{font-size:12px;color:var(--ui-muted);margin:12px 0;min-height:20px}
+.repo-status[data-error=true]{color:var(--ui-text);border-left:3px solid var(--ui-accent);padding-left:9px}
+.router-actions{display:flex;gap:9px;align-items:center;margin-left:auto}
+@media(max-width:700px){
+  .repo-github-form{flex-basis:100%}
+  .repo-github-form button{flex:none}
+  .repo-toolbar button{flex:1}
+}
