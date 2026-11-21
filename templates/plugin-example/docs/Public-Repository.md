@@ -24,3 +24,25 @@ removed on unload unless marked persistent. Host version is not writable.
 The supplied `cluster-client.js` is a simple RPC client and does not import
 internal Host modules. All successful RPC calls return a JSON envelope with
 `ok`, `status`, `data` and `error`.
+
+## Reusable UI capabilities (PRMU Capability Registry)
+
+```js
+// Provider plugin, after Cluster Host context is ready:
+await Cluster.PRMU.register("capabilities", {
+  key: "example.hello.ui.v1",
+  value: { kind: "ui.embed", version: "1.0.0" },
+  sharedWrite: false, persistent: false
+});
+
+// Any consumer may resolve the provider's packaged entry HTML:
+const reply = await Cluster.PRMU.resolveCapability("example.hello.ui.v1");
+if (reply.ok) frame.srcdoc = reply.data.html;
+```
+
+The Host selects the provider by its owned PRMU registration, checks it is
+loaded, and reads its manifest entry from the verified plugin package.
+`PRMU.resolveCapability` is generic: no Explorer/Editor-specific Host branch.
+The API is implemented in the Host browser runtime and must not be called
+without the updated Host. Nested frames do not automatically acquire the
+provider's Host identity; route requests through the owning main frame.
