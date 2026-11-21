@@ -3,10 +3,16 @@ import assert from "node:assert/strict";
 import { API_CATALOG, queryCatalog, catalogJSON } from "../src/core/api-catalog.js";
 import { createPluginKernel } from "../src/core/plugin-kernel.js";
 
-test("catalog has 48 unique, searchable and serializable contracts", () => {
-  assert.equal(API_CATALOG.length, 48);
-  assert.equal(new Set(API_CATALOG.map(x => x.id)).size, 48);
-  assert.equal(JSON.parse(catalogJSON()).apiCount, 48);
+test("catalog has unique, searchable and serializable contracts", () => {
+  const ids = API_CATALOG.map(entry => entry.id);
+  const exported = JSON.parse(catalogJSON());
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(exported.apiCount, API_CATALOG.length);
+  assert.deepEqual(exported.apis.map(entry => entry.id), ids);
+  for (const name of ["PRMU.getUIColorParameters", "PRMU.getVersion",
+      "PRMU.getPluginSiteUrl"]) {
+    assert.ok(ids.includes(name), "Missing public API: " + name);
+  }
   assert.equal(queryCatalog({ search: "Router.request" }).total, 1);
   assert.equal(queryCatalog({ pageSize: 7 }).entries.length, 7);
 });
@@ -14,7 +20,14 @@ test("PRMU public values, registration and version authority", () => {
   const kernel = createPluginKernel({ systemVersion: "3.1.0" });
   const p = kernel.load("example.a").PRMU;
   assert.equal(p.get("parameters", "system.version").data, "3.1.0");
-  assert.throws(() => p.set("parameters", "system.version", "99"), /PMU owns/);
+  assert.throws(() => p.set("parameters", "system.version", "99"),
+    /Host owns|VERSION_AUTHORITY/);
+  assert.equal(p.getVersion().data, "3.1.0");
+  assert.equal(p.getPluginSiteUrl().data,
+    "https://xcxc84584-prog.github.io/Cluster-v3/plugin/?view=home");
+  assert.match(p.getUIColorParameters().data.baseColor, /^#[0-9a-f]{6}$/i);
+  assert.throws(() => p.set("parameters", "plugin.siteUrl", "https://invalid.example"),
+    /Host owns|VERSION_AUTHORITY/);
   p.register("plugin.example", { key: "value", value: 42 });
   assert.equal(p.get("plugin.example", "value").data, 42);
   kernel.unload("example.a");
