@@ -353,7 +353,8 @@ function sendSettingsContext() {
     pluginId: selectedPluginId,
     language: repo.getLanguage(),
     palette: repo.getPalette(),
-    baseColor: repo.getBaseColor()
+    baseColor: repo.getBaseColor(),
+    pluginSiteUrl: repo.getPluginSiteUrl()
   }, '*');
 }
 $('pluginSettingsFrame').addEventListener('load', () => {
@@ -767,6 +768,7 @@ browserManager = createBrowserPluginManager({
     language: repo.getLanguage(),
     palette: repo.getPalette(),
     baseColor: repo.getBaseColor(),
+    pluginSiteUrl: repo.getPluginSiteUrl(),
     systemVersion: SYSTEM_MANIFEST.version
   }),
   onChange: () => {
