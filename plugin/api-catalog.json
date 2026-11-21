@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1.0",
   "generatedFrom": "src/core/api-catalog.js",
-  "apiCount": 52,
+  "apiCount": 53,
   "apis": [
     {
       "id": "PRMU.get",
@@ -129,6 +129,59 @@
         "type": "object",
         "properties": {},
         "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.setUIColorBaseColor",
+      "unit": "PRMU",
+      "method": "setUIColorBaseColor",
+      "type": "write",
+      "description": "Set the authoritative shared base RGB color for all plugin UIs",
+      "signature": "color:string",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "color"
+        ],
         "additionalProperties": false
       },
       "response": {
