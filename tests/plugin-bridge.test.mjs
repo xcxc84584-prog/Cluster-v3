@@ -61,3 +61,20 @@ test("PRMU Capability Registry is generic and appears in the API catalog", async
   kernel.unload("sample.provider");
   assert.equal(kernel.host.PRMU.list("capabilities").data.length, 0);
 });
+
+test("shared PRMU palette write updates Host snapshot and stays API discoverable", async () => {
+  const kernel = createPluginKernel({elogStore:{load:async()=>[],append:async()=>{}}});
+  kernel.load("sample.palette-plugin");
+  const result = await dispatchPluginCall(kernel,"sample.palette-plugin",
+    "PRMU.setUIColorBaseColor",["#224466"]);
+  assert.equal(result.status,200);
+  const reply = await dispatchPluginCall(kernel,"sample.palette-plugin",
+    "PRMU.getUIColorParameters",[]);
+  assert.equal(reply.data.baseColor,"#224466");
+  assert.equal(reply.data.palette.background,"#224466");
+  assert.ok(kernel.catalog.some(api =>
+    api.id === "PRMU.setUIColorBaseColor" && api.implementation === "initial"));
+  await assert.rejects(dispatchPluginCall(kernel,"sample.palette-plugin",
+    "PRMU.setUIColorBaseColor",["not-a-color"]));
+  kernel.dispose();
+});
