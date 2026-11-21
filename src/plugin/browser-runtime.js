@@ -119,8 +119,19 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     }
     const files = temporaryFiles.get(pluginId) ||
       await store.getFiles?.(pluginId);
-    const entry = record.manifest.entry;
-    if (!files?.[entry]) throw Error("Provider entry resource unavailable");
+    // A provider may expose multiple UI components, each in its own
+    // packaged HTML file. Never accept network URLs or path traversal.
+    const entry = descriptor.entry || record.manifest.entry;
+    if (typeof entry !== "string" ||
+        !/^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)*\.html$/.test(entry) ||
+        entry.split("/").includes("..")) {
+      const error = new Error("Capability entry must be a package-local HTML file");
+      error.status = 400; error.code = "BAD_UI_ENTRY"; throw error;
+    }
+    if (!files?.[entry]) {
+      const error = new Error("Capability entry resource unavailable");
+      error.status = 404; error.code = "ENTRY_NOT_FOUND"; throw error;
+    }
     return { capability, pluginId, version: record.manifest.version,
       html: buildPluginDocument(files, entry) };
   }
