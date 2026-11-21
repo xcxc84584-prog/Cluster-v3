@@ -8,7 +8,8 @@ function invalid(message) {
   err.status = 400;
   return err;
 }
-export async function dispatchPluginCall(kernel, pluginId, method, args, invoke, resolveCapability) {
+export async function dispatchPluginCall(kernel, pluginId, method, args, invoke,
+  resolveCapability, openUIColorPalette) {
   if (!Array.isArray(args) || args.length > 8)
     throw invalid("Arguments must be an array of up to eight items");
   const instance = kernel.getInstance(pluginId);
@@ -44,6 +45,14 @@ export async function dispatchPluginCall(kernel, pluginId, method, args, invoke,
     case "PRMU.resolveCapability": return { ok: true, status: 200,
       data: await resolveCapability(args[0]), error: null };
     case "PRMU.getUIColorParameters": return instance.PRMU.getUIColorParameters();
+    case "PRMU.openUIColorPalette": {
+      if (typeof openUIColorPalette !== "function") {
+        const error = new Error("Host palette UI is unavailable");
+        error.status = 503; error.code = "UI_UNAVAILABLE"; throw error;
+      }
+      openUIColorPalette();
+      return { ok: true, status: 200, data: { opened: true }, error: null };
+    }
     case "PRMU.setUIColorBaseColor": return instance.PRMU.setUIColorBaseColor(args[0]);
     case "PRMU.getVersion": return instance.PRMU.getVersion();
     case "PRMU.getPluginSiteUrl": return instance.PRMU.getPluginSiteUrl();
