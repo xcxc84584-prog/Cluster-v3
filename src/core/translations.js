@@ -7,6 +7,9 @@ export const SUPPORTED_LANGUAGES = Object.freeze([
 
 const dictionaries = {
   'zh-TW': {
+    logPageSize: "每頁筆數",
+    logPrevious: "上一頁",
+    logNext: "下一頁",
     projectSwitchTitle: "切換專案倉庫？",
     projectSwitchDescription: "載入新專案前，會移除目前的插件包並停止其運行。",
     projectSwitchCurrent: "目前專案插件",
@@ -123,6 +126,9 @@ const dictionaries = {
     footerVersion: '視覺基礎版 · 語言與調色盤已啟用',
   },
   en: {
+    logPageSize: "Per page",
+    logPrevious: "Previous",
+    logNext: "Next",
     projectSwitchTitle: "Switch project repository?",
     projectSwitchDescription: "Before importing the new project, all current plugin packages will be removed and stopped.",
     projectSwitchCurrent: "Current plugins",
@@ -238,6 +244,9 @@ const dictionaries = {
     footerVersion: 'UI foundation · language and palette enabled',
   },
   fr: {
+    logPageSize: "Par page",
+    logPrevious: "Précédent",
+    logNext: "Suivant",
     projectSwitchTitle: "Changer de dépôt de projet ?",
     projectSwitchDescription: "Les plugins actuels seront arrêtés et supprimés avant l’importation du nouveau projet.",
     projectSwitchCurrent: "Plugins actuels",
@@ -352,6 +361,9 @@ const dictionaries = {
     footerVersion: 'Base UI · langue et palette actives',
   },
   ja: {
+    logPageSize: "ページあたり",
+    logPrevious: "前へ",
+    logNext: "次へ",
     projectSwitchTitle: "プロジェクトを切り替えますか？",
     projectSwitchDescription: "新しいプロジェクトを読み込む前に、現在のプラグインを停止して削除します。",
     projectSwitchCurrent: "現在のプラグイン",
@@ -466,6 +478,9 @@ const dictionaries = {
     footerVersion: 'UI 基盤 · 言語と配色が有効',
   },
   es: {
+    logPageSize: "Por página",
+    logPrevious: "Anterior",
+    logNext: "Siguiente",
     projectSwitchTitle: "¿Cambiar de proyecto?",
     projectSwitchDescription: "Antes de cargar el nuevo proyecto, se eliminarán y detendrán los plugins actuales.",
     projectSwitchCurrent: "Plugins actuales",
@@ -580,6 +595,9 @@ const dictionaries = {
     footerVersion: 'Base UI · idioma y paleta activos',
   },
   hi: {
+    logPageSize: "प्रति पृष्ठ",
+    logPrevious: "पिछला",
+    logNext: "अगला",
     projectSwitchTitle: "प्रोजेक्ट रिपॉज़िटरी बदलें?",
     projectSwitchDescription: "नया प्रोजेक्ट लोड करने से पहले वर्तमान प्लगइन रोककर हटाए जाएँगे।",
     projectSwitchCurrent: "मौजूदा प्लगइन",
