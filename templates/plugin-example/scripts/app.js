@@ -51,3 +51,18 @@ void Cluster.Router.register("demo.echo", payload =>
   });
 // The API List is sourced from the live service registry.
 
+
+// Optional UI capability example. The Hello Cluster main page is an
+// embeddable UI; consumers can resolve its packaged entry through PRMU.
+Cluster.onContext(async context => {
+  if (context.pluginId !== "example.hello") return;
+  try {
+    await Cluster.PRMU.register("capabilities", {
+      key: "example.hello.ui.v1",
+      value: { kind: "ui.embed", version: "1.0.0" },
+      sharedWrite: false, persistent: false
+    });
+  } catch (error) {
+    console.warn("Capability registration failed", error);
+  }
+});
