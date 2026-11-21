@@ -210,8 +210,11 @@ async function loadSessionPackages(packages) {
   if (!packages.length) throw Error(t('repoEmpty'));
   // Packages are validated before install; duplicates are refused by runtime.
   const ids = new Set();
+  const existing = new Map(browserManager.list().map(record => [record.id, record]));
   for (const { manifest } of packages) {
     if (ids.has(manifest.id)) throw Error('Duplicate plugin: ' + manifest.id);
+    if (existing.has(manifest.id) && !existing.get(manifest.id).temporary)
+      throw Error('Persistent plugin ID conflict: ' + manifest.id);
     ids.add(manifest.id);
   }
   let completed = 0;
