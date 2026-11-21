@@ -174,6 +174,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       getUIColorParameters: () => result({
         baseColor: repo.getBaseColor(), palette: repo.getPalette()
       }),
+      setUIColorBaseColor: color => publicSet(pluginId, "ui", "palette.baseColor", color),
       getVersion: () => result(systemVersion),
       getPluginSiteUrl: () => result(repo.getPluginSiteUrl()),
       set: (source, item, value) => publicSet(pluginId, source, item, value),
