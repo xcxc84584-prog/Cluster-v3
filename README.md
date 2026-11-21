@@ -61,3 +61,44 @@ than direct cross-plugin access.
 - Compact icon tabs appear immediately below the Host toolbar; the redundant Plugin Manager title section is removed.
 - The six-language public setting remains available; earlier browser palette state is migrated at initialization.
 - Plugin installation, Router and PRMU remain out of scope. CSS tokens continue to be published from the browser-local public property store.
+
+## Project Repository (session-based plugin packages)
+
+The **Project Repository** tab is placed before Plugin Settings. It offers:
+
+- **Download Project ZIP:** combine every currently installed and session-loaded
+  plugin into a single `cluster-v3-project.zip`. The archive has a
+  `cluster-project.json` manifest and `plugins/<plugin-id>/` directories,
+  each containing an original validated plugin package.
+- **Open ZIP:** load a single plugin ZIP or a multi-plugin project ZIP.
+- **Open Folder:** load a local plugin folder or multiple plugin folders
+  contained in one parent directory (browser folder picker).
+- **Connect GitHub:** read public `github.com/owner/repo` URLs, including
+  `/tree/<branch>/<folder>` folder links, as plugin folders and/or ZIP
+  package files. A `?ref=<branch>` query can explicitly select a ref.
+  The last successful GitHub URL is remembered, but remote plugins are **not**
+  automatically executed again on reload.
+
+**Persistence guarantee:** Project Repository imports are held in memory only.
+No plugin bytes or installation state from these imports are written to IndexedDB.
+They vanish after a refresh. The existing Explorer install controls still use
+the persistent IndexedDB flow; plugins already installed through that flow
+continue to be restored normally.
+
+**Safety and limits:** Importing and running external plugin code is a
+security-sensitive operation. GitHub imports require confirmation and support
+**public repositories only**, without credentials. The GitHub Contents API is
+used, subject to unauthenticated rate limits; each GitHub file currently
+needs to be smaller than 1 MiB. The project exchange inherits the ZIP format
+limits (at most 500 entries, 20 MiB compressed ZIP, 16 MiB uncompressed
+project content); oversized imports/exports fail visibly without silent
+truncation. No GitHub write, sync, or private-repository OAuth is implemented.
+
+## Router status list
+
+The Router Status tab groups repeated relations by
+`source + target + action + direction + status`, showing only the latest
+relation per group with an `occurrences` count. Download List exports the
+same deduplicated rows as JSON. This is **display/export deduplication**:
+the underlying individual req/rep events and ELog remain unchanged so
+traces and request diagnostics still work.
