@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "generatedFrom": "src/core/api-catalog.js",
-  "apiCount": 48,
+  "apiCount": 51,
   "apis": [
     {
       "id": "PRMU.get",
@@ -10,7 +10,7 @@
       "type": "read",
       "description": "Read a public value",
       "signature": "source:string,item:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -64,13 +64,154 @@
       ]
     },
     {
+      "id": "PRMU.getUIColorParameters",
+      "unit": "PRMU",
+      "method": "getUIColorParameters",
+      "type": "read",
+      "description": "Read global UI base RGB and all derived palette tokens",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.getVersion",
+      "unit": "PRMU",
+      "method": "getVersion",
+      "type": "read",
+      "description": "Read authoritative Host system version",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.getPluginSiteUrl",
+      "unit": "PRMU",
+      "method": "getPluginSiteUrl",
+      "type": "read",
+      "description": "Read Plugin Manager landing page URL",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
       "id": "PRMU.set",
       "unit": "PRMU",
       "method": "set",
       "type": "write",
       "description": "Update a writable public value",
       "signature": "source:string,item:string,value:any,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -132,7 +273,7 @@
       "type": "read",
       "description": "Enumerate public entries",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -188,7 +329,7 @@
       "type": "write",
       "description": "Register owned public data",
       "signature": "source:string,definition:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -245,7 +386,7 @@
       "type": "write",
       "description": "Remove an owned registration",
       "signature": "source:string,item:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -302,7 +443,7 @@
       "type": "execute",
       "description": "Observe changes",
       "signature": "source:string,item:string,callback:function",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -364,7 +505,7 @@
       "type": "execute",
       "description": "Remove an observer",
       "signature": "subscriptionId:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -417,7 +558,7 @@
       "type": "read",
       "description": "Read entry metadata",
       "signature": "source:string,item:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -474,7 +615,7 @@
       "type": "read",
       "description": "Read a consistent repository snapshot",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -530,7 +671,7 @@
       "type": "write",
       "description": "Run a validated batch",
       "signature": "operations:array,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -586,7 +727,7 @@
       "type": "read",
       "description": "Read plugin metadata",
       "signature": "source:string,item:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -646,7 +787,7 @@
       "type": "read",
       "description": "List installed plugins",
       "signature": "options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -697,7 +838,7 @@
       "type": "execute",
       "description": "Install a package",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "host-only",
       "request": {
         "type": "object",
@@ -753,7 +894,7 @@
       "type": "execute",
       "description": "Remove a plugin",
       "signature": "pluginId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "host-only",
       "request": {
         "type": "object",
@@ -809,7 +950,7 @@
       "type": "execute",
       "description": "Start a plugin runtime",
       "signature": "pluginId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "host-only",
       "request": {
         "type": "object",
@@ -865,7 +1006,7 @@
       "type": "execute",
       "description": "Stop a plugin runtime",
       "signature": "pluginId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "host-only",
       "request": {
         "type": "object",
@@ -921,7 +1062,7 @@
       "type": "execute",
       "description": "Restart a plugin runtime",
       "signature": "pluginId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -977,7 +1118,7 @@
       "type": "write",
       "description": "Configure a plugin",
       "signature": "pluginId:string,config:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1034,7 +1175,7 @@
       "type": "read",
       "description": "Inspect plugin runtime units",
       "signature": "pluginId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1090,7 +1231,7 @@
       "type": "execute",
       "description": "Send a correlated request",
       "signature": "target:string,action:string,payload:any,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1152,7 +1293,7 @@
       "type": "execute",
       "description": "Reply to pending request",
       "signature": "requestId:string,result:any,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1210,7 +1351,7 @@
       "type": "write",
       "description": "Register action handler",
       "signature": "action:string,handler:function,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1271,7 +1412,7 @@
       "type": "write",
       "description": "Unregister owned handler",
       "signature": "action:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1324,7 +1465,7 @@
       "type": "read",
       "description": "Read router metadata",
       "signature": "source:string,item:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1384,7 +1525,7 @@
       "type": "read",
       "description": "Enumerate dependency events",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1440,7 +1581,7 @@
       "type": "execute",
       "description": "Observe router events",
       "signature": "source:string,callback:function",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1498,7 +1639,7 @@
       "type": "execute",
       "description": "Remove router observer",
       "signature": "subscriptionId:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1551,7 +1692,7 @@
       "type": "execute",
       "description": "Handshake with a target",
       "signature": "target:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1607,7 +1748,7 @@
       "type": "read",
       "description": "Read correlated events",
       "signature": "traceId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1663,7 +1804,7 @@
       "type": "write",
       "description": "Append log or permanent elog",
       "signature": "type:string,entry:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1720,7 +1861,7 @@
       "type": "read",
       "description": "Query recorded events",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -1776,7 +1917,7 @@
       "type": "read",
       "description": "Read one event",
       "signature": "logId:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1832,7 +1973,7 @@
       "type": "read",
       "description": "Summarize status counts",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1888,7 +2029,7 @@
       "type": "execute",
       "description": "Observe new entries",
       "signature": "filter:object,callback:function",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1946,7 +2087,7 @@
       "type": "execute",
       "description": "Remove log observer",
       "signature": "subscriptionId:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -1999,7 +2140,7 @@
       "type": "read",
       "description": "Export JSON or JSONL",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -2055,7 +2196,7 @@
       "type": "read",
       "description": "Inspect recorded event integrity",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -2111,7 +2252,7 @@
       "type": "read",
       "description": "Read runtime state",
       "signature": "item:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -2167,7 +2308,7 @@
       "type": "execute",
       "description": "Mount plugin web app",
       "signature": "target:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "host-only",
       "request": {
         "type": "object",
@@ -2223,7 +2364,7 @@
       "type": "execute",
       "description": "Unmount plugin web app",
       "signature": "target:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "host-only",
       "request": {
         "type": "object",
@@ -2279,7 +2420,7 @@
       "type": "execute",
       "description": "Emit runtime event",
       "signature": "event:string,data:any",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -2334,7 +2475,7 @@
       "type": "execute",
       "description": "Observe runtime event",
       "signature": "event:string,handler:function",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -2392,7 +2533,7 @@
       "type": "execute",
       "description": "Remove runtime observer",
       "signature": "subscriptionId:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "planned",
       "request": {
         "type": "object",
@@ -2445,7 +2586,7 @@
       "type": "read",
       "description": "Read contract definition",
       "signature": "source:string,item:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -2505,7 +2646,7 @@
       "type": "read",
       "description": "List contracts",
       "signature": "source:string,options?:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -2561,7 +2702,7 @@
       "type": "write",
       "description": "Publish a service schema",
       "signature": "definition:object",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -2614,7 +2755,7 @@
       "type": "write",
       "description": "Remove owned schema",
       "signature": "contractId:string",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
@@ -2667,7 +2808,7 @@
       "type": "execute",
       "description": "Validate payload against contract",
       "signature": "contractId:string,payload:any",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "implementation": "initial",
       "request": {
         "type": "object",
