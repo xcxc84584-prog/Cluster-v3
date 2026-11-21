@@ -956,11 +956,10 @@ function updateCommunityCards() {
   const entries = communityVisibleEntries();
   cards.replaceChildren(...entries.map(buildCommunityCard));
   $('communityCount').textContent = String(entries.length).padStart(2, '0');
-  $('communityEmpty').hidden = entries.length !== 0;
-  if (!entries.length && remoteCommunityError) {
-    $('communityEmpty').hidden = false;
-    $('communityEmpty').textContent = String(remoteCommunityError.message || remoteCommunityError);
-  }
+  $('communityEmpty').hidden = entries.length !== 0 && !remoteCommunityError;
+  $('communityEmpty').textContent = remoteCommunityError ?
+    String(remoteCommunityError.message || remoteCommunityError) :
+    t('noCommunityResults');
 }
 function syncCommunityCards() {
   for (const frame of $('communityCards').querySelectorAll('iframe')) {
