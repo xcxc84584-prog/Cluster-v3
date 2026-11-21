@@ -206,24 +206,53 @@ function renderProjectRepository() {
   }
   $('repoExport').disabled = !records.length;
 }
-async function loadSessionPackages(packages) {
+function confirmProjectReplacement(currentCount, incomingCount, fromGitHub) {
+  if (currentCount === 0 && !fromGitHub) return Promise.resolve(true);
+  const modal = $('projectSwitchDialog');
+  if (modal.open) return Promise.resolve(false);
+  $('projectSwitchCurrentCount').textContent = String(currentCount);
+  $('projectSwitchIncomingCount').textContent = String(incomingCount);
+  $('projectSwitchThirdParty').hidden = !fromGitHub;
+  modal.returnValue = 'cancel';
+  return new Promise(resolve => {
+    modal.addEventListener('close', () => {
+      resolve(modal.returnValue === 'confirm');
+    }, { once: true });
+    modal.showModal();
+    $('projectSwitchCancel').focus();
+  });
+}
+$('projectSwitchConfirm').addEventListener('click', () =>
+  $('projectSwitchDialog').close('confirm'));
+$('projectSwitchCancel').addEventListener('click', () =>
+  $('projectSwitchDialog').close('cancel'));
+$('projectSwitchClose').addEventListener('click', () =>
+  $('projectSwitchDialog').close('cancel'));
+$('projectSwitchDialog').addEventListener('cancel', () => {
+  $('projectSwitchDialog').returnValue = 'cancel';
+});
+
+async function loadSessionPackages(packages, { fromGitHub = false } = {}) {
   if (!packages.length) throw Error(t('repoEmpty'));
-  // Packages are validated before install; duplicates are refused by runtime.
-  const ids = new Set();
-  const existing = new Map(browserManager.list().map(record => [record.id, record]));
-  for (const { manifest } of packages) {
-    if (ids.has(manifest.id)) throw Error('Duplicate plugin: ' + manifest.id);
-    if (existing.has(manifest.id) && !existing.get(manifest.id).temporary)
-      throw Error('Persistent plugin ID conflict: ' + manifest.id);
-    ids.add(manifest.id);
+  const current = browserManager.list();
+  const accepted = await confirmProjectReplacement(
+    current.length, packages.length, fromGitHub);
+  if (!accepted) {
+    setRepositoryStatus('');
+    return false;
   }
-  let completed = 0;
-  for (const pkg of packages) {
-    await browserManager.installTemporaryFiles(pkg.files);
-    completed++;
-  }
+  // The PMU core is protected; previous plugin data is snapshotted by
+  // the runtime and restored if the replacement cannot complete.
+  selectedPluginId = 'cluster.pmu';
+  await browserManager.replaceTemporaryProject(packages);
+  renderPluginExplorer();
+  renderSettings();
+  renderPluginPage();
+  renderAPIs();
   renderProjectRepository();
-  setRepositoryStatus(t('repoImportDone') + ': ' + completed);
+  selectTab('repository');
+  setRepositoryStatus(t('repoImportDone') + ': ' + packages.length);
+  return true;
 }
 async function runRepoOperation(callback) {
   for (const id of ['repoExport','repoImportZip','repoImportFolder',
@@ -273,10 +302,10 @@ catch { /* Browser storage is optional; linked packages remain session-only. */ 
 $('repoGitHubForm').addEventListener('submit', event => {
   event.preventDefault();
   const address = $('repoGitHubUrl').value.trim();
-  if (!window.confirm(t('repoRunConfirm'))) return;
   void runRepoOperation(async () => {
     const packages = await fetchGitHubProject(address);
-    await loadSessionPackages(packages);
+    const loaded = await loadSessionPackages(packages, { fromGitHub: true });
+    if (!loaded) return;
     try { localStorage.setItem(GITHUB_REPOSITORY_KEY, address); }
     catch { /* URL memory is optional; plugin packages are never persisted. */ }
   });
