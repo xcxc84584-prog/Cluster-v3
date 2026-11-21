@@ -426,33 +426,75 @@ function choosePlugin(pluginId) {
   renderPluginPage();
   selectTab(pluginId === 'cluster.pmu' ? 'apis' : 'settings');
 }
+let settingsRenderToken = 0;
 function renderSettings() {
   const isCore = selectedPluginId === 'cluster.pmu';
-  $('publicSettings').hidden = !isCore;
-  $('pluginSettingsHost').hidden = isCore;
+  const publicSettings = $('publicSettings');
+  const host = $('pluginSettingsHost');
   const frame = $('pluginSettingsFrame');
+  const empty = $('pluginSettingsEmpty');
+  publicSettings.hidden = !isCore;
+  host.hidden = isCore;
+
   if (isCore) {
-    frame.removeAttribute('src');
-    return;
-  }
-  const manifest = kernel.getManifest(selectedPluginId);
-  const settingsURL = browserManager?.isLoaded(selectedPluginId) ?
-    resolveSettingsURL(manifest?.settingsUrl, location.href) : null;
-  frame.hidden = !settingsURL;
-  $('pluginSettingsEmpty').hidden = Boolean(settingsURL);
-  const settingsPath = manifest?.settings;
-  if (settingsURL && settingsPath &&
-      frame.dataset.pluginId !== selectedPluginId) {
-    frame.dataset.pluginId = selectedPluginId;
-    void browserManager.renderAssetFrame(
-      selectedPluginId, settingsPath, frame).catch(reportLoaderError);
-  }
-  if (settingsURL) sendSettingsContext();
-  if (!settingsURL) {
+    // Invalidate pending plugin asset reads before clearing their frame.
+    settingsRenderToken++;
+    frame.hidden = true;
+    empty.hidden = true;
     frame.removeAttribute('src');
     frame.removeAttribute('srcdoc');
     delete frame.dataset.pluginId;
+    delete frame.dataset.settingsPath;
+    return;
   }
+
+  const manifest = kernel.getManifest(selectedPluginId);
+  const settingsPath = manifest?.settings;
+  const settingsURL = browserManager?.isLoaded(selectedPluginId) ?
+    resolveSettingsURL(manifest?.settingsUrl, location.href) : null;
+  const available = Boolean(settingsURL && settingsPath);
+  const pluginId = selectedPluginId;
+
+  // Never show a blank browser document when the plugin has no settings.
+  frame.hidden = !available;
+  empty.hidden = available;
+  if (!available) {
+    settingsRenderToken++;
+    frame.removeAttribute('src');
+    frame.removeAttribute('srcdoc');
+    delete frame.dataset.pluginId;
+    delete frame.dataset.settingsPath;
+    return;
+  }
+
+  if (frame.dataset.pluginId === pluginId &&
+      frame.dataset.settingsPath === settingsPath) {
+    sendSettingsContext();
+    return;
+  }
+
+  const token = ++settingsRenderToken;
+  frame.dataset.pluginId = pluginId;
+  frame.dataset.settingsPath = settingsPath;
+  frame.hidden = true; // Show only after the correct plugin's asset is ready.
+  empty.hidden = false;
+  void browserManager.renderAssetFrame(pluginId, settingsPath, frame,
+    () => token === settingsRenderToken &&
+      selectedPluginId === pluginId &&
+      frame.dataset.pluginId === pluginId).then(result => {
+    if (result === 'cancelled' || token !== settingsRenderToken ||
+        selectedPluginId !== pluginId) return;
+    frame.hidden = false;
+    empty.hidden = true;
+    sendSettingsContext();
+  }).catch(error => {
+    if (token !== settingsRenderToken || selectedPluginId !== pluginId) return;
+    frame.hidden = true;
+    empty.hidden = false;
+    delete frame.dataset.pluginId;
+    delete frame.dataset.settingsPath;
+    reportLoaderError(error);
+  });
 }
 function renderPluginPage() {
   browserManager?.show(selectedPluginId);
@@ -477,11 +519,12 @@ function sendSettingsContext() {
   }, '*');
 }
 $('pluginSettingsFrame').addEventListener('load', () => {
+  const frame = $('pluginSettingsFrame');
+  if (frame.hidden || frame.dataset.pluginId !== selectedPluginId ||
+      selectedPluginId === 'cluster.pmu') return;
   sendSettingsContext();
-  if (selectedPluginId !== 'cluster.pmu' &&
-      browserManager?.isLoaded(selectedPluginId)) {
+  if (browserManager?.isLoaded(selectedPluginId))
     browserManager.attachSettings(selectedPluginId);
-  }
 });
 repo.subscribe(({ type }) => {
   if (type === 'language' || type === 'palette' || type === 'sync') {
