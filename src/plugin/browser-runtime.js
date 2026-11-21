@@ -295,6 +295,75 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     onChange();
     return manifest;
   }
+  /**
+   * Replace the entire managed plugin project with validated session packages.
+   * Snapshot existing packages (including persisted bytes) before removal.
+   * On import failure, restore previous plugin records and their enabled states.
+   * New imports never write their package bytes to IndexedDB.
+   */
+  async function replaceTemporaryProject(packages) {
+    await ready;
+    if (!Array.isArray(packages) || !packages.length)
+      throw new Error("A new project must contain at least one plugin");
+    // Validate the full incoming project before mutating any current plugin.
+    const incoming = [];
+    const incomingIds = new Set();
+    for (const pkg of packages) {
+      const checked = validatePluginPackage(pkg.files);
+      if (incomingIds.has(checked.manifest.id))
+        throw new Error("Duplicate incoming plugin: " + checked.manifest.id);
+      incomingIds.add(checked.manifest.id);
+      incoming.push(checked);
+    }
+    const previous = [];
+    for (const record of installed.values()) {
+      const files = temporaryFiles.get(record.id) ||
+        await store.getFiles?.(record.id);
+      if (!files) throw new Error("Cannot back up plugin: " + record.id);
+      previous.push({ record: clone(record), files: clone(files),
+        temporary: temporaryFiles.has(record.id),
+        loaded: frames.has(record.id) });
+    }
+    try {
+      for (const record of [...installed.values()])
+        await remove(record.id);
+      for (const pkg of incoming) await installTemporaryFiles(pkg.files);
+      return incoming.map(pkg => clone(pkg.manifest));
+    } catch (cause) {
+      const rollbackErrors = [];
+      // Remove anything from the failed new project before restoring.
+      for (const record of [...installed.values()]) {
+        try { await remove(record.id); }
+        catch (error) { rollbackErrors.push(error); }
+      }
+      for (const previousPlugin of previous) {
+        const { record, files, temporary, loaded } = previousPlugin;
+        try {
+          if (temporary) {
+            temporaryFiles.set(record.id, files);
+          } else {
+            await store.install(record.manifest, files);
+          }
+          installed.set(record.id, clone(record));
+          if (loaded) {
+            await load(record.id, false);
+          } else if (!temporary) {
+            await store.setEnabled(record.id, Boolean(record.enabled));
+          }
+        } catch (error) { rollbackErrors.push(error); }
+      }
+      onChange();
+      if (rollbackErrors.length) {
+        const error = new Error(
+          "Project load failed and rollback was incomplete: " +
+          rollbackErrors.map(item => item.message).join("; "));
+        error.code = "PROJECT_ROLLBACK_INCOMPLETE";
+        error.cause = cause;
+        throw error;
+      }
+      throw cause;
+    }
+  }
   async function exportProjectPackages() {
     await ready;
     const packages = [];
@@ -355,7 +424,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   }
   return Object.freeze({
     ready, installZip, installFolder, installFiles, installTemporaryFiles,
-    exportProjectPackages, exportZip, load, unload, reload,
+    exportProjectPackages, replaceTemporaryProject, exportZip, load, unload, reload,
     remove, configure, show, attachSettings, syncContext, assetURL,
     renderAssetFrame, registerAuxiliaryFrame,
     list: () => [...installed.values()].map(clone),
