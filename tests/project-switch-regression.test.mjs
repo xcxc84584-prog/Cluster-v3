@@ -55,7 +55,7 @@ test('dialog styling uses Host theme tokens and six localized strings', () => {
 test('project switch summary has two columns and no arrow', () => {
   assert.doesNotMatch(html, /class="project-switch-arrow"/);
   assert.doesNotMatch(styles, /\.project-switch-arrow/);
-  assert.match(styles, /\.project-switch-summary\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.ok(styles.includes(".project-switch-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));"));
   assert.match(html, /id="projectSwitchCurrentCount"/);
   assert.match(html, /id="projectSwitchIncomingCount"/);
 });
