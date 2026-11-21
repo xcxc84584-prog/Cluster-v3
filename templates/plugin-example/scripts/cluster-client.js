@@ -72,6 +72,7 @@
     },
     PRMU: Object.freeze({
       get: (source, item) => request("PRMU.get", source, item),
+      resolveCapability: capability => request("PRMU.resolveCapability", capability),
       set: (source, item, value) => request("PRMU.set", source, item, value),
       register: (source, definition) => request("PRMU.register", source, definition),
       list: source => request("PRMU.list", source)
