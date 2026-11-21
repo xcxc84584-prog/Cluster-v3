@@ -38,3 +38,23 @@ test('new management labels have translations for all six locales', () => {
     }
   }
 });
+
+test('LOG view paginates rows without hiding export history', async () => {
+  const {readFileSync}=await import('node:fs');
+  const app=readFileSync(new URL('../src/plugin/app.js',import.meta.url),'utf8');
+  const html=readFileSync(new URL('../plugin/index.html',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../src/plugin/style.css',import.meta.url),'utf8');
+  for(const id of ['logPageSize','logPrevious','logNext','logPage'])
+    assert.match(html,new RegExp('id="'+id+'"'));
+  assert.match(app,/const pageSize = Number\(\$\('logPageSize'\)\.value\) \|\| 50/);
+  assert.match(app,/const pageEntries = events\.slice\(first, last\)\.reverse\(\)/);
+  assert.doesNotMatch(app,/events\.slice\(-200\)\.reverse\(\)/);
+  assert.match(app,/exportListJSON\('log', currentLogs\(\)/);
+  assert.match(css,/\.log-pagination\{/);
+});
+
+test('LOG pagination is translated in every Host locale', () => {
+  for (const [language] of SUPPORTED_LANGUAGES)
+    for (const key of ['logPageSize','logPrevious','logNext'])
+      assert.ok(TRANSLATIONS[language][key],language+' '+key);
+});
