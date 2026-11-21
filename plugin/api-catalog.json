@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1.0",
   "generatedFrom": "src/core/api-catalog.js",
-  "apiCount": 51,
+  "apiCount": 52,
   "apis": [
     {
       "id": "PRMU.get",
@@ -28,6 +28,59 @@
         "required": [
           "source",
           "item"
+        ],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.resolveCapability",
+      "unit": "PRMU",
+      "method": "resolveCapability",
+      "type": "read",
+      "description": "Resolve registered embeddable UI capability via Host",
+      "signature": "capability:string",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {
+          "capability": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "capability"
         ],
         "additionalProperties": false
       },
