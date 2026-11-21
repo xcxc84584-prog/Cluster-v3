@@ -8,6 +8,8 @@ const groups = {
     ["setUIColorBaseColor","write","Set the authoritative shared base RGB color for all plugin UIs","color:string"],
     ["getVersion","read","Read authoritative Host system version",""],
     ["getPluginSiteUrl","read","Read Plugin Manager landing page URL",""],
+    ["getCommunityConfig","read","Read authoritative community registry configuration and limits",""],
+    ["getCommunityRepositoryUrl","read","Read the unique community source repository URL",""],
     ["set","write","Update a writable public value","source:string,item:string,value:any,options?:object"],
     ["list","read","Enumerate public entries","source:string,options?:object"],
     ["register","write","Register owned public data","source:string,definition:object"],
