@@ -130,6 +130,8 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     const key = source + "." + item;
     if (source === "parameters" && item === "system.version") return systemVersion;
     if (source === "parameters" && item === "plugin.siteUrl") return repo.getPluginSiteUrl();
+    if (source === "parameters" && item === "community.config") return repo.getCommunityConfig();
+    if (source === "parameters" && item === "community.repositoryUrl") return repo.getCommunityRepositoryUrl();
     if (source === "properties" && item === "system.language") return repo.getLanguage();
     if (source === "ui" && item === "palette.baseColor") return repo.getBaseColor();
     if (source === "ui" && item === "palette") return repo.getPalette();
@@ -147,7 +149,8 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     if (source === "ui" && item === "palette.baseColor") {
       repo.setBaseColor(value); return result(repo.getBaseColor());
     }
-    if (source === "parameters" && ["system.version", "plugin.siteUrl"].includes(item))
+    if (source === "parameters" && ["system.version", "plugin.siteUrl", "community.config",
+      "community.repositoryUrl"].includes(item))
       throw new ClusterError(403, "VERSION_AUTHORITY", "Host owns this public parameter");
     if (source === "ui" && ["palette", "palette.parameters"].includes(item))
       throw new ClusterError(403, "READ_ONLY", "Use supported palette setters");
@@ -177,6 +180,8 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       setUIColorBaseColor: color => publicSet(pluginId, "ui", "palette.baseColor", color),
       getVersion: () => result(systemVersion),
       getPluginSiteUrl: () => result(repo.getPluginSiteUrl()),
+      getCommunityConfig: () => result(repo.getCommunityConfig()),
+      getCommunityRepositoryUrl: () => result(repo.getCommunityRepositoryUrl()),
       set: (source, item, value) => publicSet(pluginId, source, item, value),
       list: (source, options = {}) => result([...registry].filter(([key]) =>
         key.startsWith(source + ".")).slice(0, options.limit || 100).map(([key, value]) =>
@@ -223,7 +228,9 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       snapshot(source) { return result(source === "properties" ? repo.getSnapshot() :
         source === "ui" ? repo.getPalette() :
         source === "parameters" ? { "system.version": systemVersion,
-          "plugin.siteUrl": repo.getPluginSiteUrl() } : {});
+          "plugin.siteUrl": repo.getPluginSiteUrl(),
+          "community.config": repo.getCommunityConfig(),
+          "community.repositoryUrl": repo.getCommunityRepositoryUrl() } : {});
       },
       batch(operations) { return operations.map(op =>
         op.method === "get" ? publicEntry(pluginId, op.source, op.item) :
