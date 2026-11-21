@@ -985,7 +985,8 @@ browserManager = createBrowserPluginManager({
     renderAPIs();
     renderDiagnostics();
   },
-  onFailure: reportLoaderError
+  onFailure: reportLoaderError,
+  openUIColorPalette: showPalette
 });
 hostPMU = createHostPMU({kernel, runtime:browserManager});
 syncLanguage();
