@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1.0",
   "generatedFrom": "src/core/api-catalog.js",
-  "apiCount": 54,
+  "apiCount": 56,
   "apis": [
     {
       "id": "PRMU.get",
@@ -316,6 +316,100 @@
       "method": "getPluginSiteUrl",
       "type": "read",
       "description": "Read Plugin Manager landing page URL",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.getCommunityConfig",
+      "unit": "PRMU",
+      "method": "getCommunityConfig",
+      "type": "read",
+      "description": "Read authoritative community registry configuration and limits",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.getCommunityRepositoryUrl",
+      "unit": "PRMU",
+      "method": "getCommunityRepositoryUrl",
+      "type": "read",
+      "description": "Read the unique community source repository URL",
       "signature": "",
       "version": "1.1.0",
       "implementation": "initial",
