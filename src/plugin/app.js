@@ -166,6 +166,7 @@ const kernel = createPluginKernel({ publicRepo: repo, systemVersion: SYSTEM_MANI
 let browserManager = null;
 let hostPMU = null;
 let apiPageNumber = 1;
+let logPageNumber = 1;
 let selectedAPI = null;
 let selectedPluginId = 'cluster.pmu';
 
@@ -680,9 +681,18 @@ function uniqueRouterRelations() {
 }
 function renderDiagnostics() {
   const events = currentLogs();
+  const pageSize = Number($('logPageSize').value) || 50;
+  const pages = Math.max(1, Math.ceil(events.length / pageSize));
+  logPageNumber = Math.max(1, Math.min(pages, logPageNumber));
+  const first = Math.max(0, events.length - logPageNumber * pageSize);
+  const last = events.length - (logPageNumber - 1) * pageSize;
+  const pageEntries = events.slice(first, last).reverse();
   $('logTotal').textContent = events.length + ' ' + t('logEntries');
+  $('logPage').textContent = logPageNumber + ' / ' + pages;
+  $('logPrevious').disabled = logPageNumber <= 1;
+  $('logNext').disabled = logPageNumber >= pages;
   $('logList').replaceChildren();
-  for (const entry of events.slice(-200).reverse()) {
+  for (const entry of pageEntries) {
     const row = document.createElement('pre');
     row.className = 'diagnostic-row';
     row.textContent = JSON.stringify(entry);
@@ -722,9 +732,16 @@ $('apiDownloadList').addEventListener('click', () => downloadJSON(
     type: $('apiFilter').value
   })
 ));
-$('logType').addEventListener('change', renderDiagnostics);
-$('logSearch').addEventListener('input', renderDiagnostics);
-$('logStatus').addEventListener('change', renderDiagnostics);
+for (const [id, eventName] of [['logType','change'],['logSearch','input'],
+  ['logStatus','change'],['logPageSize','change']]) {
+  $(id).addEventListener(eventName, () => { logPageNumber = 1; renderDiagnostics(); });
+}
+$('logPrevious').addEventListener('click', () => {
+  logPageNumber--;renderDiagnostics();
+});
+$('logNext').addEventListener('click', () => {
+  logPageNumber++;renderDiagnostics();
+});
 $('logDownloadList').addEventListener('click', () => downloadJSON(
   'cluster-v3-log-list.json', exportListJSON('log', currentLogs(), {
     pluginId: selectedPluginId, search: $('logSearch').value,
