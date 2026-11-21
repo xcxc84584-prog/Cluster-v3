@@ -146,6 +146,7 @@ export async function fetchGitHubProject(input, fetcher = fetch) {
       if (fileUrl.protocol !== "https:" || fileUrl.hostname !== "api.github.com" ||
           !fileUrl.pathname.startsWith(`/repos/${location.owner}/${location.repo}/contents/`))
         throw packageError("GITHUB_UNTRUSTED_URL", "Unexpected GitHub file endpoint");
+      if (location.ref) fileUrl.searchParams.set("ref", location.ref);
       const data = await request(fileUrl.href);
       if (data.encoding !== "base64" || typeof data.content !== "string")
         throw packageError("GITHUB_FILE_UNSUPPORTED", "GitHub file must be <1 MiB");
