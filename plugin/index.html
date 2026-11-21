@@ -36,7 +36,8 @@
       </aside>
       <main class="main-content" id="mainContent">
         <div class="tabs" role="tablist" aria-label="Plugin sections">
-          <button type="button" role="tab" data-tab="settings" aria-selected="true"><span class="tab-icon" aria-hidden="true">⚙</span><span data-i18n="pluginSettings">插件設定</span></button>
+          <button type="button" role="tab" data-tab="repository" aria-selected="true"><span class="tab-icon" aria-hidden="true">▤</span><span data-i18n="projectRepository">專案倉庫</span></button>
+          <button type="button" role="tab" data-tab="settings" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙</span><span data-i18n="pluginSettings">插件設定</span></button>
           <button type="button" role="tab" data-tab="page" aria-selected="false"><span class="tab-icon" aria-hidden="true">▣</span><span data-i18n="pluginPage">插件頁面</span></button>
           <button type="button" role="tab" data-tab="apis" aria-selected="false"><span class="tab-icon" aria-hidden="true">⌘</span><span data-i18n="apiList">API 列表</span></button>
           <button type="button" role="tab" data-tab="logs" aria-selected="false"><span class="tab-icon" aria-hidden="true">≡</span><span data-i18n="logList">LOG 列表</span></button>
@@ -44,6 +45,41 @@
           <button type="button" role="tab" data-tab="community" aria-selected="false"><span class="tab-icon" aria-hidden="true">▣</span><span data-i18n="community">社群</span></button>
         </div>
         <div class="tab-workspace">
+          <section class="tab-view project-repository" role="tabpanel" data-view="repository">
+            <div class="repo-topline">
+              <div><small>CLUSTER / PROJECT REPOSITORY</small>
+                <h2 data-i18n="projectRepository">專案倉庫</h2>
+                <p data-i18n="repoIntro">匯出目前所有插件，或從本地與 GitHub 暫時載入插件包。</p></div>
+              <span class="repo-count" id="repoCount">0</span>
+            </div>
+            <div class="repo-toolbar">
+              <button type="button" class="repo-primary" id="repoExport">
+                <span aria-hidden="true">↓</span><span data-i18n="repoExport">下載專案 ZIP</span></button>
+              <button type="button" id="repoImportZip">
+                <span aria-hidden="true">＋</span><span data-i18n="repoOpenZip">開啟 ZIP</span></button>
+              <button type="button" id="repoImportFolder">
+                <span aria-hidden="true">▤</span><span data-i18n="repoOpenFolder">開啟資料夾</span></button>
+              <input id="repoZipInput" type="file" accept=".zip" hidden>
+              <input id="repoFolderInput" type="file" webkitdirectory directory multiple hidden>
+            </div>
+            <div class="repo-github">
+              <div><strong data-i18n="repoGitHub">GitHub 公開倉庫</strong>
+                <p data-i18n="repoGitHubHint">輸入倉庫或其 /tree/branch/folder 網址，從公開資料夾暫時載入。</p></div>
+              <form id="repoGitHubForm" class="repo-github-form">
+                <input id="repoGitHubUrl" type="url" required
+                  placeholder="https://github.com/owner/repo/tree/main/plugins"
+                  aria-label="GitHub repository URL">
+                <button type="submit" id="repoGitHubConnect"
+                  data-i18n="repoConnect">連結並載入</button>
+              </form>
+            </div>
+            <div class="repo-list-header">
+              <strong data-i18n="repoPackages">目前插件包</strong>
+              <span data-i18n="repoTemporaryHint">臨時載入不寫入 IndexedDB，重新整理後不保留。</span>
+            </div>
+            <div class="repo-list" id="repoPackages" role="list"></div>
+            <div class="repo-status" id="repoStatus" role="status" aria-live="polite"></div>
+          </section>
           <section class="tab-view settings-panel" role="tabpanel" data-view="settings">
             <div id="publicSettings">
             <div class="section-intro"><span class="tiny-label" data-i18n="coreTag">Host / 公共屬性</span><p data-i18n="settingsIntro">尚未選擇插件。以下先提供公共庫的全域 UI 設定。</p></div>
@@ -97,6 +133,7 @@
           <section class="tab-view" role="tabpanel" data-view="router" hidden>
             <div class="list-toolbar router-toolbar">
               <strong>Router / req &amp; rep</strong>
+              <div class="router-actions"><button type="button" id="routerDownloadList" class="list-download" data-i18n="downloadList">下載 List</button>
               <button type="button" id="refreshRouter" class="router-refresh"
                 aria-label="Refresh Router status" title="Refresh Router status"
                 data-i18n-title="refreshRouter">
@@ -107,7 +144,7 @@
                   <path d="M18.3 15a7 7 0 0 1-12 2L4 12"/>
                 </svg>
                 <span data-i18n="refreshRouter">重新整理</span>
-              </button>
+              </button></div>
             </div>
             <div class="diagnostic-list" id="routerList" role="list"></div>
           </section>
