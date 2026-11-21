@@ -5,6 +5,9 @@
  */
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './translations.js';
 
+export const PLUGIN_SITE_URL =
+  'https://xcxc84584-prog.github.io/Cluster-v3/plugin/?view=home';
+
 export const COLOR_KEYS = Object.freeze([
   'background', 'surface', 'panel', 'control', 'hover', 'border',
   'text', 'muted', 'accent', 'editor', 'gutter',
@@ -195,7 +198,8 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
     listeners.forEach((fn) => fn({ type, snapshot }));
   }
 
-  function getSnapshot() { return clone(state); }
+  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL }; }
+  function getPluginSiteUrl() { return PLUGIN_SITE_URL; }
   function getLanguage() { return state.language; }
   function getPalette() { return { ...state.palette }; }
   function getBaseColor() { return state.baseColor; }
@@ -248,7 +252,7 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
   eventTarget?.addEventListener('storage', syncFromStorage);
 
   return Object.freeze({
-    getSnapshot, getLanguage, getPalette, getBaseColor, setLanguage,
+    getSnapshot, getLanguage, getPalette, getBaseColor, getPluginSiteUrl, setLanguage,
     setBaseColor, setPaletteToken, replacePalette, resetPalette, subscribe,
     destroy() { listeners.clear(); eventTarget?.removeEventListener('storage', syncFromStorage); },
   });
