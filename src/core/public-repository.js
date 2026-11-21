@@ -8,6 +8,26 @@ import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './translations.js';
 export const PLUGIN_SITE_URL =
   'https://xcxc84584-prog.github.io/Cluster-v3/plugin/?view=home';
 
+/** Host-owned, read-only community transport configuration (single authority).
+ * Client code must request this through PRMU; no marketplace URL literals elsewhere. */
+export const DEFAULT_COMMUNITY_CONFIG = Object.freeze({
+  repositoryUrl: 'https://github.com/xcxc84584-prog/cluster-v3-initplugin',
+  ref: 'main',
+  indexPath: 'community-index.json',
+  pluginRoot: 'plugins',
+  indexSchemaVersion: '1.0.0',
+  indexType: 'cluster.community-index',
+  githubApiBase: 'https://api.github.com',
+  githubRawBase: 'https://raw.githubusercontent.com',
+  maxIndexBytes: 262144,
+  maxPlugins: 100,
+  maxFilesPerPlugin: 100,
+  maxFileBytes: 1048576,
+  maxPluginBytes: 16777216,
+  parallelDownloads: 5,
+  example: Object.freeze({ id: 'example.hello', name: 'Hello Cluster', version: '1.0.0' })
+});
+
 export const COLOR_KEYS = Object.freeze([
   'background', 'surface', 'panel', 'control', 'hover', 'border',
   'text', 'muted', 'accent', 'editor', 'gutter',
@@ -198,8 +218,10 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
     listeners.forEach((fn) => fn({ type, snapshot }));
   }
 
-  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL }; }
+  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL, community: getCommunityConfig() }; }
   function getPluginSiteUrl() { return PLUGIN_SITE_URL; }
+  function getCommunityConfig() { return clone(DEFAULT_COMMUNITY_CONFIG); }
+  function getCommunityRepositoryUrl() { return DEFAULT_COMMUNITY_CONFIG.repositoryUrl; }
   function getLanguage() { return state.language; }
   function getPalette() { return { ...state.palette }; }
   function getBaseColor() { return state.baseColor; }
@@ -252,7 +274,8 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
   eventTarget?.addEventListener('storage', syncFromStorage);
 
   return Object.freeze({
-    getSnapshot, getLanguage, getPalette, getBaseColor, getPluginSiteUrl, setLanguage,
+    getSnapshot, getLanguage, getPalette, getBaseColor, getPluginSiteUrl,
+    getCommunityConfig, getCommunityRepositoryUrl, setLanguage,
     setBaseColor, setPaletteToken, replacePalette, resetPalette, subscribe,
     destroy() { listeners.clear(); eventTarget?.removeEventListener('storage', syncFromStorage); },
   });
