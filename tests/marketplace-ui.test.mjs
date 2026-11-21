@@ -6,7 +6,8 @@ test("marketplace deduplicates example and has a bounded custom iframe", () => {
   const code = readFileSync(new URL("../src/plugin/app.js", import.meta.url), "utf8");
   const html = readFileSync(new URL("../plugin/index.html", import.meta.url), "utf8");
   assert.match(code, /id: 'example\.hello'/);
-  assert.match(code, /installed\.filter\(x => x\.id !== 'example\.hello'\)/);
+  assert.match(code, /COMMUNITY_PLUGINS\.map\(entry =>/);
+  assert.match(code, /!COMMUNITY_PLUGINS\.some\(entry => entry\.id === x\.id\)/);
   assert.match(code, /browserManager\.exportZip\(id\)/);
   assert.doesNotMatch(code, /frame\.sandbox\s*=/);
   assert.match(html, /id="communitySearch"/);
