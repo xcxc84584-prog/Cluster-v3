@@ -163,7 +163,7 @@ export async function fetchGitHubProject(input, fetcher = fetch) {
     }
   }
   const folderPlugins = Object.keys(files).some(path =>
-    path.endsWith("manifest.json")) ? unpackProjectFiles(files) : [];
+    path === "manifest.json" || path.endsWith("/manifest.json")) ? unpackProjectFiles(files) : [];
   const merged = [...folderPlugins, ...archives];
   if (!merged.length) throw packageError("MISSING_MANIFEST", "No plugin package found");
   const seen = new Set();
