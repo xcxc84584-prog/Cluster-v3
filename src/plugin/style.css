@@ -184,9 +184,17 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-l
 .settings-panel:has(.plugin-settings-host:not([hidden])){padding:0;overflow:hidden;height:100%}
 .plugin-settings-host{height:100%;width:100%;min-height:280px;overflow:hidden;
   background:var(--ui-background)}
-.plugin-settings-frame{width:100%;height:100%;border:0;display:block}
+.plugin-settings-frame{width:100%;height:100%;border:0;display:block;
+  background:var(--ui-background);color:var(--ui-text)}
 .plugin-settings-empty{height:100%;display:grid;place-items:center;
-  color:var(--ui-muted);padding:24px;text-align:center}
+  background:var(--ui-background);color:var(--ui-muted);
+  padding:24px;text-align:center}
+/* Explicitly override component display rules; otherwise [hidden] iframes
+   keep rendering their browser-default white document over the empty state. */
+.plugin-settings-frame[hidden],
+.plugin-settings-empty[hidden],
+.plugin-settings-host[hidden],
+#publicSettings[hidden]{display:none!important}
 .list-download{height:38px;flex:none;display:inline-flex;align-items:center;
   justify-content:center;gap:6px;white-space:nowrap;background:var(--ui-control);
   color:var(--ui-text);border:1px solid var(--ui-border);border-radius:5px;padding:0 13px}
