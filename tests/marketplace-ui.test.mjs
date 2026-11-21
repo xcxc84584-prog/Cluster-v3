@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-test("marketplace deduplicates example and has a bounded custom iframe", () => {
+test("marketplace discovers dynamic community index without static plugin IDs", () => {
   const code = readFileSync(new URL("../src/plugin/app.js", import.meta.url), "utf8");
   const html = readFileSync(new URL("../plugin/index.html", import.meta.url), "utf8");
-  assert.match(code, /id: 'example\.hello'/);
-  assert.match(code, /COMMUNITY_PLUGINS\.map\(entry =>/);
-  assert.match(code, /!COMMUNITY_PLUGINS\.some\(entry => entry\.id === x\.id\)/);
+  assert.match(code, /fetchCommunityIndex\(repo.getCommunityConfig\(\)\)/);
+  assert.match(code, /remoteCommunity\.filter\(entry =>/);
   assert.match(code, /browserManager\.exportZip\(id\)/);
+  assert.doesNotMatch(code, /COMMUNITY_PLUGINS/);
   assert.doesNotMatch(code, /frame\.sandbox\s*=/);
   assert.match(html, /id="communitySearch"/);
   assert.doesNotMatch(html, /id="builtinExampleCard"/);
