@@ -16,7 +16,8 @@ Hello-Cluster/
    ├─ Cluster-API-Catalog.json Full Host API contracts
    ├─ PMU-API.json             PMU contract subset
    ├─ Public-Repository.md    Language, color, version
-   └─ Plugin-Standards.md      This standard
+   ├─ Plugin-Standards.md      This standard
+   └─ Troubleshooting.md      Common errors and diagnostics
 ```
 
 ## Required manifest
@@ -72,3 +73,10 @@ Hello-Cluster/
   the Host controls iframe size, lifecycle and event source identity.
 - PMU install/uninstall/reload operations are Host-only; plugin RPC is
   limited to allowed Router, PRMU and diagnostic services.
+
+## Failure handling and diagnostics
+
+Use [`Troubleshooting.md`](Troubleshooting.md) for package validation,
+missing service registrations, Host context, navigation, CORS/sandbox,
+and persistent file-save failures. Never display secrets or stack traces
+in normal user-facing UI; record sanitized location and error codes in ELog.
