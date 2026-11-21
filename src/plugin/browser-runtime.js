@@ -45,8 +45,11 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   function sendContext(id, targetWindow) {
     targetWindow?.postMessage(context(id), "*");
   }
-  async function renderAssetFrame(id, path, frame) {
+  async function renderAssetFrame(id, path, frame, shouldRender = () => true) {
     const files = temporaryFiles.get(id) || await store.getFiles?.(id);
+    // A tab/plugin selection can change while IndexedDB resolves.
+    // Never mount an old plugin document into the current settings frame.
+    if (!shouldRender()) return "cancelled";
     if (files && files[path] && typeof DOMParser !== "undefined") {
       frame.removeAttribute("src");
       frame.srcdoc = buildPluginDocument(files, path);
@@ -54,6 +57,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       return "srcdoc";
     }
     if (packageStore) {
+      if (!shouldRender()) return "cancelled";
       frame.src = assetURL(id, path);
       return "virtual";
     }
