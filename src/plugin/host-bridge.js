@@ -8,7 +8,7 @@ function invalid(message) {
   err.status = 400;
   return err;
 }
-export async function dispatchPluginCall(kernel, pluginId, method, args, invoke) {
+export async function dispatchPluginCall(kernel, pluginId, method, args, invoke, resolveCapability) {
   if (!Array.isArray(args) || args.length > 8)
     throw invalid("Arguments must be an array of up to eight items");
   const instance = kernel.getInstance(pluginId);
@@ -41,6 +41,8 @@ export async function dispatchPluginCall(kernel, pluginId, method, args, invoke)
   const run = async () => {
   switch (method) {
     case "PRMU.get": return instance.PRMU.get(args[0], args[1]);
+    case "PRMU.resolveCapability": return { ok: true, status: 200,
+      data: await resolveCapability(args[0]), error: null };
     case "PRMU.getUIColorParameters": return instance.PRMU.getUIColorParameters();
     case "PRMU.getVersion": return instance.PRMU.getVersion();
     case "PRMU.getPluginSiteUrl": return instance.PRMU.getPluginSiteUrl();
