@@ -12,7 +12,7 @@ function errorResult(error) {
     error: { code: error.code || "RUNTIME_ERROR", message: error.message } };
 }
 export function createBrowserPluginManager({ kernel, pagesRoot,
-  settingsFrame, getContext, onChange, onFailure,
+  settingsFrame, getContext, onChange, onFailure, openUIColorPalette,
   packageStore = null, registerServiceWorker = null }) {
   const store = packageStore || createPackageStore();
   const installed = new Map();
@@ -169,7 +169,8 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
         message.method.length > 128) return;
     try {
       const output = await dispatchPluginCall(
-        kernel, pluginId, message.method, message.args, invoke, resolveCapability);
+        kernel, pluginId, message.method, message.args, invoke,
+        resolveCapability, openUIColorPalette);
       post(event.source, { type: "response",
         requestId: message.requestId, ...output });
       // Plugin APIs are registered asynchronously after iframe load.
