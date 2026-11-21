@@ -16,6 +16,7 @@ or zip the entire directory and load it in the Plugin Explorer.
 - `scripts/settings.js` — changes shared language and UI base RGB color.
 - `styles/main.css` — responsive, theme-token-based independent CSS.
 - `docs/` — full API catalog, PMU API subset, shared repository and standards.
+- `docs/Troubleshooting.md` — common failures, symptoms, causes and verification steps.
 
 ## Quick start
 
@@ -62,3 +63,10 @@ opaque-origin `srcdoc` document so the browser can execute the plugin
 without granting same-origin access. External URLs still follow browser
 restrictions. Advanced lazy-loaded assets, dynamic module imports and
 network service access must be explicitly supported by the plugin.
+
+## Troubleshooting
+
+If installation, API registration, UI themes, navigation, or file persistence
+fails, read [Common Problems and Solutions](docs/Troubleshooting.md) before
+changing the Host. The checklist distinguishes plugin-only fixes from changes
+that require Host Router or browser support; check ELog for the exact failure.
