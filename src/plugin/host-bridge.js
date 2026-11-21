@@ -44,6 +44,7 @@ export async function dispatchPluginCall(kernel, pluginId, method, args, invoke,
     case "PRMU.resolveCapability": return { ok: true, status: 200,
       data: await resolveCapability(args[0]), error: null };
     case "PRMU.getUIColorParameters": return instance.PRMU.getUIColorParameters();
+    case "PRMU.setUIColorBaseColor": return instance.PRMU.setUIColorBaseColor(args[0]);
     case "PRMU.getVersion": return instance.PRMU.getVersion();
     case "PRMU.getPluginSiteUrl": return instance.PRMU.getPluginSiteUrl();
     case "PRMU.set": return instance.PRMU.set(args[0], args[1], args[2]);
