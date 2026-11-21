@@ -1,86 +1,139 @@
-/** Published community plugins. The Host only downloads verified Folder packages. */
+/** Dynamic GitHub community index. All deployment parameters come from PRMU. */
 import { validatePluginPackage } from "./package-format.js";
 
-export const COMMUNITY_PLUGINS = Object.freeze([
-  Object.freeze({
-    id: "cluster.explorer",
-    name: "Cluster Explorer",
-    version: "2.2.0",
-    description: "File explorer with shared workspace, multilingual controls and authorized disk operations."
-  }),
-  Object.freeze({
-    id: "cluster.text-editor",
-    name: "Cluster BasicTextEditor",
-    version: "2.7.0",
-    description: "Multi-tab editor with Explorer synchronization, Host palette and direct-save support."
-  })
-]);
-
-const OWNER = "xcxc84584-prog";
-const REPO = "cluster-v3-initplugin";
-const MAX_FILES = 100;
-const MAX_BYTES = 16 * 1024 * 1024;
-const MAX_PER_FILE = 1024 * 1024;
-
-function fail(message) {
+function problem(code, message) {
   const error = new Error(message);
-  error.code = "COMMUNITY_FETCH_FAILED";
+  error.code = code;
   return error;
 }
-
-/** One GitHub tree call; file bytes are fetched from raw URLs, avoiding
- * GitHub Contents API rate limits on a per-file basis. */
-export async function fetchCommunityPlugin(id, fetcher = fetch) {
-  if (!COMMUNITY_PLUGINS.some(entry => entry.id === id)) {
-    throw fail("Unknown published plugin: " + id);
+const ensure = (valid, message) => {
+  if (!valid) throw problem("COMMUNITY_INDEX_INVALID", message);
+};
+function source(config) {
+  ensure(config && typeof config === "object", "Missing public community config");
+  const url = new URL(config.repositoryUrl);
+  ensure(url.protocol === "https:" && url.hostname === "github.com" &&
+    !url.username && !url.password && !url.port, "Invalid public repository URL");
+  const segments = url.pathname.split("/").filter(Boolean);
+  ensure(segments.length === 2 && segments.every(x => /^[\w.-]+$/.test(x)),
+    "Community repository must be owner/repo");
+  ensure(typeof config.ref === "string" && /^[\w./-]+$/.test(config.ref) &&
+    !config.ref.includes(".."), "Invalid community ref");
+  for (const prop of ["indexPath", "pluginRoot"]) {
+    ensure(typeof config[prop] === "string" &&
+      config[prop].split("/").every(x => x && x !== "." && x !== ".."),
+      "Invalid community path " + prop);
   }
-  const treeURL = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/main?recursive=1`;
-  const listing = await fetcher(treeURL, {
+  for (const prop of ["githubApiBase", "githubRawBase"]) {
+    const endpoint = new URL(config[prop]);
+    ensure(endpoint.protocol === "https:" &&
+      !endpoint.username && !endpoint.password && !endpoint.port &&
+      endpoint.pathname === "/", "Invalid GitHub endpoint");
+  }
+  return {
+    owner: segments[0], repo: segments[1],
+    raw: config.githubRawBase.replace(/\/$/, ""),
+    api: config.githubApiBase.replace(/\/$/, ""),
+    ref: config.ref
+  };
+}
+function rawURL(root, remotePath) {
+  return root.raw + "/" + [root.owner, root.repo, root.ref, ...remotePath.split("/")]
+    .map(encodeURIComponent).join("/");
+}
+function checkEntry(entry, config, ids, folders) {
+  ensure(entry && typeof entry === "object" && !Array.isArray(entry),
+    "Invalid plugin entry");
+  ensure(typeof entry.id === "string" &&
+    /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/.test(entry.id),
+    "Invalid plugin ID");
+  ensure(!ids.has(entry.id), "Duplicate plugin ID: " + entry.id);
+  ids.add(entry.id);
+  ensure(["name","version","description","directory"].every(key =>
+    typeof entry[key] === "string"), "Incomplete plugin metadata");
+  ensure(/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(entry.version),
+    "Invalid plugin version");
+  ensure(entry.name.trim(), "Missing plugin name");
+  const folder = config.pluginRoot + "/" + entry.id;
+  ensure(entry.directory === folder && !folders.has(folder),
+    "Plugin directory must match public root and plugin ID");
+  folders.add(folder);
+  return Object.freeze({ id: entry.id, name: entry.name,
+    version: entry.version, description: entry.description,
+    directory: entry.directory });
+}
+export function parseCommunityIndex(index, config) {
+  ensure(index?.schemaVersion === config.indexSchemaVersion &&
+    index?.type === config.indexType && Array.isArray(index.plugins),
+    "Unsupported community index schema");
+  ensure(index.plugins.length <= config.maxPlugins, "Too many community plugins");
+  const ids = new Set(), folders = new Set();
+  return index.plugins.map(entry => checkEntry(entry, config, ids, folders));
+}
+export async function fetchCommunityIndex(config, fetcher = fetch) {
+  const root = source(config);
+  const url = rawURL(root, config.indexPath);
+  const response = await fetcher(url, { cache: "no-store" });
+  if (!response.ok) throw problem("COMMUNITY_FETCH_FAILED",
+    "Community index HTTP " + response.status);
+  const length = Number(response.headers?.get?.("content-length"));
+  if (Number.isFinite(length) && length > config.maxIndexBytes)
+    throw problem("COMMUNITY_LIMIT", "Community index too large");
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.byteLength > config.maxIndexBytes)
+    throw problem("COMMUNITY_LIMIT", "Community index too large");
+  let index;
+  try { index = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
+  catch { throw problem("COMMUNITY_INDEX_INVALID", "Invalid community index JSON"); }
+  return parseCommunityIndex(index, config);
+}
+export async function fetchCommunityPlugin(entry, config, fetcher = fetch) {
+  const root = source(config);
+  const checked = checkEntry(entry, config, new Set(), new Set());
+  const treeUrl = root.api + "/repos/" +
+    [root.owner, root.repo].map(encodeURIComponent).join("/") +
+    "/git/trees/" + encodeURIComponent(root.ref) + "?recursive=1";
+  const response = await fetcher(treeUrl, {
     headers: { Accept: "application/vnd.github+json" }
   });
-  if (!listing.ok) {
-    throw fail(`GitHub tree HTTP ${listing.status}`);
+  if (!response.ok) throw problem("COMMUNITY_FETCH_FAILED",
+    "GitHub tree HTTP " + response.status);
+  const tree = await response.json();
+  ensure(!tree.truncated && Array.isArray(tree.tree), "GitHub tree incomplete");
+  const prefix = checked.directory + "/";
+  const files = tree.tree.filter(file =>
+    file.type === "blob" && file.path.startsWith(prefix));
+  ensure(files.length && files.length <= config.maxFilesPerPlugin &&
+    files.some(file => file.path === prefix + "manifest.json"),
+    "Plugin manifest or files missing");
+  let total = 0;
+  for (const file of files) {
+    ensure(Number.isInteger(file.size) && file.size >= 0 &&
+      file.size <= config.maxFileBytes, "Invalid file size");
+    total += file.size;
   }
-  const tree = await listing.json();
-  if (tree.truncated || !Array.isArray(tree.tree)) {
-    throw fail("GitHub repository tree incomplete");
-  }
-  const prefix = `plugins/${id}/`;
-  const entries = tree.tree.filter(entry =>
-    entry.type === "blob" && entry.path.startsWith(prefix));
-  if (!entries.length || entries.length > MAX_FILES ||
-      !entries.some(entry => entry.path === prefix + "manifest.json")) {
-    throw fail("Published plugin files or manifest are missing");
-  }
-  const total = entries.reduce((sum, entry) => {
-    const size = entry.size;
-    if (!Number.isInteger(size) || size < 0 || size > MAX_PER_FILE)
-      throw fail("Published plugin contains an oversized file");
-    return sum + size;
-  }, 0);
-  if (total > MAX_BYTES) throw fail("Published plugin exceeds size limit");
+  ensure(total <= config.maxPluginBytes, "Plugin exceeds public size limit");
 
-  const files = {};
-  // Bounded parallel downloads keep the page responsive and protect servers.
-  for (let offset = 0; offset < entries.length; offset += 5) {
-    const slice = entries.slice(offset, offset + 5);
-    const received = await Promise.all(slice.map(async entry => {
-      const relative = entry.path.slice(prefix.length);
-      if (!relative || relative.split("/").some(segment =>
-        !segment || segment === "." || segment === "..")) {
-        throw fail("Invalid published plugin path");
-      }
-      const encoded = entry.path.split("/").map(encodeURIComponent).join("/");
-      const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${encoded}`;
-      const response = await fetcher(url);
-      if (!response.ok) throw fail(`GitHub file HTTP ${response.status}: ${relative}`);
-      const bytes = new Uint8Array(await response.arrayBuffer());
-      if (bytes.byteLength !== entry.size) throw fail("Incomplete file: " + relative);
-      return [relative, bytes];
-    }));
-    for (const [path, bytes] of received) files[path] = bytes;
+  const contents = {};
+  for (let i = 0; i < files.length; i += config.parallelDownloads) {
+    const result = await Promise.all(
+      files.slice(i, i + config.parallelDownloads).map(async file => {
+        const relative = file.path.slice(prefix.length);
+        ensure(relative && relative.split("/").every(x =>
+          x && x !== "." && x !== ".."), "Unsafe plugin path");
+        const fileResponse = await fetcher(rawURL(root, file.path));
+        if (!fileResponse.ok) throw problem("COMMUNITY_FETCH_FAILED",
+          "Plugin file HTTP " + fileResponse.status + ": " + relative);
+        const bytes = new Uint8Array(await fileResponse.arrayBuffer());
+        ensure(bytes.byteLength === file.size, "Truncated plugin file: " + relative);
+        return [relative, bytes];
+      })
+    );
+    for (const [path, bytes] of result) contents[path] = bytes;
   }
-  const checked = validatePluginPackage(files);
-  if (checked.manifest.id !== id) throw fail("Published plugin ID mismatch");
-  return checked;
+  const packageResult = validatePluginPackage(contents);
+  ensure(packageResult.manifest.id === checked.id &&
+    packageResult.manifest.version === checked.version,
+    "Manifest differs from community index");
+  return packageResult;
 }
