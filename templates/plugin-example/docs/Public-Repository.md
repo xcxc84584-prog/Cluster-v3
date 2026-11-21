@@ -31,7 +31,7 @@ internal Host modules. All successful RPC calls return a JSON envelope with
 // Provider plugin, after Cluster Host context is ready:
 await Cluster.PRMU.register("capabilities", {
   key: "example.hello.ui.v1",
-  value: { kind: "ui.embed", version: "1.0.0" },
+  value: { kind: "ui.embed", version: "1.0.0", entry: "index.html" },
   sharedWrite: false, persistent: false
 });
 
@@ -46,3 +46,8 @@ loaded, and reads its manifest entry from the verified plugin package.
 The API is implemented in the Host browser runtime and must not be called
 without the updated Host. Nested frames do not automatically acquire the
 provider's Host identity; route requests through the owning main frame.
+
+To publish multiple UI elements from one plugin, register distinct capability
+keys with different package-local `entry` HTML paths (for example,
+`panels/tree.html` and `panels/details.html`). The Host checks each path
+against the installed plugin package; absolute URLs and `..` are rejected.
