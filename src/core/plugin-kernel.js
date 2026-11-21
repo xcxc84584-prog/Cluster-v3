@@ -129,9 +129,13 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
   function publicEntry(pluginId, source, item) {
     const key = source + "." + item;
     if (source === "parameters" && item === "system.version") return systemVersion;
+    if (source === "parameters" && item === "plugin.siteUrl") return repo.getPluginSiteUrl();
     if (source === "properties" && item === "system.language") return repo.getLanguage();
     if (source === "ui" && item === "palette.baseColor") return repo.getBaseColor();
     if (source === "ui" && item === "palette") return repo.getPalette();
+    if (source === "ui" && item === "palette.parameters") return {
+      baseColor: repo.getBaseColor(), palette: repo.getPalette()
+    };
     const entry = registry.get(key);
     if (!entry) throw new ClusterError(404, "NOT_FOUND", key);
     return copy(entry.value);
@@ -143,8 +147,10 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     if (source === "ui" && item === "palette.baseColor") {
       repo.setBaseColor(value); return result(repo.getBaseColor());
     }
-    if (source === "parameters" && item === "system.version")
-      throw new ClusterError(403, "VERSION_AUTHORITY", "PMU owns the system version");
+    if (source === "parameters" && ["system.version", "plugin.siteUrl"].includes(item))
+      throw new ClusterError(403, "VERSION_AUTHORITY", "Host owns this public parameter");
+    if (source === "ui" && ["palette", "palette.parameters"].includes(item))
+      throw new ClusterError(403, "READ_ONLY", "Use supported palette setters");
     const key = source + "." + item;
     const entry = registry.get(key);
     if (!entry) throw new ClusterError(404, "NOT_FOUND", key);
@@ -165,6 +171,11 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     }
     return Object.freeze({
       get: (source, item) => result(publicEntry(pluginId, source, item)),
+      getUIColorParameters: () => result({
+        baseColor: repo.getBaseColor(), palette: repo.getPalette()
+      }),
+      getVersion: () => result(systemVersion),
+      getPluginSiteUrl: () => result(repo.getPluginSiteUrl()),
       set: (source, item, value) => publicSet(pluginId, source, item, value),
       list: (source, options = {}) => result([...registry].filter(([key]) =>
         key.startsWith(source + ".")).slice(0, options.limit || 100).map(([key, value]) =>
@@ -205,11 +216,13 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       describe(source, item) {
         const key = source + "." + item;
         return result(registry.get(key) ? copy(registry.get(key)) :
-          { key, readonly: source === "parameters" });
+          { key, readonly: source === "parameters" ||
+            (source === "ui" && ["palette", "palette.parameters"].includes(item)) });
       },
       snapshot(source) { return result(source === "properties" ? repo.getSnapshot() :
         source === "ui" ? repo.getPalette() :
-        source === "parameters" ? { "system.version": systemVersion } : {});
+        source === "parameters" ? { "system.version": systemVersion,
+          "plugin.siteUrl": repo.getPluginSiteUrl() } : {});
       },
       batch(operations) { return operations.map(op =>
         op.method === "get" ? publicEntry(pluginId, op.source, op.item) :
