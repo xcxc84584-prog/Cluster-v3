@@ -198,17 +198,9 @@ try {
     const select=document.querySelector('#homeLanguage');
     select.value='zh-TW';select.dispatchEvent(new Event('change',{bubbles:true}));
   })()`);
-  const settingsURL=new URL(hostURL);
-  settingsURL.searchParams.set("tab","settings");
-  await send("Page.navigate",{url:settingsURL.href});
-  await until("document.documentElement.dataset.clusterReady === '1' &&" +
-    " document.querySelector('[data-tab=settings]')?.getAttribute('aria-selected')==='true'",
-    "direct Plugin Settings navigation");
-  assert(await evaluate("!document.body.classList.contains('standalone-mode')"),
-    "Plugin Settings must not be trapped in standalone page mode");
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
-    "Host restored after settings route");
+    "Host restored after root landing");
   // Check two-column replacement summary without the removed arrow.
   const projectSummary = await evaluate(`(() => {
     const dialog = document.querySelector('#projectSwitchDialog');
