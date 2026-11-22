@@ -8,7 +8,7 @@ const groups = {
     ["setUIColorBaseColor","write","Set the authoritative shared base RGB color for all plugin UIs","color:string"],
     ["getVersion","read","Read authoritative Host system version",""],
     ["getPluginSiteUrl","read","Read canonical Cluster home URL",""],
-    ["getPluginManagerUrl","read","Read canonical Plugin Manager URL from PRMU",""],
+    ["getPluginManagerUrl","read","Read canonical Plugin Manager URL published by PRMU",""],
     ["getCommunityConfig","read","Read authoritative community registry configuration and limits",""],
     ["getCommunityRepositoryUrl","read","Read the unique community source repository URL",""],
     ["set","write","Update a writable public value","source:string,item:string,value:any,options?:object"],
