@@ -1087,17 +1087,6 @@ void browserManager.ready.then(async () => {
   void refreshRemoteCommunity();
   renderPluginExplorer();
   const query = new URLSearchParams(location.search);
-  if (query.get('tab') === 'settings') {
-    const selected = query.get('plugin');
-    if (selected && browserManager.get(selected)) {
-      selectedPluginId = selected;
-      renderPluginExplorer();
-      renderSettings();
-      renderPluginPage();
-    }
-    selectTab('settings');
-    return;
-  }
   if (query.get('initialize') === '1') {
     try {
       if (browserManager.list().length === 0) {
