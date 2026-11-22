@@ -7,6 +7,7 @@ import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './translations.js';
 
 export const PLUGIN_SITE_URL =
   'https://xcxc84584-prog.github.io/Cluster-v3/';
+export const PLUGIN_MANAGER_URL = new URL('plugin/', PLUGIN_SITE_URL).href;
 
 /** Host-owned, read-only community transport configuration (single authority).
  * Client code must request this through PRMU; no marketplace URL literals elsewhere. */
@@ -220,8 +221,9 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
     listeners.forEach((fn) => fn({ type, snapshot }));
   }
 
-  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL, community: getCommunityConfig() }; }
+  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL, pluginManagerUrl: PLUGIN_MANAGER_URL, community: getCommunityConfig() }; }
   function getPluginSiteUrl() { return PLUGIN_SITE_URL; }
+  function getPluginManagerUrl() { return PLUGIN_MANAGER_URL; }
   function getCommunityConfig() { return clone(DEFAULT_COMMUNITY_CONFIG); }
   function getCommunityRepositoryUrl() { return DEFAULT_COMMUNITY_CONFIG.repositoryUrl; }
   function getLanguage() { return state.language; }
@@ -276,7 +278,7 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
   eventTarget?.addEventListener('storage', syncFromStorage);
 
   return Object.freeze({
-    getSnapshot, getLanguage, getPalette, getBaseColor, getPluginSiteUrl,
+    getSnapshot, getLanguage, getPalette, getBaseColor, getPluginSiteUrl, getPluginManagerUrl,
     getCommunityConfig, getCommunityRepositoryUrl, setLanguage,
     setBaseColor, setPaletteToken, replacePalette, resetPalette, subscribe,
     destroy() { listeners.clear(); eventTarget?.removeEventListener('storage', syncFromStorage); },
