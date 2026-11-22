@@ -53,3 +53,17 @@ test('home text exists in each authoritative PRMU locale',()=>{
     'homeInitializeFailed','homeLoading'])
    assert.equal(typeof TRANSLATIONS[lang][key],'string',lang+':'+key);
 });
+
+test('workspace exposes plugin settings without leaving fullscreen runtime trapped',()=>{
+ const html=read('index.html');
+ const app=read('src/home/app.js');
+ const host=read('src/plugin/app.js');
+ const css=read('src/home/style.css');
+ assert.match(html,/id="workspaceSettingsLink"/);
+ assert.match(html,/href="\.\/plugin\/\?tab=settings"/);
+ assert.match(app,/settingsLink\.hidden=false/);
+ assert.match(app,/settingsLink\.hidden=true/);
+ assert.match(host,/if \(query\.get\('tab'\) === 'settings'\)/);
+ assert.match(host,/selectTab\('settings'\)/);
+ assert.match(css,/\.workspace-settings-link/);
+});
