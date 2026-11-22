@@ -8,6 +8,22 @@ import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './translations.js';
 export const PLUGIN_SITE_URL =
   'https://xcxc84584-prog.github.io/Cluster-v3/';
 export const PLUGIN_MANAGER_URL = new URL('plugin/', PLUGIN_SITE_URL).href;
+/** Host-owned reset inventory. Never clear unrelated origins or browser profiles.
+ * Plugins should use the Cluster namespace for durable state to participate. */
+export const FULL_RESET_POLICY = Object.freeze({
+  route: 'reset.html',
+  databaseNames: Object.freeze([
+    'cluster-v3-plugin-packages-v1',
+    'cluster-v3-elog-v1',
+    'cluster-v3-plugin-workspace'
+  ]),
+  databasePrefixes: Object.freeze(['cluster-', 'cluster.', 'Cluster-']),
+  localStoragePrefixes: Object.freeze(['cluster-', 'cluster.', 'Cluster-']),
+  sessionStoragePrefixes: Object.freeze(['cluster-', 'cluster.', 'Cluster-']),
+  cachePrefixes: Object.freeze(['cluster-', 'cluster.', 'Cluster-']),
+  serviceWorkerPath: 'plugin-sw.js'
+});
+
 
 /** Host-owned, read-only community transport configuration (single authority).
  * Client code must request this through PRMU; no marketplace URL literals elsewhere. */
@@ -222,6 +238,12 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
   }
 
   function getPluginSiteUrl() { return PLUGIN_SITE_URL; }
+  function getFullResetPolicy() { return clone(FULL_RESET_POLICY); }
+  function getFullResetUrl() {
+    // The canonical route is owned by PRMU; local development stays same-origin.
+    const root = getPluginManagerUrl();
+    return new URL(FULL_RESET_POLICY.route, new URL('../', root)).href;
+  }
   function getPluginManagerUrl() {
     // Keep local development on its own origin; do not route test/browser
     // plugins to the production GitHub Pages domain.
@@ -289,6 +311,7 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
 
   return Object.freeze({
     getSnapshot, getLanguage, getPalette, getBaseColor, getPluginSiteUrl, getPluginManagerUrl,
+    getFullResetPolicy, getFullResetUrl,
     getCommunityConfig, getCommunityRepositoryUrl, setLanguage,
     setBaseColor, setPaletteToken, replacePalette, resetPalette, subscribe,
     destroy() { listeners.clear(); eventTarget?.removeEventListener('storage', syncFromStorage); },
