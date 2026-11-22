@@ -21,7 +21,7 @@ test('home checks persisted packages, not browser memory',()=>{
  assert.match(js,/createPackageStore\(\)\.list\(\)/);
  assert.match(js,/if\(records\.length\)showWorkspace\(\)/);
  assert.match(js,/loadInitializer\(\)/);
- assert.match(js,/query\.get\(["\x27]plugin["\x27]\)/);
+ assert.match(js,/\.get\(['\x22]plugin['\x22]\)/);
  assert.match(js,/event\.origin!==location\.origin/);
 });
 test('init loads only PRMU-indexed Folder packages into persistent runtime',()=>{
