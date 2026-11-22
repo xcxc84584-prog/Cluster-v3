@@ -1,14 +1,61 @@
 <!doctype html>
-<html lang="zh-TW"><head><meta charset="utf-8">
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cluster-v3</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>Cluster</title>
 <link rel="icon" type="image/svg+xml" href="./assets/cluster-diamond.svg">
-<script>
-// Root path is the Cluster landing page. Preserve optional ?plugin=<id>.
-const url = new URL("./plugin/", location.href);
-const plugin = new URLSearchParams(location.search).get("plugin");
-if (plugin) url.searchParams.set("plugin", plugin);
-else url.searchParams.set("view", "home");
-location.replace(url.href);
-</script></head>
-<body><a href="./plugin/">Cluster-v3 Plugin Manager</a></body></html>
+<link rel="stylesheet" href="./src/home/style.css">
+<script type="module" src="./src/home/app.js"></script>
+</head>
+<body>
+<main id="home" class="home" hidden>
+  <div class="home-outline" aria-hidden="true"></div>
+  <div class="home-language">
+    <label for="homeLanguage" class="sr-only" data-i18n="homeLanguage">語言設定</label>
+    <span aria-hidden="true">◎</span>
+    <select id="homeLanguage" aria-label="Language">
+      <option value="zh-TW">繁體中文</option>
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="ja">日本語</option>
+      <option value="es">Español</option>
+      <option value="hi">हिन्दी</option>
+    </select>
+  </div>
+  <section class="home-center" aria-labelledby="homeTitle">
+    <div class="home-brand">
+      <img class="home-diamond" src="./assets/cluster-diamond.svg" alt="">
+      <h1 id="homeTitle">Cluster</h1>
+    </div>
+    <div class="home-divider" aria-hidden="true"><span></span></div>
+    <p class="home-message" data-i18n="homeNoPlugins">尚未安裝任何插件</p>
+    <div class="home-actions">
+      <button id="homeInitialize" class="home-action home-primary" type="button">
+        <span class="home-action-icon" aria-hidden="true">↓</span>
+        <span class="home-action-copy">
+          <strong data-i18n="homeInitialize">開始初始化</strong>
+          <small data-i18n="homeInitializeDesc">安裝官方初始插件</small>
+        </span>
+      </button>
+      <a id="homeManager" class="home-action home-secondary" href="./plugin/">
+        <span class="home-action-icon" aria-hidden="true">◇</span>
+        <span class="home-action-copy">
+          <strong data-i18n="homeManage">進入插件管理</strong>
+          <small data-i18n="homeManageDesc">瀏覽、安裝與管理插件</small>
+        </span>
+      </a>
+    </div>
+    <div id="homeStatus" class="home-status" role="status" aria-live="polite"></div>
+  </section>
+</main>
+<div id="homeBoot" class="home-boot" role="status" aria-live="polite">
+  <img src="./assets/cluster-diamond.svg" alt="">
+  <span>Cluster</span>
+</div>
+<iframe id="homeWorkspace" class="home-workspace" title="Cluster workspace"
+  hidden></iframe>
+</body>
+</html>
