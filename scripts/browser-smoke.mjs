@@ -382,6 +382,23 @@ try {
   await until("document.querySelector('#homeWorkspace')?.contentDocument" +
     "?.body?.classList.contains('standalone-mode')",
     "root workspace entry and IndexedDB restore");
+  await until("document.querySelector('#homeWorkspace')?.hidden === false",
+    "root reveals completed workspace");
+  const noManagerFlash=await evaluate(`(() => {
+    const frame=document.querySelector('#homeWorkspace');
+    const inner=frame?.contentDocument;
+    return {
+      shellVisible:!frame.hidden,
+      childReady:inner?.body?.classList.contains('standalone-mode'),
+      paintGuard:inner?.documentElement.classList.contains('cluster-workspace-boot'),
+      hiddenManagerChrome:inner?.querySelector('.topbar') &&
+        getComputedStyle(inner.querySelector('.topbar')).display === 'none'
+    };
+  })()`);
+  assert(noManagerFlash.shellVisible && noManagerFlash.childReady &&
+    noManagerFlash.paintGuard && noManagerFlash.hiddenManagerChrome,
+    "Workspace must never reveal Manager chrome: "+
+      JSON.stringify(noManagerFlash));
   await until("Boolean(document.querySelector('#homeWorkspace')" +
     "?.contentDocument?.querySelector('.plugin-main-frame')?.srcdoc)",
     "home-mounted standalone plugin iframe");
