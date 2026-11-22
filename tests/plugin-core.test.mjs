@@ -24,7 +24,7 @@ test("PRMU public values, registration and version authority", () => {
     /Host owns|VERSION_AUTHORITY/);
   assert.equal(p.getVersion().data, "3.1.0");
   assert.equal(p.getPluginSiteUrl().data,
-    "https://xcxc84584-prog.github.io/Cluster-v3/plugin/?view=home");
+    "https://xcxc84584-prog.github.io/Cluster-v3/");
   assert.match(p.getUIColorParameters().data.baseColor, /^#[0-9a-f]{6}$/i);
   assert.throws(() => p.set("parameters", "plugin.siteUrl", "https://invalid.example"),
     /Host owns|VERSION_AUTHORITY/);
