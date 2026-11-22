@@ -7,6 +7,7 @@ export const SUPPORTED_LANGUAGES = Object.freeze([
 
 const dictionaries = {
   'zh-TW': {
+    resetUnauthorized: "沒有有效的初始化確認。請返回公共庫設定重新操作。",
     resetTitle: "完全初始化",
     resetAction: "重設所有 Cluster 資料",
     resetDescription: "清除 Cluster 的插件、工作區資料、LOG 和 Router 紀錄，回到初次開啟狀態。",
@@ -150,6 +151,7 @@ const dictionaries = {
     footerVersion: '視覺基礎版 · 語言與調色盤已啟用',
   },
   en: {
+    resetUnauthorized: "No valid reset confirmation. Return to Public Repository settings.",
     resetTitle: "Full initialization",
     resetAction: "Reset all Cluster data",
     resetDescription: "Remove Cluster plugins, workspace data, logs and Router records to return to the initial state.",
@@ -292,6 +294,7 @@ const dictionaries = {
     footerVersion: 'UI foundation · language and palette enabled',
   },
   fr: {
+    resetUnauthorized: "Aucune confirmation valide. Revenez aux paramètres du dépôt public.",
     resetTitle: "Réinitialisation complète",
     resetAction: "Effacer les données Cluster",
     resetDescription: "Supprimer plugins, espaces de travail, journaux et Router pour revenir à l’état initial.",
@@ -433,6 +436,7 @@ const dictionaries = {
     footerVersion: 'Base UI · langue et palette actives',
   },
   ja: {
+    resetUnauthorized: "有効な初期化確認がありません。公共庫の設定からやり直してください。",
     resetTitle: "完全初期化",
     resetAction: "Cluster のデータをすべてリセット",
     resetDescription: "プラグイン、作業領域、ログ、Router の記録を削除して初期状態に戻します。",
@@ -574,6 +578,7 @@ const dictionaries = {
     footerVersion: 'UI 基盤 · 言語と配色が有効',
   },
   es: {
+    resetUnauthorized: "Falta confirmación válida. Vuelva a los ajustes del repositorio público.",
     resetTitle: "Inicialización completa",
     resetAction: "Restablecer todos los datos de Cluster",
     resetDescription: "Eliminar plugins, datos del espacio de trabajo, LOG y Router para volver al inicio.",
@@ -715,6 +720,7 @@ const dictionaries = {
     footerVersion: 'Base UI · idioma y paleta activos',
   },
   hi: {
+    resetUnauthorized: "मान्य रीसेट पुष्टि नहीं है। सार्वजनिक रिपॉज़िटरी सेटिंग पर वापस जाएँ।",
     resetTitle: "पूर्ण आरंभीकरण",
     resetAction: "सारा Cluster डेटा रीसेट करें",
     resetDescription: "प्लगइन, कार्यक्षेत्र डेटा, लॉग और Router रिकॉर्ड हटाकर शुरुआती स्थिति में लौटें।",
