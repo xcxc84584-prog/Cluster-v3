@@ -54,3 +54,21 @@ test('home text exists in each authoritative PRMU locale',()=>{
    assert.equal(typeof TRANSLATIONS[lang][key],'string',lang+':'+key);
 });
 
+
+test('uninitialized home is compact, centered and without outer frame or empty notice',()=>{
+  const html=read('index.html');
+  const css=read('src/home/style.css');
+  assert.doesNotMatch(html,/class="home-outline"/);
+  assert.doesNotMatch(html,/data-i18n="homeNoPlugins"/);
+  assert.doesNotMatch(css,/\.home-outline/);
+  assert.match(css,/width:min\(100%,560px\)/);
+  assert.match(css,/min-height:74px/);
+  assert.match(css,/margin:26px auto 0/);
+});
+test('all homepage routes are published by PRMU',()=>{
+  const js=read('src/home/app.js');
+  const html=read('index.html');
+  assert.match(js,/repo\.getPluginManagerUrl\(\)/);
+  assert.doesNotMatch(js,/new URL\(["']\.\/plugin\//);
+  assert.doesNotMatch(html,/href="\.\/plugin\//);
+});
