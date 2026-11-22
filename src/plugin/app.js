@@ -1060,8 +1060,8 @@ async function installInitialCommunity() {
   const installedNow = [];
   try {
     for (const files of prepared) {
-      const record = await hostPMU.installFiles(files);
-      if (!existing.has(record.data.id)) installedNow.push(record.data.id);
+      const manifest = await browserManager.installFiles(files);
+      if (!existing.has(manifest.id)) installedNow.push(manifest.id);
     }
   } catch (error) {
     for (const id of installedNow.reverse()) {
