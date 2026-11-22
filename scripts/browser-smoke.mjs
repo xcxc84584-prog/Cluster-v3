@@ -172,6 +172,31 @@ try {
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host initialization and Service Worker activation");
+  const rootURL=new URL("../",hostURL);
+  await send("Page.navigate",{url:rootURL.href});
+  await until("document.querySelector('#home')?.hidden === false",
+    "first visit: empty Cluster root landing");
+  const emptyHome=await evaluate(`(() => ({
+    pluginCount:document.querySelectorAll('.home-action').length,
+    initialize:document.querySelector('#homeInitialize')?.disabled === false,
+    manage:document.querySelector('#homeManager')?.getAttribute('href'),
+    title:document.querySelector('#homeTitle')?.textContent,
+    accent:getComputedStyle(document.documentElement)
+      .getPropertyValue('--ui-accent').trim()
+  }))()`);
+  assert(emptyHome.pluginCount===2 && emptyHome.initialize &&
+    emptyHome.title==='Cluster' && emptyHome.manage?.includes('plugin/') &&
+    Boolean(emptyHome.accent),"Fresh Cluster home must offer both actions: "+
+      JSON.stringify(emptyHome));
+  await evaluate(`(() => {
+    const select=document.querySelector('#homeLanguage');
+    select.value='en';select.dispatchEvent(new Event('change',{bubbles:true}));
+  })()`);
+  assert(await evaluate("document.querySelector('[data-i18n=homeInitialize]')?.textContent") ===
+    "Start initialization","Root language selector must use PRMU translations");
+  await send("Page.navigate",{url:hostURL});
+  await until("document.documentElement.dataset.clusterReady === '1'",
+    "Host restored after root landing");
   // Check two-column replacement summary without the removed arrow.
   const projectSummary = await evaluate(`(() => {
     const dialog = document.querySelector('#projectSwitchDialog');
