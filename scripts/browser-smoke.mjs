@@ -201,6 +201,22 @@ try {
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host restored after root landing");
+  // Full reset must be discoverable but never run without user acknowledgement.
+  await evaluate("document.querySelector('[data-tab=settings]').click()");
+  const resetGuard=await evaluate(`(() => {
+    document.querySelector('#fullResetOpen').click();
+    const dialog=document.querySelector('#fullResetDialog');
+    const confirm=document.querySelector('#fullResetConfirm');
+    const before=dialog.open && confirm.disabled;
+    document.querySelector('#fullResetAcknowledge').click();
+    const enabled=!confirm.disabled;
+    document.querySelector('#fullResetCancel').click();
+    return {before,enabled,closed:!dialog.open,
+      stillInstalled:document.querySelector('#pluginCount').textContent === '01'};
+  })()`);
+  assert(resetGuard.before && resetGuard.enabled && resetGuard.closed &&
+    resetGuard.stillInstalled,"Reset dialog must require acknowledgement: "+
+      JSON.stringify(resetGuard));
   // Check two-column replacement summary without the removed arrow.
   const projectSummary = await evaluate(`(() => {
     const dialog = document.querySelector('#projectSwitchDialog');
