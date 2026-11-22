@@ -97,3 +97,18 @@ body{overflow:hidden;background:var(--ui-background)}
  .home-center{margin-top:42px}.home-action{padding:12px 18px}
  .home-action-icon{width:52px;min-width:52px;font-size:30px}
  .home-language{height:35px}}
+
+/* Workspace-only settings access: visible above fullscreen plugin iframe. */
+.workspace-settings-link{position:fixed;z-index:15;top:13px;right:15px;
+ display:flex;align-items:center;gap:8px;min-height:36px;
+ padding:7px 13px;color:var(--ui-text);text-decoration:none;
+ background:color-mix(in srgb,var(--ui-panel) 94%,transparent);
+ border:1px solid var(--ui-border);border-radius:6px;
+ box-shadow:0 4px 16px #0008;font-size:12px;font-weight:600;
+ transition:background .15s,border-color .15s}
+.workspace-settings-link svg{width:17px;height:17px;flex:none}
+.workspace-settings-link:hover,.workspace-settings-link:focus-visible{
+ border-color:var(--ui-accent);background:var(--ui-surface);outline:none}
+@media(max-width:460px){.workspace-settings-link{top:8px;right:8px;
+ padding:8px;min-height:34px}
+ .workspace-settings-link span{display:none}}
