@@ -15,6 +15,7 @@ export const DEFAULT_COMMUNITY_CONFIG = Object.freeze({
   ref: 'main',
   indexPath: 'community-index.json',
   pluginRoot: 'plugins',
+  homePluginId: 'cluster.text-editor',
   indexSchemaVersion: '1.0.0',
   indexType: 'cluster.community-index',
   githubApiBase: 'https://api.github.com',
