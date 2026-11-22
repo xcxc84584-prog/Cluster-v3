@@ -427,8 +427,8 @@ function renderPluginExplorer() {
 async function openPluginSite(pluginId) {
   const record = browserManager?.get(pluginId);
   if (!record || pluginId === 'cluster.pmu') return;
-  const url = new URL('../', location.href);
-  url.searchParams.set('plugin', pluginId);
+  const url = new URL(repo.getPluginSiteUrl());
+  // Explorer and Editor both use the shared Cluster home/workspace.
   const tab = window.open('about:blank', '_blank');
   if (!tab) {
     reportLoaderError(new Error('Browser blocked the plugin window'));
@@ -1046,13 +1046,62 @@ renderProjectRepository();
 renderSettings();
 renderPluginPage();
 
-void browserManager.ready.then(() => {
+async function installInitialCommunity() {
+  const config = repo.getCommunityConfig();
+  const packages = await fetchCommunityIndex(config);
+  if (!packages.length) throw Error('Initial community index is empty');
+  // Validate every Folder before any persistent installation begins.
+  const prepared = [];
+  for (const entry of packages) {
+    const pkg = await fetchCommunityPlugin(entry, config);
+    prepared.push(pkg.files);
+  }
+  const existing = new Set(browserManager.list().map(record => record.id));
+  const installedNow = [];
+  try {
+    for (const files of prepared) {
+      const record = await hostPMU.installFiles(files);
+      if (!existing.has(record.data.id)) installedNow.push(record.data.id);
+    }
+  } catch (error) {
+    for (const id of installedNow.reverse()) {
+      try { await hostPMU.uninstall(id); } catch (rollback) {
+        kernel.log('elog', { source:'cluster.pmu', target:id,
+          action:'plugin.initialize.rollback', status:500,
+          error:{code:'ROLLBACK_FAILED',message:String(rollback)} });
+      }
+    }
+    throw error;
+  }
+  return installedNow;
+}
+void browserManager.ready.then(async () => {
   setLoaderState('loaderReady');
   document.documentElement.dataset.clusterReady = '1';
   updateCommunityCards();
   void refreshRemoteCommunity();
   renderPluginExplorer();
   const query = new URLSearchParams(location.search);
+  if (query.get('initialize') === '1') {
+    try {
+      if (browserManager.list().length === 0) {
+        setLoaderState('loaderBusy');
+        await installInitialCommunity();
+      }
+      if (window.parent !== window) {
+        window.parent.postMessage({protocol:'cluster.home.v1',type:'initialized'},
+          location.origin);
+      } else {
+        location.replace(new URL('../',location.href));
+      }
+    } catch(error) {
+      reportLoaderError(error);
+      if (window.parent !== window)
+        window.parent.postMessage({protocol:'cluster.home.v1',type:'error',
+          message:String(error?.message||error)},location.origin);
+    }
+    return;
+  }
   const requested = query.get('plugin');
   const home = browserManager.list().find(record =>
     record.enabled && browserManager.isLoaded(record.id) &&
