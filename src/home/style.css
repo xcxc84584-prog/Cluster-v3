@@ -26,6 +26,8 @@ body{overflow:hidden;background:var(--ui-background)}
  clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),
  calc(100% - 11px) 100%,0 100%,0 11px);
  background:var(--ui-panel);font-size:19px;color:var(--ui-accent)}
+.home-language-label{font-size:13px;font-weight:650;color:var(--ui-text);
+ white-space:nowrap}
 .home-language select{background:transparent;color:var(--ui-text);
  border:0;outline:0;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;
  padding:5px 0;max-width:145px}
