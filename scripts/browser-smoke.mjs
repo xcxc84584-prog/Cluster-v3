@@ -297,7 +297,7 @@ try {
       return launched;
     } finally { window.open = previous; }
   })()`);
-  assert(launchedUrl.includes('/Cluster-v3/'),
+  assert(launchedUrl.includes('/Cluster-v3/?plugin=example.hello'),
     "Explorer Open button must launch correct plugin standalone site: " +
       launchedUrl);
 
