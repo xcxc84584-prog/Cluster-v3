@@ -221,9 +221,19 @@ export function createPublicRepository({ storage, eventTarget } = {}) {
     listeners.forEach((fn) => fn({ type, snapshot }));
   }
 
-  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL, pluginManagerUrl: PLUGIN_MANAGER_URL, community: getCommunityConfig() }; }
   function getPluginSiteUrl() { return PLUGIN_SITE_URL; }
-  function getPluginManagerUrl() { return PLUGIN_MANAGER_URL; }
+  function getPluginManagerUrl() {
+    // Keep local development on its own origin; do not route test/browser
+    // plugins to the production GitHub Pages domain.
+    const canonical = new URL(PLUGIN_MANAGER_URL);
+    const current = typeof location !== 'undefined' ? location : null;
+    if (current && ['localhost', '127.0.0.1', '[::1]'].includes(current.hostname) &&
+        ['http:', 'https:'].includes(current.protocol))
+      return new URL(canonical.pathname, current.origin).href;
+    return canonical.href;
+  }
+  function getSnapshot() { return { ...clone(state), pluginSiteUrl: PLUGIN_SITE_URL,
+    pluginManagerUrl: getPluginManagerUrl(), community: getCommunityConfig() }; }
   function getCommunityConfig() { return clone(DEFAULT_COMMUNITY_CONFIG); }
   function getCommunityRepositoryUrl() { return DEFAULT_COMMUNITY_CONFIG.repositoryUrl; }
   function getLanguage() { return state.language; }
