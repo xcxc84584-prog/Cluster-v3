@@ -201,8 +201,8 @@ try {
   const settingsURL=new URL(hostURL);
   settingsURL.searchParams.set("tab","settings");
   await send("Page.navigate",{url:settingsURL.href});
-  await until("document.documentElement.dataset.clusterReady === '1' &&
-    document.querySelector('[data-tab=settings]')?.getAttribute('aria-selected')==='true'",
+  await until("document.documentElement.dataset.clusterReady === '1' &&" +
+    " document.querySelector('[data-tab=settings]')?.getAttribute('aria-selected')==='true'",
     "direct Plugin Settings navigation");
   assert(await evaluate("!document.body.classList.contains('standalone-mode')"),
     "Plugin Settings must not be trapped in standalone page mode");
