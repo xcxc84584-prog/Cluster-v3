@@ -33,6 +33,8 @@ test('init loads only PRMU-indexed Folder packages into persistent runtime',()=>
  assert.match(host,/protocol:'cluster\.home\.v1',type:'initialized'/);
  assert.match(host,/repo\.getCommunityConfig\(\)\.homePluginId/);
  assert.equal(DEFAULT_COMMUNITY_CONFIG.homePluginId,'cluster.text-editor');
+ assert.deepEqual(DEFAULT_COMMUNITY_CONFIG.homeNavigationPluginIds,
+   ['cluster.explorer','cluster.text-editor']);
  assert.equal(PLUGIN_SITE_URL,'https://xcxc84584-prog.github.io/Cluster-v3/');
 });
 test('root style keeps blue bevel without header or footer',()=>{
