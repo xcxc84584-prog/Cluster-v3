@@ -81,7 +81,7 @@ const implemented = new Set([
   "PRMU.get", "PRMU.resolveCapability", "PRMU.getUIColorParameters",
   "PRMU.openUIColorPalette",
   "PRMU.setUIColorBaseColor", "PRMU.getVersion",
-  "PRMU.getPluginSiteUrl", "PRMU.getCommunityConfig",
+  "PRMU.getPluginSiteUrl", "PRMU.getPluginManagerUrl", "PRMU.getCommunityConfig",
   "PRMU.getCommunityRepositoryUrl", "PRMU.set", "PRMU.list", "PRMU.register",
   "PRMU.unregister", "PRMU.subscribe", "PRMU.unsubscribe",
   "PRMU.describe", "PRMU.snapshot", "PRMU.batch",
