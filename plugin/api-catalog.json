@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1.0",
   "generatedFrom": "src/core/api-catalog.js",
-  "apiCount": 56,
+  "apiCount": 57,
   "apis": [
     {
       "id": "PRMU.get",
@@ -315,7 +315,54 @@
       "unit": "PRMU",
       "method": "getPluginSiteUrl",
       "type": "read",
-      "description": "Read Plugin Manager landing page URL",
+      "description": "Read canonical Cluster home URL",
+      "signature": "",
+      "version": "1.1.0",
+      "implementation": "initial",
+      "request": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "response": {
+        "type": "object",
+        "required": [
+          "ok",
+          "status"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "data": {},
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "errors": [
+        400,
+        403,
+        404,
+        408,
+        409,
+        500,
+        503
+      ]
+    },
+    {
+      "id": "PRMU.getPluginManagerUrl",
+      "unit": "PRMU",
+      "method": "getPluginManagerUrl",
+      "type": "read",
+      "description": "Read canonical Plugin Manager URL published by PRMU",
       "signature": "",
       "version": "1.1.0",
       "implementation": "initial",
