@@ -48,7 +48,7 @@ test("Explorer provides Open/Stop/Remove icons, without page-level launcher", ()
   assert.match(code, /actions\.append\(open, toggle, remove\)/);
   assert.match(code, /open\.textContent = '↗'/);
   assert.match(code, /open\.setAttribute\('aria-label'/);
-  assert.match(code, /url\.searchParams\.set\('plugin', pluginId\)/);
+  assert.match(code, /new URL\(repo\.getPluginSiteUrl\(\)\)/);
   assert.match(code, /window\.open\('about:blank', '_blank'\)/);
   assert.match(code, /await hostPMU\.load\(pluginId\)/);
   assert.doesNotMatch(html, /id="pluginStandalone"/);
