@@ -19,6 +19,7 @@ function localize() {
   for (const node of document.querySelectorAll("[data-i18n]"))
     node.textContent=t(node.dataset.i18n);
   language.setAttribute("aria-label",t("homeLanguage"));
+  $("homeManager").href=repo.getPluginManagerUrl();
 }
 function syncPalette() {
   applyPalette(repo.getPalette());
@@ -37,14 +38,14 @@ function showWorkspace() {
   splash.hidden=true;
   home.hidden=true;
   workspace.hidden=false;
-  const url=new URL("./plugin/",location.href);
+  const url=new URL(repo.getPluginManagerUrl());
   const plugin=new URLSearchParams(location.search).get("plugin");
   if(plugin)url.searchParams.set("plugin",plugin);
   else url.searchParams.set("view","home");
   workspace.src=url.href;
 }
 function loadInitializer() {
-  const url=new URL("./plugin/",location.href);
+  const url=new URL(repo.getPluginManagerUrl());
   url.searchParams.set("initialize","1");
   workspace.hidden=true;
   workspace.src=url.href;
