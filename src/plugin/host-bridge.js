@@ -56,6 +56,7 @@ export async function dispatchPluginCall(kernel, pluginId, method, args, invoke,
     case "PRMU.setUIColorBaseColor": return instance.PRMU.setUIColorBaseColor(args[0]);
     case "PRMU.getVersion": return instance.PRMU.getVersion();
     case "PRMU.getPluginSiteUrl": return instance.PRMU.getPluginSiteUrl();
+    case "PRMU.getPluginManagerUrl": return instance.PRMU.getPluginManagerUrl();
     case "PRMU.getCommunityConfig": return instance.PRMU.getCommunityConfig();
     case "PRMU.getCommunityRepositoryUrl": return instance.PRMU.getCommunityRepositoryUrl();
     case "PRMU.set": return instance.PRMU.set(args[0], args[1], args[2]);
