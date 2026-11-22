@@ -12,6 +12,7 @@ export const PLUGIN_MANAGER_URL = new URL('plugin/', PLUGIN_SITE_URL).href;
  * Plugins should use the Cluster namespace for durable state to participate. */
 export const FULL_RESET_POLICY = Object.freeze({
   route: 'reset.html',
+  authorizationKey: 'cluster-v3.full-reset-authorization.v1',
   databaseNames: Object.freeze([
     'cluster-v3-plugin-packages-v1',
     'cluster-v3-elog-v1',
