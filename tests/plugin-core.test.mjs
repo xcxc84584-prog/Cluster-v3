@@ -10,7 +10,7 @@ test("catalog has unique, searchable and serializable contracts", () => {
   assert.equal(exported.apiCount, API_CATALOG.length);
   assert.deepEqual(exported.apis.map(entry => entry.id), ids);
   for (const name of ["PRMU.getUIColorParameters", "PRMU.getVersion",
-      "PRMU.getPluginSiteUrl"]) {
+      "PRMU.getPluginSiteUrl", "PRMU.getPluginManagerUrl"]) {
     assert.ok(ids.includes(name), "Missing public API: " + name);
   }
   assert.equal(queryCatalog({ search: "Router.request" }).total, 1);
@@ -25,6 +25,12 @@ test("PRMU public values, registration and version authority", () => {
   assert.equal(p.getVersion().data, "3.1.0");
   assert.equal(p.getPluginSiteUrl().data,
     "https://xcxc84584-prog.github.io/Cluster-v3/");
+  assert.equal(p.getPluginManagerUrl().data,
+    "https://xcxc84584-prog.github.io/Cluster-v3/plugin/");
+  assert.equal(p.get("parameters","plugin.managerUrl").data,
+    p.getPluginManagerUrl().data);
+  assert.throws(() => p.set("parameters", "plugin.managerUrl", "https://invalid.example"),
+    /Host owns|VERSION_AUTHORITY/);
   assert.match(p.getUIColorParameters().data.baseColor, /^#[0-9a-f]{6}$/i);
   assert.throws(() => p.set("parameters", "plugin.siteUrl", "https://invalid.example"),
     /Host owns|VERSION_AUTHORITY/);
