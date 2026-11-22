@@ -423,7 +423,32 @@ try {
     ".querySelector('.plugin-main-frame')?.getAttribute('sandbox')");
   assert(isolated === null,
     "Standalone plugin iframe must not specify sandbox");
-  console.log("Chrome E2E PASS: install, API contract, standalone restore, no sandbox");
+  // Full destructive reset is tested only inside this isolated Chromium profile.
+  await send("Page.navigate",{url:hostURL});
+  await until("document.documentElement.dataset.clusterReady === '1'",
+    "reopen Manager to perform isolated full reset");
+  await evaluate(`(() => {
+    document.querySelector('[data-tab=settings]').click();
+    document.querySelector('#fullResetOpen').click();
+    document.querySelector('#fullResetAcknowledge').click();
+    document.querySelector('#fullResetConfirm').click();
+  })()`);
+  await until("document.querySelector('#home')?.hidden === false",
+    "full reset returns to uninitialized Cluster homepage");
+  const resetState=await evaluate(`(async()=>{
+    const names=typeof indexedDB.databases==='function' ?
+      (await indexedDB.databases()).map(x=>x.name) : [];
+    return {
+      home:document.querySelector('#home')?.hidden===false,
+      initialize:document.querySelector('#homeInitialize')?.disabled===false,
+      databases:names.filter(name=>name?.startsWith('cluster-'))
+    };
+  })()`);
+  assert(resetState.home && resetState.initialize &&
+    resetState.databases.every(name=>name==='cluster-v3-plugin-packages-v1'),
+    "Reset must remove runtime data and return to fresh home: "+
+      JSON.stringify(resetState));
+  console.log("Chrome E2E PASS: install, API contract, standalone restore, no sandbox, full reset");
 } finally {
   socket?.close();
   browser?.kill("SIGKILL");
