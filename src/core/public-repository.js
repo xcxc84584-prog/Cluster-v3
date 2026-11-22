@@ -6,7 +6,7 @@
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './translations.js';
 
 export const PLUGIN_SITE_URL =
-  'https://xcxc84584-prog.github.io/Cluster-v3/plugin/?view=home';
+  'https://xcxc84584-prog.github.io/Cluster-v3/';
 
 /** Host-owned, read-only community transport configuration (single authority).
  * Client code must request this through PRMU; no marketplace URL literals elsewhere. */
