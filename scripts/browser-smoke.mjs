@@ -194,6 +194,10 @@ try {
   })()`);
   assert(await evaluate("document.querySelector('[data-i18n=homeInitialize]')?.textContent") ===
     "Start initialization","Root language selector must use PRMU translations");
+  await evaluate(`(() => {
+    const select=document.querySelector('#homeLanguage');
+    select.value='zh-TW';select.dispatchEvent(new Event('change',{bubbles:true}));
+  })()`);
   await send("Page.navigate",{url:hostURL});
   await until("document.documentElement.dataset.clusterReady === '1'",
     "Host restored after root landing");
