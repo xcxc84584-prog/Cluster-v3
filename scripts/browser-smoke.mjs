@@ -350,12 +350,15 @@ try {
   const url=new URL("../",hostURL);
   url.searchParams.set("plugin","example.hello");
   await send("Page.navigate",{url:url.href});
-  await until("document.body?.classList.contains('standalone-mode')",
-    "standalone entry and IndexedDB restore");
-  await until("Boolean(document.querySelector('.plugin-main-frame')?.srcdoc)",
-    "standalone plugin iframe");
+  await until("document.querySelector('#homeWorkspace')?.contentDocument" +
+    "?.body?.classList.contains('standalone-mode')",
+    "root workspace entry and IndexedDB restore");
+  await until("Boolean(document.querySelector('#homeWorkspace')" +
+    "?.contentDocument?.querySelector('.plugin-main-frame')?.srcdoc)",
+    "home-mounted standalone plugin iframe");
   const isolated=await evaluate(
-    "document.querySelector('.plugin-main-frame')?.getAttribute('sandbox')");
+    "document.querySelector('#homeWorkspace').contentDocument" +
+    ".querySelector('.plugin-main-frame')?.getAttribute('sandbox')");
   assert(isolated === null,
     "Standalone plugin iframe must not specify sandbox");
   console.log("Chrome E2E PASS: install, API contract, standalone restore, no sandbox");
