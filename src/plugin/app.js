@@ -1016,6 +1016,26 @@ function setStandaloneMode(pluginId) {
   renderSettings();
   renderPluginPage();
   selectTab('page');
+  // Tell the root page to reveal the iframe only after the selected plugin's
+  // own document is loaded, rather than when the Manager shell has booted.
+  if (window.parent === window) return;
+  const host = [...document.querySelectorAll('.plugin-main-host')]
+    .find(node => node.dataset.pluginId === pluginId);
+  const frame = host?.querySelector('.plugin-main-frame');
+  if (!frame) return;
+  let announced = false;
+  const announce = () => {
+    if (announced) return;
+    announced = true;
+    window.parent.postMessage({
+      protocol:'cluster.home.v1',type:'workspace-ready',pluginId
+    }, location.origin);
+  };
+  frame.addEventListener('load', announce, {once:true});
+  try {
+    if (frame.contentDocument?.readyState === 'complete')
+      requestAnimationFrame(announce);
+  } catch { /* Cross-origin plugin documents still report load. */ }
 }
 browserManager = createBrowserPluginManager({
   kernel,
