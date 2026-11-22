@@ -428,7 +428,10 @@ async function openPluginSite(pluginId) {
   const record = browserManager?.get(pluginId);
   if (!record || pluginId === 'cluster.pmu') return;
   const url = new URL(repo.getPluginSiteUrl());
-  // Explorer and Editor both use the shared Cluster home/workspace.
+  // Only PRMU-listed workspace plugins navigate directly to shared home.
+  // Third-party plugins retain their own standalone page through ?plugin=.
+  if (!repo.getCommunityConfig().homeNavigationPluginIds.includes(pluginId))
+    url.searchParams.set('plugin', pluginId);
   const tab = window.open('about:blank', '_blank');
   if (!tab) {
     reportLoaderError(new Error('Browser blocked the plugin window'));
