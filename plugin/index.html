@@ -99,6 +99,18 @@
               <div class="setting-row"><div class="setting-copy"><strong data-i18n="globalLanguage">全域語言</strong><p data-i18n="languageHint">切換後即時更新管理介面，設定保存在此瀏覽器。</p></div><select id="settingsLanguage" aria-label="Global language"><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="fr">Français</option><option value="ja">日本語</option><option value="es">Español</option><option value="hi">हिन्दी</option></select></div>
               <div class="setting-row"><div class="setting-copy"><strong data-i18n="globalPalette">全域調色盤</strong><p data-i18n="paletteHint">使用 RGB 分量調整介面色彩；變更會即時套用並保存。</p></div><button type="button" class="palette-preview-trigger" id="settingsPalette" aria-label="Open UI palette"><span class="palette-chips" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-i18n="palette">介面調色盤</span><span aria-hidden="true">↗</span></button></div>
             </section>
+            <section class="preference-section reset-preference" aria-labelledby="fullResetTitle">
+              <header class="section-heading"><div>
+                <small data-i18n="resetCategory">WORKSPACE / RESET</small>
+                <h2 id="fullResetTitle" data-i18n="resetTitle">完全初始化</h2>
+                <p data-i18n="resetDescription">清除 Cluster 的插件、工作區資料、LOG 和 Router 紀錄，回到初次開啟狀態。</p>
+              </div><span class="property-icon" aria-hidden="true">↺</span></header>
+              <div class="setting-row"><div class="setting-copy">
+                <strong data-i18n="resetAction">重設所有 Cluster 資料</strong>
+                <p data-i18n="resetPermanent">此操作無法復原，請先備份重要文件。</p>
+              </div><button id="fullResetOpen" class="reset-action" type="button"
+                data-i18n="resetButton">完全初始化</button></div>
+            </section>
             <section class="live-preview" aria-labelledby="previewTitle"><div class="preview-heading"><h2 id="previewTitle" data-i18n="uiPreview">即時介面預覽</h2><span class="status-dot"></span></div><div class="preview-body"><div class="preview-toolbar"><span>◇</span> CLUSTER / UI <span class="preview-mini-button">×</span></div><div class="preview-inner"><div class="preview-gutter">01<br>02<br>03<br>04</div><div class="preview-editor"><span class="code-comment">// Public Repository</span><br><span class="code-accent">const</span> palette = ui.palette;<br><span class="code-accent">const</span> language = ui.language;<br><br><span class="code-comment">// live preview</span></div></div><div class="preview-controls"><input data-i18n-placeholder="sampleInputHint" placeholder="輸入內容…"><button type="button" data-i18n="sampleButton">範例按鈕</button></div></div></section>
             </div>
             <div id="pluginSettingsHost" class="plugin-settings-host" hidden>
@@ -290,6 +302,24 @@
       </div>
     </div>
     <div class="palette-footer"><small data-i18n="paletteSaved">設定會自動儲存</small><button type="button" id="donePalette" class="primary-button" data-i18n="paletteDone">完成</button></div>
+  </dialog>
+  <dialog id="fullResetDialog" class="full-reset-dialog" aria-labelledby="fullResetDialogTitle">
+    <div class="full-reset-heading">
+      <div><small data-i18n="resetCategory">WORKSPACE / RESET</small>
+        <h2 id="fullResetDialogTitle" data-i18n="resetDialogTitle">完全初始化 Cluster？</h2>
+      </div>
+      <button id="fullResetClose" type="button" class="reset-dialog-close"
+        aria-label="Close" data-i18n-title="resetCancel">×</button>
+    </div>
+    <p class="full-reset-warning" data-i18n="resetWarning">將永久刪除本網站 Cluster 管理的插件資料、工作區快照、LOG／ELOG 和 Router 相關紀錄。</p>
+    <p class="full-reset-boundary" data-i18n="resetBoundary">不會刪除電腦原生檔案，也不會清理同網域其他專案的資料。</p>
+    <label class="full-reset-ack"><input id="fullResetAcknowledge" type="checkbox">
+      <span data-i18n="resetAcknowledge">我已備份重要資料，了解此操作無法復原。</span>
+    </label>
+    <div class="full-reset-actions">
+      <button id="fullResetCancel" type="button" data-i18n="resetCancel">取消</button>
+      <button id="fullResetConfirm" type="button" disabled data-i18n="resetConfirm">清除並重新初始化</button>
+    </div>
   </dialog>
 </body>
 </html>
