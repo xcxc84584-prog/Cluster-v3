@@ -6,7 +6,6 @@ import { createPackageStore } from "../plugin/package-store.js";
 const $ = id => document.getElementById(id);
 const home = $("home");
 const workspace = $("homeWorkspace");
-const settingsLink = $("workspaceSettingsLink");
 const splash = $("homeBoot");
 const status = $("homeStatus");
 const language = $("homeLanguage");
@@ -20,8 +19,6 @@ function localize() {
   for (const node of document.querySelectorAll("[data-i18n]"))
     node.textContent=t(node.dataset.i18n);
   language.setAttribute("aria-label",t("homeLanguage"));
-  settingsLink.setAttribute("aria-label",t("pluginSettings"));
-  settingsLink.title=t("pluginSettings");
 }
 function syncPalette() {
   applyPalette(repo.getPalette());
@@ -34,14 +31,12 @@ function showWelcome() {
   splash.hidden=true;
   home.hidden=false;
   workspace.hidden=true;
-  settingsLink.hidden=true;
 }
 function showWorkspace() {
   mounted=true;
   splash.hidden=true;
   home.hidden=true;
   workspace.hidden=false;
-  settingsLink.hidden=false;
   const url=new URL("./plugin/",location.href);
   const plugin=new URLSearchParams(location.search).get("plugin");
   if(plugin)url.searchParams.set("plugin",plugin);
@@ -52,7 +47,6 @@ function loadInitializer() {
   const url=new URL("./plugin/",location.href);
   url.searchParams.set("initialize","1");
   workspace.hidden=true;
-  settingsLink.hidden=true;
   workspace.src=url.href;
 }
 repo.subscribe(({type})=>{
