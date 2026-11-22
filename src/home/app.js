@@ -35,9 +35,11 @@ function showWelcome() {
 }
 function showWorkspace() {
   mounted=true;
-  splash.hidden=true;
+  // The Plugin Manager iframe loads offscreen until its workspace is ready.
+  // Keeping the splash prevents intermediate Manager chrome from flashing.
+  splash.hidden=false;
   home.hidden=true;
-  workspace.hidden=false;
+  workspace.hidden=true;
   const url=new URL(repo.getPluginManagerUrl());
   const plugin=new URLSearchParams(location.search).get("plugin");
   if(plugin)url.searchParams.set("plugin",plugin);
@@ -70,6 +72,10 @@ window.addEventListener("message",event=>{
   if(event.data.type==="initialized"){
     showStatus(t("homeLoading"));
     showWorkspace();
+  }else if(event.data.type==="workspace-ready"){
+    if(!mounted)return;
+    workspace.hidden=false;
+    splash.hidden=true;
   }else if(event.data.type==="error"){
     initializing=false;
     $("homeInitialize").disabled=false;
