@@ -1103,9 +1103,11 @@ void browserManager.ready.then(async () => {
     return;
   }
   const requested = query.get('plugin');
-  const home = browserManager.list().find(record =>
-    record.enabled && browserManager.isLoaded(record.id) &&
-    record.manifest.ui?.home);
+  const available = browserManager.list().filter(record =>
+    record.enabled && browserManager.isLoaded(record.id));
+  const preferred = repo.getCommunityConfig().homePluginId;
+  const home = available.find(record => record.manifest.ui?.home) ||
+    available.find(record => record.id === preferred) || available[0];
   const target = requested || (query.get('view') === 'home' ? home?.id : null);
   if (target && browserManager.isLoaded(target)) setStandaloneMode(target);
 }).catch(reportLoaderError);
