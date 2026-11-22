@@ -120,6 +120,14 @@ $('fullResetConfirm').addEventListener('click', () => {
   if (!$('fullResetAcknowledge').checked ||
       $('fullResetConfirm').disabled) return;
   $('fullResetConfirm').disabled = true;
+  try {
+    sessionStorage.setItem(repo.getFullResetPolicy().authorizationKey,
+      JSON.stringify({issuedAt:Date.now(),nonce:crypto.randomUUID()}));
+  } catch (error) {
+    $('fullResetConfirm').disabled = false;
+    reportLoaderError(error);
+    return;
+  }
   // Leave the app first. The isolated reset document closes plugin frames
   // before opening IndexedDB for deletion.
   window.top.location.assign(repo.getFullResetUrl());
