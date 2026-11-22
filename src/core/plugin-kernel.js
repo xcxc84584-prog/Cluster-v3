@@ -130,6 +130,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     const key = source + "." + item;
     if (source === "parameters" && item === "system.version") return systemVersion;
     if (source === "parameters" && item === "plugin.siteUrl") return repo.getPluginSiteUrl();
+    if (source === "parameters" && item === "plugin.managerUrl") return repo.getPluginManagerUrl();
     if (source === "parameters" && item === "community.config") return repo.getCommunityConfig();
     if (source === "parameters" && item === "community.repositoryUrl") return repo.getCommunityRepositoryUrl();
     if (source === "properties" && item === "system.language") return repo.getLanguage();
@@ -149,7 +150,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
     if (source === "ui" && item === "palette.baseColor") {
       repo.setBaseColor(value); return result(repo.getBaseColor());
     }
-    if (source === "parameters" && ["system.version", "plugin.siteUrl", "community.config",
+    if (source === "parameters" && ["system.version", "plugin.siteUrl", "plugin.managerUrl", "community.config",
       "community.repositoryUrl"].includes(item))
       throw new ClusterError(403, "VERSION_AUTHORITY", "Host owns this public parameter");
     if (source === "ui" && ["palette", "palette.parameters"].includes(item))
@@ -180,6 +181,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
       setUIColorBaseColor: color => publicSet(pluginId, "ui", "palette.baseColor", color),
       getVersion: () => result(systemVersion),
       getPluginSiteUrl: () => result(repo.getPluginSiteUrl()),
+      getPluginManagerUrl: () => result(repo.getPluginManagerUrl()),
       getCommunityConfig: () => result(repo.getCommunityConfig()),
       getCommunityRepositoryUrl: () => result(repo.getCommunityRepositoryUrl()),
       set: (source, item, value) => publicSet(pluginId, source, item, value),
@@ -229,6 +231,7 @@ export function createPluginKernel({ storage, publicRepo, elogStore, systemVersi
         source === "ui" ? repo.getPalette() :
         source === "parameters" ? { "system.version": systemVersion,
           "plugin.siteUrl": repo.getPluginSiteUrl(),
+          "plugin.managerUrl": repo.getPluginManagerUrl(),
           "community.config": repo.getCommunityConfig(),
           "community.repositoryUrl": repo.getCommunityRepositoryUrl() } : {});
       },
