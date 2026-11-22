@@ -27,7 +27,7 @@ body{overflow:hidden;background:var(--ui-background)}
  calc(100% - 11px) 100%,0 100%,0 11px);
  background:var(--ui-panel);font-size:19px;color:var(--ui-accent)}
 .home-language select{background:transparent;color:var(--ui-text);
- border:0;outline:0;cursor:pointer;font:600 13px inherit;
+ border:0;outline:0;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;
  padding:5px 0;max-width:145px}
 .home-language select option{background:var(--ui-panel);color:var(--ui-text)}
 .home-center{width:100%;max-width:945px;text-align:center;
@@ -42,7 +42,7 @@ body{overflow:hidden;background:var(--ui-background)}
 .home-divider span{position:absolute;width:13px;height:13px;left:50%;top:50%;
  transform:translate(-50%,-50%) rotate(45deg);
  border:2px solid var(--ui-background);background:var(--ui-accent)}
-.home-message{font:600 clamp(16px,2vw,24px)/1.5 inherit;
+.home-message{font-size:clamp(16px,2vw,24px);font-weight:600;line-height:1.5;
  color:var(--ui-muted);margin:29px 0 48px}
 .home-actions{display:grid;grid-template-columns:1fr 1fr;
  gap:26px;max-width:900px;margin:auto}
