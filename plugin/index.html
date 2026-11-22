@@ -2,6 +2,17 @@
 <html lang="zh-TW">
 <head>
   <meta charset="utf-8">
+  <!-- Paint guard: direct workspace routes must never expose Manager chrome. -->
+  <script>
+    if (new URLSearchParams(location.search).has('plugin') ||
+        new URLSearchParams(location.search).get('view') === 'home' ||
+        new URLSearchParams(location.search).get('initialize') === '1')
+      document.documentElement.classList.add('cluster-workspace-boot');
+  </script>
+  <style>
+    html.cluster-workspace-boot body {visibility:hidden;background:var(--ui-background,#000)}
+    html.cluster-workspace-boot body.standalone-mode {visibility:visible}
+  </style>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#202127">
