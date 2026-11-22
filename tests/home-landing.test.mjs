@@ -72,3 +72,17 @@ test('all homepage routes are published by PRMU',()=>{
   assert.doesNotMatch(js,/new URL\(["']\.\/plugin\//);
   assert.doesNotMatch(html,/href="\.\/plugin\//);
 });
+
+test('reload never reveals Plugin Manager before workspace is ready',()=>{
+  const root=read('src/home/app.js');
+  const manager=read('plugin/index.html');
+  const host=read('src/plugin/app.js');
+  assert.match(manager,/cluster-workspace-boot/);
+  assert.match(manager,/visibility:hidden/);
+  assert.match(manager,/body\.standalone-mode \{visibility:visible\}/);
+  assert.match(root,/workspace\.hidden=true;\s*const url=new URL\(repo\.getPluginManagerUrl\(\)\)/);
+  assert.match(root,/event\.data\.type==="workspace-ready"/);
+  assert.match(root,/workspace\.hidden=false;\s*splash\.hidden=true;/);
+  assert.match(host,/frame\.addEventListener\('load', announce, \{once:true\}\)/);
+  assert.match(host,/type:'workspace-ready'/);
+});
