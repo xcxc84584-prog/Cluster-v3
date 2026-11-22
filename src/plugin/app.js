@@ -1053,13 +1053,15 @@ async function installInitialCommunity() {
   const config = repo.getCommunityConfig();
   const packages = await fetchCommunityIndex(config);
   if (!packages.length) throw Error('Initial community index is empty');
-  // Validate every Folder before any persistent installation begins.
+  // Never overwrite an existing user's plugin on initialization.
+  const existing = new Set(browserManager.list().map(record => record.id));
+  const pending = packages.filter(entry => !existing.has(entry.id));
+  // Validate every pending Folder before any persistent installation begins.
   const prepared = [];
-  for (const entry of packages) {
+  for (const entry of pending) {
     const pkg = await fetchCommunityPlugin(entry, config);
     prepared.push(pkg.files);
   }
-  const existing = new Set(browserManager.list().map(record => record.id));
   const installedNow = [];
   try {
     for (const files of prepared) {
