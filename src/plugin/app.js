@@ -104,6 +104,26 @@ function hidePalette() {
 }
 $('settingsLanguage').addEventListener('change', (e) => repo.setLanguage(e.target.value));
 $('settingsPalette').addEventListener('click', showPalette);
+const resetDialog = $('fullResetDialog');
+$('fullResetOpen').addEventListener('click', () => {
+  $('fullResetAcknowledge').checked = false;
+  $('fullResetConfirm').disabled = true;
+  resetDialog.showModal();
+});
+$('fullResetAcknowledge').addEventListener('change', event => {
+  $('fullResetConfirm').disabled = !event.target.checked;
+});
+const closeResetDialog = () => { if(resetDialog.open) resetDialog.close(); };
+$('fullResetCancel').addEventListener('click', closeResetDialog);
+$('fullResetClose').addEventListener('click', closeResetDialog);
+$('fullResetConfirm').addEventListener('click', () => {
+  if (!$('fullResetAcknowledge').checked ||
+      $('fullResetConfirm').disabled) return;
+  $('fullResetConfirm').disabled = true;
+  // Leave the app first. The isolated reset document closes plugin frames
+  // before opening IndexedDB for deletion.
+  window.top.location.assign(repo.getFullResetUrl());
+});
 $('closePalette').addEventListener('click', hidePalette);
 $('donePalette').addEventListener('click', hidePalette);
 $('hexColor').addEventListener('change', (e) => {
