@@ -41,6 +41,44 @@ function rawURL(root, remotePath) {
   return root.raw + "/" + [root.owner, root.repo, root.ref, ...remotePath.split("/")]
     .map(encodeURIComponent).join("/");
 }
+/** Verify the exact Git blob returned by the tree, not only its byte length. */
+async function matchesGitBlob(content, sha) {
+  if (!/^[0-9a-f]{40}$/i.test(sha || "")) return false;
+  const header = new TextEncoder().encode("blob " + content.byteLength + "\\0");
+  const payload = new Uint8Array(header.length + content.byteLength);
+  payload.set(header);
+  payload.set(content, header.length);
+  const digest = await crypto.subtle.digest("SHA-1", payload);
+  const actual = [...new Uint8Array(digest)]
+    .map(value => value.toString(16).padStart(2, "0")).join("");
+  return actual === sha.toLowerCase();
+}
+
+async function downloadPinnedBlob(file, relative, root, fetcher) {
+  const url = root.api + "/repos/" +
+    [root.owner, root.repo].map(encodeURIComponent).join("/") +
+    "/git/blobs/" + encodeURIComponent(file.sha);
+  const response = await fetcher(url, { cache: "no-store",
+    headers: { Accept: "application/vnd.github+json" } });
+  if (!response.ok) throw problem("COMMUNITY_FETCH_FAILED",
+    "GitHub blob HTTP " + response.status + ": " + relative);
+  const blob = await response.json();
+  if (blob.sha !== file.sha || blob.encoding !== "base64" ||
+      typeof blob.content !== "string")
+    throw problem("COMMUNITY_INTEGRITY", "Invalid Git blob: " + relative);
+  let data;
+  try {
+    const binary = atob(blob.content.replace(/\\s/g, ""));
+    data = Uint8Array.from(binary, character => character.charCodeAt(0));
+  } catch {
+    throw problem("COMMUNITY_INTEGRITY", "Invalid blob encoding: " + relative);
+  }
+  if (data.byteLength !== file.size ||
+      !(await matchesGitBlob(data, file.sha)))
+    throw problem("COMMUNITY_INTEGRITY", "Git blob SHA mismatch: " + relative);
+  return data;
+}
+
 function checkEntry(entry, config, ids, folders) {
   ensure(entry && typeof entry === "object" && !Array.isArray(entry),
     "Invalid plugin entry");
@@ -121,11 +159,15 @@ export async function fetchCommunityPlugin(entry, config, fetcher = fetch) {
         const relative = file.path.slice(prefix.length);
         ensure(relative && relative.split("/").every(x =>
           x && x !== "." && x !== ".."), "Unsafe plugin path");
-        const fileResponse = await fetcher(rawURL(root, file.path));
-        if (!fileResponse.ok) throw problem("COMMUNITY_FETCH_FAILED",
-          "Plugin file HTTP " + fileResponse.status + ": " + relative);
-        const bytes = new Uint8Array(await fileResponse.arrayBuffer());
-        ensure(bytes.byteLength === file.size, "Truncated plugin file: " + relative);
+        ensure(typeof file.sha === "string" &&
+          /^[0-9a-f]{40}$/i.test(file.sha), "Invalid Git blob SHA: " + relative);
+        // The branch's raw CDN and the tree API can temporarily resolve to
+        // different commits. Trust only the tree's immutable blob identity.
+        const raw = await fetcher(rawURL(root, file.path), { cache: "no-store" });
+        let bytes = raw.ok ? new Uint8Array(await raw.arrayBuffer()) : null;
+        if (!bytes || bytes.byteLength !== file.size ||
+            !(await matchesGitBlob(bytes, file.sha)))
+          bytes = await downloadPinnedBlob(file, relative, root, fetcher);
         return [relative, bytes];
       })
     );
