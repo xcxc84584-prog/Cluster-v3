@@ -1,10 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { DEFAULT_COMMUNITY_CONFIG, createPublicRepository } from
   "../src/core/public-repository.js";
 import { parseCommunityIndex, fetchCommunityIndex, fetchCommunityPlugin } from
   "../src/plugin/community-remote.js";
 const encoder = new TextEncoder();
+const gitSha = bytes => createHash("sha1")
+  .update("blob " + bytes.byteLength + "\0").update(bytes).digest("hex");
 const config = DEFAULT_COMMUNITY_CONFIG;
 const metadata = id => ({
   id, name: id, version: "1.2.3", description: "Dynamic plugin",
@@ -62,7 +65,7 @@ test("folder download uses authoritative URL and verifies manifest identity", as
     if (url.includes("/git/trees/")) {
       return { ok:true, json:async () => ({truncated:false,
         tree:Object.entries(files).map(([path,bytes]) =>
-          ({path,type:"blob",size:bytes.length}))}) };
+          ({path,type:"blob",size:bytes.length,sha:gitSha(bytes)}))}) };
     }
     const key = Object.keys(files).find(path => url.endsWith(path));
     assert.ok(key, url);
@@ -74,4 +77,42 @@ test("folder download uses authoritative URL and verifies manifest identity", as
   assert.equal(pkg.manifest.id, entry.id);
   assert.equal(calls.filter(url => url.startsWith(config.githubApiBase)).length, 1);
   assert.equal(calls.filter(url => url.startsWith(config.githubRawBase)).length, 2);
+});
+
+test("stale raw content falls back to immutable Git blob", async () => {
+  const entry = metadata("future.plugin");
+  const prefix = entry.directory + "/";
+  const files = {
+    [prefix + "manifest.json"]: encoder.encode(JSON.stringify({
+      schemaVersion: "1.0.0", id: entry.id, name: entry.name,
+      version: entry.version, entry: "index.html"
+    })),
+    [prefix + "index.html"]: encoder.encode("<title>Current</title>")
+  };
+  let recovered = 0;
+  const fetcher = async url => {
+    if (url.includes("/git/trees/"))
+      return { ok: true, json: async () => ({
+        truncated: false,
+        tree: Object.entries(files).map(([path, bytes]) =>
+          ({ path, type: "blob", size: bytes.length, sha: gitSha(bytes) }))
+      }) };
+    if (url.includes("/git/blobs/")) {
+      recovered++;
+      const sha = url.split("/").at(-1);
+      const bytes = Object.values(files).find(data => gitSha(data) === sha);
+      return { ok: true, json: async () => ({
+        sha, encoding: "base64", content: Buffer.from(bytes).toString("base64")
+      }) };
+    }
+    const name = Object.keys(files).find(path => url.endsWith(path));
+    const bytes = name.endsWith("/index.html")
+      ? encoder.encode("<title>Former!</title>") : files[name];
+    return { ok: true, arrayBuffer: async () => bytes.buffer.slice(
+      bytes.byteOffset, bytes.byteOffset + bytes.byteLength) };
+  };
+  const result = await fetchCommunityPlugin(entry, config, fetcher);
+  assert.equal(new TextDecoder().decode(result.files["index.html"]),
+    "<title>Current</title>");
+  assert.equal(recovered, 1);
 });
