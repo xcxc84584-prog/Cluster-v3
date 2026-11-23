@@ -121,10 +121,35 @@ export async function fetchCommunityPlugin(entry, config, fetcher = fetch) {
         const relative = file.path.slice(prefix.length);
         ensure(relative && relative.split("/").every(x =>
           x && x !== "." && x !== ".."), "Unsafe plugin path");
-        const fileResponse = await fetcher(rawURL(root, file.path));
-        if (!fileResponse.ok) throw problem("COMMUNITY_FETCH_FAILED",
-          "Plugin file HTTP " + fileResponse.status + ": " + relative);
-        const bytes = new Uint8Array(await fileResponse.arrayBuffer());
+        // A tree entry identifies a specific Git blob. Raw CDN responses can lag
+        // behind a recent commit, so never accept bytes from a different revision.
+        const expectedSha = file.sha;
+        ensure(typeof expectedSha === "string" && /^[a-f0-9]{40}$/.test(expectedSha),
+          "Missing Git blob SHA: " + relative);
+        const raw = new URL(rawURL(root, file.path));
+        raw.searchParams.set("sha", expectedSha);
+        const fileResponse = await fetcher(raw.href, { cache: "no-store" });
+        let bytes = fileResponse.ok ?
+          new Uint8Array(await fileResponse.arrayBuffer()) : null;
+        if (!bytes || bytes.byteLength !== file.size) {
+          // The immutable blob endpoint avoids raw-content CDN cache skew.
+          const blobUrl = root.api + "/repos/" +
+            [root.owner, root.repo].map(encodeURIComponent).join("/") +
+            "/git/blobs/" + encodeURIComponent(expectedSha);
+          const blobResponse = await fetcher(blobUrl, {
+            cache: "no-store",
+            headers: { Accept: "application/vnd.github+json" }
+          });
+          if (!blobResponse.ok) throw problem("COMMUNITY_FETCH_FAILED",
+            "Plugin blob HTTP " + blobResponse.status + ": " + relative);
+          const blob = await blobResponse.json();
+          if (blob.sha !== expectedSha || blob.encoding !== "base64" ||
+              typeof blob.content !== "string")
+            throw problem("COMMUNITY_FETCH_FAILED",
+              "Invalid GitHub blob response: " + relative);
+          const binary = atob(blob.content.replace(/\\s/g, ""));
+          bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+        }
         ensure(bytes.byteLength === file.size, "Truncated plugin file: " + relative);
         return [relative, bytes];
       })
