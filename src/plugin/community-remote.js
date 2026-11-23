@@ -44,7 +44,7 @@ function rawURL(root, remotePath) {
 /** Verify the exact Git blob returned by the tree, not only its byte length. */
 async function matchesGitBlob(content, sha) {
   if (!/^[0-9a-f]{40}$/i.test(sha || "")) return false;
-  const header = new TextEncoder().encode("blob " + content.byteLength + "\\0");
+  const header = new TextEncoder().encode("blob " + content.byteLength + "\0");
   const payload = new Uint8Array(header.length + content.byteLength);
   payload.set(header);
   payload.set(content, header.length);
@@ -68,7 +68,7 @@ async function downloadPinnedBlob(file, relative, root, fetcher) {
     throw problem("COMMUNITY_INTEGRITY", "Invalid Git blob: " + relative);
   let data;
   try {
-    const binary = atob(blob.content.replace(/\\s/g, ""));
+    const binary = atob(blob.content.replace(/\s/g, ""));
     data = Uint8Array.from(binary, character => character.charCodeAt(0));
   } catch {
     throw problem("COMMUNITY_INTEGRITY", "Invalid blob encoding: " + relative);
