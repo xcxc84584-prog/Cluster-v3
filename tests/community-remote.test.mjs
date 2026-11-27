@@ -11,11 +11,11 @@ const gitSha = bytes => createHash("sha1")
 const config = DEFAULT_COMMUNITY_CONFIG;
 const metadata = id => ({
   id, name: id, version: "1.2.3", description: "Dynamic plugin",
-  directory: config.pluginRoot + "/" + id
+  directory: config.pluginRoot + "/" + id, initialize:true, community:true
 });
 const index = entries => ({
   type: config.indexType, schemaVersion: config.indexSchemaVersion,
-  plugins: entries
+  plugins: entries, collectionVersion: '1.0.0'
 });
 function ok(data) {
   const bytes = encoder.encode(JSON.stringify(data));
@@ -35,7 +35,7 @@ test("community index permits arbitrary plugins without code edits", async () =>
   const entries = [metadata("plugin.a"), metadata("plugin.b"), metadata("future.plugin")];
   const fetcher = async url => {
     if (url.includes("/commits/")) return {ok:true,json:async()=>({sha:"a".repeat(40)})};
-    assert.match(url, /community-index\.json$/);
+    assert.ok(url.endsWith('/'+config.indexPath));
     assert.ok(url.includes("/"+"a".repeat(40)+"/"));
     return ok(index(entries));
   };
@@ -150,4 +150,12 @@ test("index and plugin remain pinned even when the branch changes", async () => 
   const pkg=await fetchCommunityPlugin(item,config,fetcher);
   assert.equal(pkg.manifest.version,entry.version);
   assert.equal(calls.filter(url=>url.includes("/commits/")).length,1);
+});
+
+test("collection policy separates initial installation from visibility",()=>{
+ const entries=parseCommunityIndex(index([{...metadata("a.a"),initialize:false,community:true},{...metadata("b.b"),initialize:true,community:false}]),config);
+ assert.equal(entries.collectionVersion,"1.0.0");
+ assert.deepEqual(entries.filter(e=>e.initialize).map(e=>e.id),["b.b"]);
+ assert.deepEqual(entries.filter(e=>e.community).map(e=>e.id),["a.a"]);
+ assert.throws(()=>parseCommunityIndex(index([{...metadata("a.a"),community:"yes"}]),config),/policy/);
 });
