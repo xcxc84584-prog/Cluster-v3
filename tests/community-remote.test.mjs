@@ -34,7 +34,9 @@ test("public repository is the sole authority of community connection config", (
 test("community index permits arbitrary plugins without code edits", async () => {
   const entries = [metadata("plugin.a"), metadata("plugin.b"), metadata("future.plugin")];
   const fetcher = async url => {
+    if (url.includes("/commits/")) return {ok:true,json:async()=>({sha:"a".repeat(40)})};
     assert.match(url, /community-index\.json$/);
+    assert.ok(url.includes("/"+"a".repeat(40)+"/"));
     return ok(index(entries));
   };
   const result = await fetchCommunityIndex(config, fetcher);
@@ -115,4 +117,37 @@ test("stale raw content falls back to immutable Git blob", async () => {
   assert.equal(new TextDecoder().decode(result.files["index.html"]),
     "<title>Current</title>");
   assert.equal(recovered, 1);
+});
+
+test("index and plugin remain pinned even when the branch changes", async () => {
+  const entry=metadata("future.plugin");
+  const sha="b".repeat(40);
+  const files={
+    [entry.directory+"/manifest.json"]:encoder.encode(JSON.stringify({
+      schemaVersion:"1.0.0",id:entry.id,name:entry.name,version:entry.version,entry:"index.html"
+    })),
+    [entry.directory+"/index.html"]:encoder.encode("<title>Snapshot</title>")
+  };
+  const calls=[];
+  const fetcher=async url=>{
+    calls.push(url);
+    if(url.includes("/commits/"))return {ok:true,json:async()=>({sha})};
+    if(url.endsWith("/"+config.indexPath)){
+      assert.ok(url.includes("/"+sha+"/"));
+      return ok(index([entry]));
+    }
+    if(url.includes("/git/trees/")){
+      assert.ok(url.includes("/git/trees/"+sha+"?"));
+      return {ok:true,json:async()=>({truncated:false,tree:Object.entries(files).map(([path,bytes])=>({path,type:"blob",size:bytes.length,sha:gitSha(bytes)}))})};
+    }
+    assert.ok(url.includes("/"+sha+"/"));
+    const key=Object.keys(files).find(path=>url.endsWith(path));
+    assert.ok(key);
+    const bytes=files[key];
+    return {ok:true,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)};
+  };
+  const [item]=await fetchCommunityIndex(config,fetcher);
+  const pkg=await fetchCommunityPlugin(item,config,fetcher);
+  assert.equal(pkg.manifest.version,entry.version);
+  assert.equal(calls.filter(url=>url.includes("/commits/")).length,1);
 });
