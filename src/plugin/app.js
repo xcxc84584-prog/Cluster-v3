@@ -436,7 +436,8 @@ function renderPluginExplorer() {
       open.addEventListener('click', () => {
         void openPluginSite(entry.id);
       });
-      actions.append(open, toggle, remove);
+      if (entry.manifest.ui?.mode !== "headless") actions.append(open);
+      actions.append(toggle, remove);
       line.append(actions);
     }
     $('pluginList').append(line);
@@ -454,7 +455,7 @@ function renderPluginExplorer() {
  */
 async function openPluginSite(pluginId) {
   const record = browserManager?.get(pluginId);
-  if (!record || pluginId === 'cluster.pmu') return;
+  if (!record || pluginId === 'cluster.pmu' || record.manifest.ui?.mode === 'headless') return;
   const url = new URL(repo.getPluginSiteUrl());
   // Only PRMU-listed workspace plugins navigate directly to shared home.
   // Third-party plugins retain their own standalone page through ?plugin=.
@@ -562,7 +563,8 @@ function renderSettings() {
 function renderPluginPage() {
   browserManager?.show(selectedPluginId);
   const canOpen = selectedPluginId !== 'cluster.pmu' &&
-    browserManager?.isLoaded(selectedPluginId);
+    browserManager?.isLoaded(selectedPluginId) &&
+    browserManager?.get(selectedPluginId)?.manifest.ui?.mode !== 'headless';
   $('pluginPageEmpty').hidden = Boolean(canOpen);
 }
 function sendSettingsContext() {
@@ -1040,6 +1042,7 @@ window.addEventListener('message', event => {
     void communityDownload(id);
 });
 function setStandaloneMode(pluginId) {
+  if (browserManager?.get(pluginId)?.manifest.ui?.mode === 'headless') return;
   document.body.classList.add('standalone-mode');
   selectedPluginId = pluginId;
   renderSettings();
@@ -1160,7 +1163,7 @@ void browserManager.ready.then(async () => {
   }
   const requested = query.get('plugin');
   const available = browserManager.list().filter(record =>
-    record.enabled && browserManager.isLoaded(record.id));
+    record.enabled && browserManager.isLoaded(record.id) && record.manifest.ui?.mode !== "headless");
   const preferred = repo.getCommunityConfig().homePluginId;
   const home = available.find(record => record.manifest.ui?.home) ||
     available.find(record => record.id === preferred) || available[0];
