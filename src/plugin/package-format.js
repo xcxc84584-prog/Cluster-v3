@@ -217,8 +217,10 @@ export function validatePluginPackage(files) {
   // A plugin can be embedded in Cluster, opened standalone, or both.
   if (manifest.ui !== undefined) {
     if (!manifest.ui || typeof manifest.ui !== "object" ||
-        !["embedded", "standalone", "both"].includes(manifest.ui.mode))
-      throw packageError("INVALID_MANIFEST", "ui.mode must be embedded, standalone or both");
+        !["embedded", "standalone", "both", "headless"].includes(manifest.ui.mode))
+      throw packageError("INVALID_MANIFEST", "ui.mode must be embedded, standalone, both or headless");
+    if (manifest.ui.mode === "headless" && manifest.ui.home === true)
+      throw packageError("INVALID_MANIFEST", "Headless plugin cannot be home");
     if (manifest.ui.home !== undefined && typeof manifest.ui.home !== "boolean")
       throw packageError("INVALID_MANIFEST", "ui.home must be boolean");
   }
