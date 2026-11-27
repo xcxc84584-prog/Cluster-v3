@@ -37,7 +37,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     await navigator.serviceWorker.ready;
   }
   function context(id) {
-    return { protocol: PROTOCOL, type: "context", pluginId: id, ...getContext() };
+    return { protocol: PROTOCOL, type: "context", pluginId: id, ...getContext(), services: kernel.contract.list().map(c=>({owner:c.owner,action:c.action})) };
   }
   function currentWindow(id) {
     return frames.get(id)?.iframe.contentWindow || null;
@@ -177,6 +177,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
       // Refresh the selected plugin's API List as soon as its registry changes.
       if (output?.ok && ["Router.register", "Router.unregister",
           "Contract.register", "Contract.unregister"].includes(message.method)) {
+        syncContext();
         onChange?.();
       }
     } catch (error) {
@@ -224,7 +225,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
     host.className = "plugin-main-host";
     host.dataset.pluginId = pluginId;
     host.dataset.inactive = "true";
-    host.hidden = false;
+    host.hidden = manifest.ui?.mode === "headless";
     const iframe = document.createElement("iframe");
     iframe.className = "plugin-main-frame";
     // Unrestricted iframe: inherits Host origin for srcdoc-based plugins.
@@ -266,6 +267,7 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
         if (owner === pluginId) auxiliaryFrames.delete(frame);
       }
       kernel.unload(pluginId);
+      syncContext();
     }
     if (installed.has(pluginId)) {
       if (!temporaryFiles.has(pluginId)) await store.setEnabled(pluginId, false);
@@ -444,8 +446,9 @@ export function createBrowserPluginManager({ kernel, pagesRoot,
   }
   function show(pluginId) {
     for (const [id, state] of frames) {
-      state.host.hidden = false;
-      state.host.dataset.inactive = String(id !== pluginId);
+      const headless = installed.get(id)?.manifest.ui?.mode === "headless";
+      state.host.hidden = headless;
+      state.host.dataset.inactive = String(headless || id !== pluginId);
     }
   }
   function attachSettings(pluginId) {
