@@ -874,7 +874,7 @@ async function communityInstall(id) {
       return;
     }
     const settings = repo.getCommunityConfig();
-    const item = remoteCommunity.find(entry => entry.id === id);
+    const item = remoteCommunity.find(entry => entry.community && entry.id === id);
     const archive = id === settings.example.id ?
       await exampleArchive() :
       item ? createZip((await fetchCommunityPlugin(item, settings)).files) : null;
@@ -902,7 +902,7 @@ function communityCatalog() {
     ...example, installed: installed.some(x => x.id === example.id),
     description: t('exampleDescription'), isExample: true,
     manifest: installed.find(x => x.id === example.id)?.manifest || {}
-  }, ...remoteCommunity.filter(entry => entry.id !== example.id).map(entry => ({
+  }, ...remoteCommunity.filter(entry => entry.community && entry.id !== example.id).map(entry => ({
     ...entry, installed: installed.some(record => record.id === entry.id),
     isExample: false,
     manifest: installed.find(record => record.id === entry.id)?.manifest || {}
@@ -1105,7 +1105,7 @@ async function installInitialCommunity() {
   if (!packages.length) throw Error('Initial community index is empty');
   // Never overwrite an existing user's plugin on initialization.
   const existing = new Set(browserManager.list().map(record => record.id));
-  const pending = packages.filter(entry => !existing.has(entry.id));
+  const pending = packages.filter(entry => entry.initialize && !existing.has(entry.id));
   // Validate every pending Folder before any persistent installation begins.
   const prepared = [];
   for (const entry of pending) {
