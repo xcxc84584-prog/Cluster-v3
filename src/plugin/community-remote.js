@@ -37,6 +37,7 @@ function source(config) {
     ref: config.ref
   };
 }
+const snapshotRefs = new WeakMap();
 function rawURL(root, remotePath) {
   return root.raw + "/" + [root.owner, root.repo, root.ref, ...remotePath.split("/")]
     .map(encodeURIComponent).join("/");
@@ -110,6 +111,17 @@ export function parseCommunityIndex(index, config) {
 }
 export async function fetchCommunityIndex(config, fetcher = fetch) {
   const root = source(config);
+  // Resolve the mutable branch once; index and package must use the same commit.
+  const commitUrl = root.api + "/repos/" +
+    [root.owner, root.repo].map(encodeURIComponent).join("/") +
+    "/commits/" + encodeURIComponent(root.ref);
+  const commitResponse = await fetcher(commitUrl, { cache: "no-store",
+    headers: { Accept: "application/vnd.github+json" } });
+  if (!commitResponse.ok) throw problem("COMMUNITY_FETCH_FAILED",
+    "GitHub commit HTTP " + commitResponse.status);
+  const commit = await commitResponse.json();
+  ensure(/^[0-9a-f]{40}$/i.test(commit.sha || ""), "Invalid community commit SHA");
+  root.ref = commit.sha;
   const url = rawURL(root, config.indexPath);
   const response = await fetcher(url, { cache: "no-store" });
   if (!response.ok) throw problem("COMMUNITY_FETCH_FAILED",
@@ -123,16 +135,20 @@ export async function fetchCommunityIndex(config, fetcher = fetch) {
   let index;
   try { index = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
   catch { throw problem("COMMUNITY_INDEX_INVALID", "Invalid community index JSON"); }
-  return parseCommunityIndex(index, config);
+  const entries = parseCommunityIndex(index, config);
+  for (const entry of entries) snapshotRefs.set(entry, root.ref);
+  return entries;
 }
 export async function fetchCommunityPlugin(entry, config, fetcher = fetch) {
   const root = source(config);
   const checked = checkEntry(entry, config, new Set(), new Set());
+  const snapshot = snapshotRefs.get(entry);
+  if (snapshot) root.ref = snapshot;
   const treeUrl = root.api + "/repos/" +
     [root.owner, root.repo].map(encodeURIComponent).join("/") +
     "/git/trees/" + encodeURIComponent(root.ref) + "?recursive=1";
   const response = await fetcher(treeUrl, {
-    headers: { Accept: "application/vnd.github+json" }
+    cache: "no-store", headers: { Accept: "application/vnd.github+json" }
   });
   if (!response.ok) throw problem("COMMUNITY_FETCH_FAILED",
     "GitHub tree HTTP " + response.status);
@@ -176,6 +192,7 @@ export async function fetchCommunityPlugin(entry, config, fetcher = fetch) {
   const packageResult = validatePluginPackage(contents);
   ensure(packageResult.manifest.id === checked.id &&
     packageResult.manifest.version === checked.version,
-    "Manifest differs from community index");
+    "Manifest differs from community index: " + checked.id +
+    " expected " + checked.version + ", received " + packageResult.manifest.version);
   return packageResult;
 }
