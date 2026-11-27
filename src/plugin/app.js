@@ -1004,7 +1004,8 @@ function updateCommunityCards() {
   const cards = $('communityCards');
   const entries = communityVisibleEntries();
   cards.replaceChildren(...entries.map(buildCommunityCard));
-  $('communityCount').textContent = String(entries.length).padStart(2, '0');
+  $('communityCount').textContent = String(entries.length).padStart(2, '0') +
+    (remoteCommunity.collectionVersion ? ' · init_cluster v' + remoteCommunity.collectionVersion : '');
   $('communityEmpty').hidden = entries.length !== 0 && !remoteCommunityError;
   $('communityEmpty').textContent = remoteCommunityError ?
     String(remoteCommunityError.message || remoteCommunityError) :
