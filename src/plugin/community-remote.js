@@ -93,21 +93,31 @@ function checkEntry(entry, config, ids, folders) {
   ensure(/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(entry.version),
     "Invalid plugin version");
   ensure(entry.name.trim(), "Missing plugin name");
+  ensure((entry.initialize === undefined || typeof entry.initialize === 'boolean') &&
+    (entry.community === undefined || typeof entry.community === 'boolean'), 'Invalid collection policy');
   const folder = config.pluginRoot + "/" + entry.id;
   ensure(entry.directory === folder && !folders.has(folder),
     "Plugin directory must match public root and plugin ID");
   folders.add(folder);
   return Object.freeze({ id: entry.id, name: entry.name,
     version: entry.version, description: entry.description,
-    directory: entry.directory });
+    directory: entry.directory, initialize: entry.initialize ?? true,
+    community: entry.community ?? true });
 }
 export function parseCommunityIndex(index, config) {
   ensure(index?.schemaVersion === config.indexSchemaVersion &&
     index?.type === config.indexType && Array.isArray(index.plugins),
     "Unsupported community index schema");
   ensure(index.plugins.length <= config.maxPlugins, "Too many community plugins");
+  if (index.collectionVersion !== undefined) {
+    ensure(/^\d+\.\d+\.\d+$/.test(index.collectionVersion), 'Invalid collection version');
+    ensure(index.plugins.every(entry => entry && typeof entry.initialize === 'boolean' &&
+      typeof entry.community === 'boolean'), 'Missing collection policy');
+  }
   const ids = new Set(), folders = new Set();
-  return index.plugins.map(entry => checkEntry(entry, config, ids, folders));
+  const entries = index.plugins.map(entry => checkEntry(entry, config, ids, folders));
+  Object.defineProperty(entries, 'collectionVersion', {value: index.collectionVersion ?? null, enumerable:false});
+  return entries;
 }
 export async function fetchCommunityIndex(config, fetcher = fetch) {
   const root = source(config);
@@ -136,6 +146,8 @@ export async function fetchCommunityIndex(config, fetcher = fetch) {
   try { index = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
   catch { throw problem("COMMUNITY_INDEX_INVALID", "Invalid community index JSON"); }
   const entries = parseCommunityIndex(index, config);
+  if (config.indexPath.endsWith('/collection.json'))
+    ensure(entries.collectionVersion !== null, 'Missing authoritative collection version');
   for (const entry of entries) snapshotRefs.set(entry, root.ref);
   return entries;
 }

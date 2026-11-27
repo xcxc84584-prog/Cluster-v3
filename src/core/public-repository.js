@@ -31,7 +31,7 @@ export const FULL_RESET_POLICY = Object.freeze({
 export const DEFAULT_COMMUNITY_CONFIG = Object.freeze({
   repositoryUrl: 'https://github.com/xcxc84584-prog/cluster-v3-initplugin',
   ref: 'main',
-  indexPath: 'community-index.json',
+  indexPath: 'plugins/cluster.init-cluster/collection.json',
   pluginRoot: 'plugins',
   homePluginId: 'cluster.text-editor',
   homeNavigationPluginIds: Object.freeze(['cluster.explorer', 'cluster.text-editor']),
